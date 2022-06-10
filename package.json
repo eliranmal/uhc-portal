@@ -123,6 +123,7 @@
     "concurrently": "^7.2.0",
     "copy-webpack-plugin": "^8.1.1",
     "css-loader": "^5.2.1",
+    "cypress": "^10.1.0",
     "enzyme": "^3.11.0",
     "enzyme-to-json": "^3.4.3",
     "eslint": "^7.24.0",
@@ -131,6 +132,7 @@
     "eslint-config-standard": "^16.0.0",
     "eslint-config-standard-react": "^11.0.1",
     "eslint-import-resolver-alias": "^1.1.2",
+    "eslint-plugin-cypress": "^2.12.1",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-jsx-a11y": "^6.4.1",
     "eslint-plugin-node": "^11.1.0",
@@ -237,6 +239,9 @@
     "stop": "yarn stop-insights-proxy; run/podman-or-docker.sh rm --force browser; pkill --full 'concurrently.*SERVER(prevent self match){0},MOCK'; pkill --full 'concurrently.*BROWSER(prevent self match){0},TEST'; true",
     "prepare": "husky install",
     "gen-types": "node scripts/gen-openapi-typescript.js && prettier --write 'src/types/**/*.ts'"
+    "e2e-test-qa": "cypress open --config baseUrl='https://qa.foo.redhat.com:1337/openshift/'",
+    "e2e-test-prod": "cypress open --config baseUrl='https://prod.foo.redhat.com:1337/openshift/'",
+    "e2e-test-prod-headless": "cypress run --config baseUrl='https://prod.foo.redhat.com:1337/openshift/'"
   },
   "insights": {
     "appname": "openshift"

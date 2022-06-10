@@ -59,7 +59,9 @@ const osdRow = (shouldExpand = true, isOpen = true, hasQuota = true, hasTrial = 
     }
     contents = (
       <Link id="create-cluster" to="/create/osd">
-        <Button className={buttonWidth}>Create cluster</Button>
+        <Button data-test-id="create_osd_cluster_btn" className={buttonWidth}>
+          Create cluster
+        </Button>
       </Link>
     );
   }
