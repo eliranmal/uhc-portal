@@ -25,5 +25,10 @@
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 
 Cypress.Commands.add('getByTestId', (selector, ...args) => {
-  return cy.get(`[data-test-id=${selector}]`, ...args)
-})
+  cy.get('body').then(($body) => {
+    if ($body.find(`[data-test-id=${selector}]`).length !== 0) {
+      return cy.get(`[data-test-id=${selector}]`, ...args);
+    }
+    return cy.get(`[data-testid=${selector}]`, ...args);
+  });
+});

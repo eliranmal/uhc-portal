@@ -4,15 +4,20 @@ import { getAuthConfig } from './authConfig';
 
 class LoginPage extends Page {
   get inputUsername() { return 'input[name="username"]'; }
+
   get inputPassword() { return 'input[name="password"]'; }
+
   clickNextBtn = () => cy.get('button').contains('Next').should('be.visible').click();
+
   clickSubmitBtn = () => cy.get('button[type="submit"]').should('be.visible').click();
+
   isLoginPage = () => cy.url().should('include', 'auth/realms/redhat-external/protocol/openid-connect');
+
   isPasswordScreen = () => cy.contains('h1', 'Log in to your Red Hat account').should('be.visible');
 
   login() {
     const { username, password } = getAuthConfig();
-    cy.get(this.inputUsername).first().type(username); //there are 2 hidden username fields?!
+    cy.get(this.inputUsername).first().type(username); // there are 2 hidden username fields?!
     this.clickNextBtn();
     this.isPasswordScreen();
     cy.get(this.inputPassword).type(password);
@@ -21,7 +26,7 @@ class LoginPage extends Page {
     this.closeCookieConsentIfShowing();
   }
 
-  async closePendoIfShowing() {
+  closePendoIfShowing() {
     // This might not work, it takes time for Pendo to pop up.
     const closePendoGuideBtn = '._pendo-close-guide';
     cy.get('body').then(($body) => {
@@ -35,7 +40,7 @@ class LoginPage extends Page {
     });
   }
 
-  async closeCookieConsentIfShowing() {
+  closeCookieConsentIfShowing() {
     const closeCookieConsentBtn = 'button#truste-consent-button';
     cy.get('body').then(($body) => {
       if ($body.find(closeCookieConsentBtn)) {

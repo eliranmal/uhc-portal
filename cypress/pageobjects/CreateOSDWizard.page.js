@@ -5,6 +5,10 @@ class CreateOSDCluster extends Page {
     cy.url().should('match', /openshift\/create\/osd$/);
   }
 
+  isCreateOSDTrialPage() {
+    cy.url().should('match', /openshift\/create\/osdtrial\?trial=osd$/);
+  }
+
   isBillingModelScreen() {
     cy.contains('h2', 'Welcome to Red Hat OpenShift Dedicated');
   }
@@ -44,6 +48,10 @@ class CreateOSDCluster extends Page {
   get clusterNameInputError() { return 'ul#redux-rich-input-popover-name li.pf-c-helper-text__item.pf-m-error.pf-m-dynamic'; }
 
   get primaryButton() { return '.osd-wizard button.pf-c-button.pf-m-primary'; }
+
+  get CCSSSelected() { return 'input:checked[name="byoc"][value="true"]'; }
+
+  get TrialSelected() { return 'input:checked[name="billing_model"][value="standard-trial"]'; }
 }
 
 export default new CreateOSDCluster();

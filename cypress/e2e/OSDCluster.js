@@ -2,6 +2,8 @@ import LoginPage from '../pageobjects/login.page';
 import ClusterListPage from '../pageobjects/ClusterList.page';
 import CreateClusterPage from '../pageobjects/CreateCluster.page';
 import CreateOSDWizardPage from '../pageobjects/CreateOSDWizard.page';
+import GlobalNav from '../pageobjects/GlobalNav.page';
+import LeaveCreateClusterPrompt from '../pageobjects/LeaveCreateClusterPrompt';
 
 const clusterName = `test-${Math.random().toString(36).substr(2, 10)}`;
 
@@ -17,7 +19,8 @@ describe('OSD cluster tests', () => {
 
     ClusterListPage.isClusterListPage();
     ClusterListPage.isReady();
-    // cy.getByTestId('foo') finds any elements with 'data-test-id' attribute === 'foo'
+    // cy.getByTestId('foo') finds any elements with 'data-test-id' attribute === 'foo',
+    // if none, tries 'data-testid' attribute
     cy.getByTestId('create_cluster_btn').should('be.visible');
   });
 
@@ -66,6 +69,25 @@ describe('OSD cluster tests', () => {
       CreateOSDWizardPage.isUpdatesScreen();
       cy.get(CreateOSDWizardPage.primaryButton).click();
       CreateOSDWizardPage.isReviewScreen();
+    });
+  });
+});
+
+describe('OSD Trial cluster tests', () => {
+  describe('View Create OSD Trial cluster page', () => {
+    it('navigates to create OSD Trial cluster and CCS is selected', () => {
+      GlobalNav.navigateTo('Clusters');
+
+      LeaveCreateClusterPrompt.submit();
+
+      ClusterListPage.isReady();
+
+      cy.getByTestId('create_cluster_btn').click();
+      CreateClusterPage.isCreateClusterPage();
+      cy.getByTestId('create_osd_trial-cluster_btn').click({ force: true });
+      CreateOSDWizardPage.isCreateOSDTrialPage();
+      cy.get(CreateOSDWizardPage.CCSSSelected).should('exist');
+      cy.get(CreateOSDWizardPage.TrialSelected).should('exist');
     });
   });
 });
