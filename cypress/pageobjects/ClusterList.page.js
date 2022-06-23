@@ -5,13 +5,12 @@ import Page from './page';
  * sub page containing specific selectors and methods for a specific page
  */
 class ClusterList extends Page {
-
   isClusterListPage() {
     cy.url().should('match', /openshift\/$/);
   }
 
   isReady() {
-    cy.get('div[data-ready="true"]').should('exist');
+    cy.get('div[data-ready="true"]', { timeout: 9000 }).should('exist');
   }
 }
 
