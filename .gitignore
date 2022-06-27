@@ -15,3 +15,7 @@
 /run/output
 /vendor/
 backend-config.yml
+/cypress/screenshots/
+/cypress/videos/
+/coverage/
+.nyc_output/out.json

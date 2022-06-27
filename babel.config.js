@@ -18,6 +18,8 @@ module.exports = {
     '@babel/plugin-transform-object-assign',
     '@babel/plugin-proposal-optional-chaining',
     '@babel/plugin-transform-modules-commonjs',
+    'transform-class-properties',
+    'istanbul',
     [
       'transform-imports',
       {

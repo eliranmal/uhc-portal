@@ -95,6 +95,7 @@
     "@babel/preset-react": "^7.10.4",
     "@babel/register": "^7.10.5",
     "@redhat-cloud-services/types": "^0.0.16",
+    "@cypress/code-coverage": "^3.10.0",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^12.1.4",
     "@testing-library/react-hooks": "^7.0.2",
@@ -117,6 +118,8 @@
     "@wdio/spec-reporter": "^6.3.0",
     "babel-jest": "^26.0.0",
     "babel-loader": "^8.2.4",
+    "babel-plugin-istanbul": "^6.1.1",
+    "babel-plugin-transform-class-properties": "^6.24.1",
     "babel-plugin-transform-imports": "^2.0.0",
     "chalk": "^5.0.1",
     "chromedriver": "*",
@@ -165,6 +168,7 @@
     "ts-jest": "^26.0.0",
     "ts-loader": "^9.3.1",
     "typescript": "^4.7.4",
+    "transform-class-properties": "^1.0.0-beta",
     "url-loader": "^3.0.0",
     "wait-on": "^4.0.1",
     "webpack": "^5.72.0",
@@ -241,7 +245,8 @@
     "gen-types": "node scripts/gen-openapi-typescript.js && prettier --write 'src/types/**/*.ts'"
     "e2e-test-qa": "cypress open --config baseUrl='https://qa.foo.redhat.com:1337/openshift/'",
     "e2e-test-prod": "cypress open --config baseUrl='https://prod.foo.redhat.com:1337/openshift/'",
-    "e2e-test-prod-headless": "cypress run --config baseUrl='https://prod.foo.redhat.com:1337/openshift/'"
+    "e2e-test-prod-headless": "cypress run --config baseUrl='https://prod.foo.redhat.com:1337/openshift/'",
+    "e2e-code-coverage": "nyc report --reporter=text-summary"
   },
   "insights": {
     "appname": "openshift"
