@@ -3,6 +3,15 @@ import ClusterListPage from '../pageobjects/ClusterList.page';
 import CreateClusterPage from '../pageobjects/CreateCluster.page';
 import CreateRosaWizardPage from '../pageobjects/CreateRosaWizard.page';
 
+const associatedAccountsSelector = '**/api/accounts_mgmt/v1/organizations/*/labels';
+const ARNsSelector = '**/api.openshift.com/api/clusters_mgmt/v1/aws_inquiries/sts_account_roles';
+const userRoleSelector = '**/api/accounts_mgmt/v1/accounts/*/labels/sts_user_role';
+
+const interceptAndReturnMockAssociatedAccounts = mockFile => cy.intercept({ method: 'GET', url: associatedAccountsSelector },
+  { fixture: mockFile }).as('getMockAssociatedAccounts');
+const interceptAndReturnMockARNs = mockFile => cy.intercept({ method: 'POST', url: ARNsSelector },
+  { fixture: mockFile }).as('getMockARNs');
+
 describe('Rosa cluster tests', () => {
   before(() => {
     cy.visit('/');
@@ -15,19 +24,16 @@ describe('Rosa cluster tests', () => {
   });
 
   describe('Create Rosa cluster', () => {
-    before(() => {
-      cy.intercept({ method: 'GET', url: '**/api/accounts_mgmt/v1/organizations/*/labels' },
-        { fixture: 'rosa/rosa_no_associated_account.json' }).as('noAssociatedAWSAccount');
-    });
-
     it('navigates to create Rosa cluster wizard', () => {
+      interceptAndReturnMockAssociatedAccounts('rosa/rosa_no_associated_account.json');
+
       cy.getByTestId('create_cluster_btn').click();
       CreateClusterPage.isCreateClusterPage();
       cy.getByTestId('create_rosa_cluster_btn').click({ force: true }); // need force=true to get past 'element detached from dom' error
       CreateRosaWizardPage.isCreateRosaPage();
       // append rosa query params
       cy.url().then(url => cy.visit(`${url}?env=production&fake=true`));
-      cy.wait('@noAssociatedAWSAccount');
+      cy.wait('@getMockAssociatedAccounts');
 
       CreateRosaWizardPage.showsFakeClusterBanner();
       CreateRosaWizardPage.isAccountsAndRolesScreen();
@@ -46,25 +52,13 @@ describe('Rosa cluster tests', () => {
       });
 
       it('tests for an associated account, no ARNs alert', () => {
-        // I have this defined in ../support/e2e.js to trap all uncaught exceptions,
-        // but it doesn't seem to be working from there
-        // eslint-disable-next-line no-unused-vars
-        cy.on('uncaught:exception', (err, runnable) => {
-          // return false to prevent the error from failing this test
-          console.error(`uncaught:exception in Cypress: ${err.message}`);
-          return false;
-        });
-
-        cy.intercept({ method: 'GET', url: '**/api/accounts_mgmt/v1/organizations/*/labels' },
-          { fixture: 'rosa/rosa_one_associated_account.json' }).as('getOneAssociatedAWSAccount');
-
-        cy.intercept({ method: 'POST', url: '**/api.openshift.com/api/clusters_mgmt/v1/aws_inquiries/sts_account_roles' },
-          { fixture: 'rosa/rosa_no_arns.json' }).as('noARNs');
+        interceptAndReturnMockAssociatedAccounts('rosa/rosa_one_associated_account.json');
+        interceptAndReturnMockARNs('rosa/rosa_no_arns.json');
 
         CreateRosaWizardPage.cancelAndRestartWizard();
 
-        cy.wait('@getOneAssociatedAWSAccount', { timeout: 9000 });
-        cy.wait('@noARNs', { timeout: 9000 });
+        cy.wait('@getMockAssociatedAccounts', { timeout: 9000 });
+        cy.wait('@getMockARNs', { timeout: 9000 });
 
         CreateRosaWizardPage.isAccountsAndRolesScreen();
         cy.get(CreateRosaWizardPage.associatedAccountsDropdown).click();
@@ -74,11 +68,10 @@ describe('Rosa cluster tests', () => {
       });
 
       it('tests for all ARNs', () => {
-        cy.intercept({ method: 'POST', url: '**/api.openshift.com/api/clusters_mgmt/v1/aws_inquiries/sts_account_roles' },
-          { fixture: 'rosa/rosa_all_arns.json' }).as('allARNs');
+        interceptAndReturnMockARNs('rosa/rosa_all_arns.json');
 
         cy.getByTestId('refresh_arns_btn').click();
-        cy.wait('@allARNs');
+        cy.wait('@getMockARNs');
         cy.get(CreateRosaWizardPage.ARNFieldRequiredMsg).should('have.length', 0); // no ARN validation alerts
       });
 
@@ -86,13 +79,10 @@ describe('Rosa cluster tests', () => {
         // click "next"
         cy.get(CreateRosaWizardPage.primaryButton).click();
         CreateRosaWizardPage.isAccountsAndRolesScreen();
-
-        cy.get(CreateRosaWizardPage.acknowledgePrerequisitesCheckbox).click();
-        cy.get(CreateRosaWizardPage.primaryButton).click();
       });
 
       it('tests preventing Next if no user role, shows alert', () => {
-        cy.intercept({ method: 'GET', url: '**/api/accounts_mgmt/v1/accounts/*/labels/sts_user_role' },
+        cy.intercept({ method: 'GET', url: userRoleSelector },
           {
             statusCode: 404,
             body: '404 Not Found!',
@@ -101,13 +91,7 @@ describe('Rosa cluster tests', () => {
             },
           }).as('noUserRole');
 
-        // eslint-disable-next-line no-unused-vars
-        cy.on('uncaught:exception', (err, runnable) => {
-          // return false to prevent the error from failing this test
-          console.error(`uncaught:exception in Cypress: ${err.message}`);
-          return false;
-        });
-
+        cy.get(CreateRosaWizardPage.acknowledgePrerequisitesCheckbox).click();
         cy.get(CreateRosaWizardPage.primaryButton).click({ force: true });
         cy.wait('@noUserRole');
 
@@ -116,10 +100,9 @@ describe('Rosa cluster tests', () => {
       });
 
       it('tests if no ocm role, shows alert', () => {
-        cy.intercept({ method: 'GET', url: '**/api/accounts_mgmt/v1/organizations/*/labels' },
-          { fixture: 'rosa/rosa_one_associated_account.json' }).as('getOneAssociatedAWSAccount');
+        interceptAndReturnMockAssociatedAccounts('rosa/rosa_one_associated_account.json');
 
-        cy.intercept({ method: 'POST', url: '**/api.openshift.com/api/clusters_mgmt/v1/aws_inquiries/sts_account_roles' },
+        cy.intercept({ method: 'POST', url: ARNsSelector },
           {
             statusCode: 400,
             body: {
@@ -137,16 +120,9 @@ describe('Rosa cluster tests', () => {
             },
           }).as('noOcmRole');
 
-        // eslint-disable-next-line no-unused-vars
-        cy.on('uncaught:exception', (err, runnable) => {
-          // return false to prevent the error from failing this test
-          console.error(`uncaught:exception in Cypress: ${err.message}`);
-          return false;
-        });
-
         CreateRosaWizardPage.cancelAndRestartWizard();
 
-        cy.wait('@getOneAssociatedAWSAccount');
+        cy.wait('@getMockAssociatedAccounts');
         cy.wait('@noOcmRole');
 
         CreateRosaWizardPage.isAccountsAndRolesScreen();
@@ -154,25 +130,23 @@ describe('Rosa cluster tests', () => {
       });
 
       it('tests Next goes to next step if no validation errors', () => {
-        cy.intercept({ method: 'GET', url: '**/api/accounts_mgmt/v1/organizations/*/labels' },
-          { fixture: 'rosa/rosa_one_associated_account.json' }).as('getOneAssociatedAWSAccount');
+        interceptAndReturnMockAssociatedAccounts('rosa/rosa_one_associated_account.json');
+        interceptAndReturnMockARNs('rosa/rosa_all_arns.json');
 
-        cy.intercept({ method: 'GET', url: '**/api/accounts_mgmt/v1/accounts/*/labels/sts_user_role' },
-          { fixture: 'rosa/rosa_user_role.json' }).as('getUserRole');
-
-        cy.intercept({ method: 'POST', url: '**/api.openshift.com/api/clusters_mgmt/v1/aws_inquiries/sts_account_roles' },
-          { fixture: 'rosa/rosa_all_arns.json' }).as('allARNs');
+        cy.intercept({ method: 'GET', url: userRoleSelector },
+          { fixture: 'rosa/rosa_user_role.json' }).as('getMockUserRole');
 
         cy.intercept({ method: 'GET', url: '**/api.openshift.com/api/clusters_mgmt/v1/versions/**' },
-          { fixture: 'rosa/rosa_installable_cluster_versions.json' }).as('getInstallableVersions');
+          { fixture: 'rosa/rosa_installable_cluster_versions.json' }).as('getMockVersions');
 
         CreateRosaWizardPage.cancelAndRestartWizard();
-        cy.wait('@allARNs');
+        cy.wait('@getMockAssociatedAccounts');
+        cy.wait('@getMockARNs');
 
         cy.get(CreateRosaWizardPage.acknowledgePrerequisitesCheckbox).click();
         cy.get(CreateRosaWizardPage.primaryButton).click({ force: true });
-        cy.wait('@getUserRole');
-        cy.wait('@getInstallableVersions');
+        cy.wait('@getMockUserRole');
+        cy.wait('@getMockVersions');
 
         CreateRosaWizardPage.isClusterDetailsScreen();
       });

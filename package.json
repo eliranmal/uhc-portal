@@ -245,10 +245,13 @@
     "gen-types": "node scripts/gen-openapi-typescript.js && prettier --write 'src/types/**/*.ts'"
     "e2e-test-qa": "cypress open --config baseUrl='https://qa.foo.redhat.com:1337/openshift/'",
     "e2e-test-prod": "cypress open --config baseUrl='https://prod.foo.redhat.com:1337/openshift/'",
-    "e2e-test-prod-headless": "cypress run --config baseUrl='https://prod.foo.redhat.com:1337/openshift/'",
-    "e2e-code-coverage": "nyc report --reporter=text-summary"
+    "e2e-code-coverage": "nyc report --reporter=text-summary",
+    "e2e-test-prod-headless": "rm -rf ./coverage/* && cypress run --browser chrome --config baseUrl='https://prod.foo.redhat.com:1337/openshift/' && yarn e2e-code-coverage"
   },
   "insights": {
     "appname": "openshift"
+  },
+  "nyc": {
+    "include": ["src/**/*"]
   }
 }
