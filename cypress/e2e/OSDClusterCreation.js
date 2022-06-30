@@ -77,8 +77,8 @@ describe('OSD Trial cluster tests', () => {
   describe('View Create OSD Trial cluster page', () => {
     it('navigates to create OSD Trial cluster and CCS is selected', () => {
       GlobalNav.navigateTo('Clusters');
-
       LeaveCreateClusterPrompt.submit();
+      GlobalNav.closeSideBarNav();
 
       ClusterListPage.isReady();
 

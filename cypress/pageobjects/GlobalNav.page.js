@@ -11,6 +11,14 @@ class GlobalNav extends Page {
         .click();
     });
   }
+
+  closeSideBarNav() {
+    cy.get('body').then(($body) => {
+      if ($body.find('#chr-c-sidebar').is(':visible')) {
+        cy.get('#nav-toggle').click();
+      }
+    });
+  }
 }
 
 export default new GlobalNav();

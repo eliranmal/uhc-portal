@@ -111,7 +111,7 @@ export const architecturesForToolOS = (urls, tool, channel, OS) =>
   );
 
 export const operatingSystemDropdown = (urls, tool, channel, OS, setOS) => (
-  <FormSelect value={OS} onChange={setOS} aria-label="Select OS dropdown">
+  <FormSelect value={OS} data-test-id={`os-dropdown-${tool}`} onChange={setOS} aria-label="Select OS dropdown">
     <FormSelectOption key="select" value="select" label="Select OS" isDisabled />
     {allOperatingSystemsForTool(urls, tool, channel).map(({ value, label }) => (
       <FormSelectOption key={value} value={value} label={label} />
@@ -127,6 +127,7 @@ export const architectureDropdown = (urls, tool, channel, OS, architecture, setA
       value={architecture}
       onChange={setArchitecture}
       isDisabled={optionsForOS.length <= 1}
+      data-test-id={`arch-dropdown-${tool}`}
     >
       <FormSelectOption key="select" value="select" label="Select architecture" isDisabled />
       {allArchitecturesForTool(urls, tool, channel).map(
@@ -224,7 +225,7 @@ const ExpandableRowPair = ({ expanded, setExpanded, expandKey, cells, descriptio
         <Td expand={{ isExpanded, onToggle, rowIndex: 0 }} />
         {cells}
       </Tr>
-      <Tr isExpanded={isExpanded}>
+      <Tr isExpanded={isExpanded} data-test-id={`expanded-row-${expandKey}`}>
         <Td colSpan={1 + cells.length}>
           <ExpandableRowContent>{description}</ExpandableRowContent>
         </Td>

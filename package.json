@@ -246,7 +246,8 @@
     "e2e-test-qa": "cypress open --config baseUrl='https://qa.foo.redhat.com:1337/openshift/'",
     "e2e-test-prod": "cypress open --config baseUrl='https://prod.foo.redhat.com:1337/openshift/'",
     "e2e-code-coverage": "nyc report --reporter=text-summary",
-    "e2e-test-prod-headless": "rm -rf ./coverage/* && cypress run --browser chrome --config baseUrl='https://prod.foo.redhat.com:1337/openshift/' && yarn e2e-code-coverage"
+    "e2e-test-prod-headless": "cypress run --browser chrome --config baseUrl='https://prod.foo.redhat.com:1337/openshift/'",
+    "e2e-test-prod-ci": "rm -rf ./coverage/* && yarn e2e-test-prod-headless && yarn e2e-code-coverage"
   },
   "insights": {
     "appname": "openshift"
