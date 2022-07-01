@@ -1,0 +1,38 @@
+# Reference: https://www.exclamationlabs.com/blog/continuous-deployment-to-npm-using-gitlab-ci/
+
+# GitLab uses docker in the background, so we need to specify the
+# image versions. This is useful because we're freely to use
+# multiple node versions to work with it. They come from the docker
+# repo.
+# Uses latest NodeJS
+image: node:latest
+
+# And to cache them as well.
+cache:
+  paths:
+    - node_modules/
+    - .yarn
+
+# We tell GitLab to install all the packages
+# before running anything.
+# Docker images come with yarn preinstalled
+before_script:
+  - apt-get update -qq && apt-get install libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb
+
+# You specify the stages. Those are the steps that GitLab will go through
+# Order matters.
+stages:
+  - test
+
+Test:
+  image: cypress/browsers
+  stage: test
+  before_script:
+    - yarn config set cache-folder .yarn
+    - yarn install
+  script:
+    # Runs the tests.
+    - yarn start &
+    # yarn wait-on http://prod.foo.redhat.com:1337
+    # run Cypress tests
+    - yarn e2e-test-prod-ci
