@@ -865,7 +865,7 @@ const tokenRows = (expanded, setExpanded, toolRefs, token) => (
         <Td>
           <AlignRight>
             <Link to="/token">
-              <Button variant="secondary" icon={<ArrowRightIcon />} iconPosition="right">
+              <Button variant="secondary" icon={<ArrowRightIcon />} data-test-id="view-api-token-btn" iconPosition="right">
                 View API token
               </Button>
             </Link>
