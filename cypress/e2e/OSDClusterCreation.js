@@ -1,4 +1,4 @@
-import LoginPage from '../pageobjects/login.page';
+import Login from '../pageobjects/login.page';
 import ClusterListPage from '../pageobjects/ClusterList.page';
 import CreateClusterPage from '../pageobjects/CreateCluster.page';
 import CreateOSDWizardPage from '../pageobjects/CreateOSDWizard.page';
@@ -14,10 +14,10 @@ describe('OSD cluster tests', () => {
     // only need to specify relative path to baseUrl.
     // Ex: cy.visit('/create/osd');
     cy.visit('/');
-    LoginPage.isLoginPage();
-    LoginPage.login();
+    Login.isLoginPageUrl();
+    Login.login();
 
-    ClusterListPage.isClusterListPage();
+    ClusterListPage.isClusterListUrl();
     ClusterListPage.isReady();
     // cy.getByTestId('foo') finds any elements with 'data-test-id' attribute === 'foo',
     // if none, tries 'data-testid' attribute

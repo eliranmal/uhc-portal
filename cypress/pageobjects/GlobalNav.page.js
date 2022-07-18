@@ -6,8 +6,7 @@ class GlobalNav extends Page {
       if (!$body.find('#chr-c-sidebar').is(':visible')) {
         cy.get('#nav-toggle').click();
       }
-      cy.get('.pf-c-nav__item')
-        .contains(text)
+      cy.contains('a.pf-c-nav__link', text)
         .click();
     });
   }

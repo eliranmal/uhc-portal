@@ -1,14 +1,14 @@
-import LoginPage from '../pageobjects/login.page';
+import Login from '../pageobjects/login.page';
 import TokenPages from '../pageobjects/Tokens.page';
 import ClusterListPage from '../pageobjects/ClusterList.page';
 
 describe('Token pages', () => {
   before(() => {
     cy.visit('/');
-    LoginPage.isLoginPage();
-    LoginPage.login();
+    Login.isLoginPageUrl();
+    Login.login();
 
-    ClusterListPage.isClusterListPage();
+    ClusterListPage.isClusterListUrl();
     ClusterListPage.isReady();
   });
 

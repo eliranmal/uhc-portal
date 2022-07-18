@@ -1,4 +1,4 @@
-import LoginPage from '../pageobjects/login.page';
+import Login from '../pageobjects/login.page';
 import ClusterListPage from '../pageobjects/ClusterList.page';
 import CreateClusterPage from '../pageobjects/CreateCluster.page';
 import CreateRosaWizardPage from '../pageobjects/CreateRosaWizard.page';
@@ -15,10 +15,10 @@ const interceptAndReturnMockARNs = mockFile => cy.intercept({ method: 'POST', ur
 describe('Rosa cluster tests', () => {
   before(() => {
     cy.visit('/');
-    LoginPage.isLoginPage();
-    LoginPage.login();
+    Login.isLoginPageUrl();
+    Login.login();
 
-    ClusterListPage.isClusterListPage();
+    ClusterListPage.isClusterListUrl();
     ClusterListPage.isReady();
     cy.getByTestId('create_cluster_btn').should('be.visible');
   });

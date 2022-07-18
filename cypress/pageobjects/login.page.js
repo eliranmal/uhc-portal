@@ -2,7 +2,7 @@
 import Page from './page';
 import { getAuthConfig } from './authConfig';
 
-class LoginPage extends Page {
+class Login extends Page {
   get inputUsername() { return 'input[name="username"]'; }
 
   get inputPassword() { return 'input[name="password"]'; }
@@ -11,7 +11,7 @@ class LoginPage extends Page {
 
   clickSubmitBtn = () => cy.get('button[type="submit"]').should('be.visible').click();
 
-  isLoginPage = () => cy.url().should('include', 'auth/realms/redhat-external/protocol/openid-connect');
+  isLoginPageUrl = () => cy.url().should('include', 'auth/realms/redhat-external/protocol/openid-connect');
 
   isPasswordScreen = () => cy.contains('h1', 'Log in to your Red Hat account').should('be.visible');
 
@@ -53,4 +53,4 @@ class LoginPage extends Page {
     });
   }
 }
-export default new LoginPage();
+export default new Login();

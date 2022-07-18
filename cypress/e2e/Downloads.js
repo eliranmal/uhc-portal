@@ -1,4 +1,4 @@
-import LoginPage from '../pageobjects/login.page';
+import Login from '../pageobjects/login.page';
 import GlobalNav from '../pageobjects/GlobalNav.page';
 import Downloads from '../pageobjects/Downloads.page';
 
@@ -10,8 +10,8 @@ const OSLocalTitle = 'Download and open the OpenShift Local';
 describe('Downloads page', () => {
   before(() => {
     cy.visit('/');
-    LoginPage.isLoginPage();
-    LoginPage.login();
+    Login.isLoginPageUrl();
+    Login.login();
 
     GlobalNav.navigateTo('Downloads');
     GlobalNav.closeSideBarNav();
