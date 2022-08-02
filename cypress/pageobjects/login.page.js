@@ -22,7 +22,7 @@ class Login extends Page {
     this.isPasswordScreen();
     cy.get(this.inputPassword).type(password);
     this.clickSubmitBtn();
-    // this.closePendoIfShowing();
+    this.closePendoIfShowing();
     this.closeCookieConsentIfShowing();
   }
 
@@ -30,9 +30,10 @@ class Login extends Page {
     // This might not work, it takes time for Pendo to pop up.
     const closePendoGuideBtn = '._pendo-close-guide';
     cy.get('body').then(($body) => {
-      if ($body.find(closePendoGuideBtn)) {
+      cy.pause();
+      if ($body.find(closePendoGuideBtn).length) {
         cy.get(closePendoGuideBtn)
-          // .should('be.visible')
+          .should('be.visible')
           .click();
         cy.get(closePendoGuideBtn)
           .should('not.be.visible');
@@ -43,7 +44,7 @@ class Login extends Page {
   closeCookieConsentIfShowing() {
     const closeCookieConsentBtn = 'button#truste-consent-button';
     cy.get('body').then(($body) => {
-      if ($body.find(closeCookieConsentBtn)) {
+      if ($body.find(closeCookieConsentBtn).length) {
         cy.get(closeCookieConsentBtn)
           .should('be.visible')
           .click();
