@@ -4,6 +4,7 @@ exports[`DownloadButton renders correctly 1`] = `
 <Button
   className="download-button tool-oc"
   component="a"
+  data-test-id="download-btn-oc"
   disabled={false}
   download={true}
   href="https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/stable/openshift-client-linux.tar.gz"
@@ -18,6 +19,7 @@ exports[`DownloadButton when disabled should render 1`] = `
 <Button
   className="download-button tool-x86_64-openshift-install"
   component="a"
+  data-test-id="download-btn-x86_64-openshift-install"
   disabled={true}
   onClick={[Function]}
   rel="noreferrer noopener"

@@ -12,6 +12,7 @@ exports[`DownloadAndOSSelection aarch64-openshift-install renders correctly 1`] 
       <FormSelect
         aria-label="Select OS dropdown"
         className=""
+        data-test-id="os-dropdown-aarch64-openshift-install"
         isDisabled={false}
         isIconSprite={false}
         isRequired={false}
@@ -46,6 +47,7 @@ exports[`DownloadAndOSSelection aarch64-openshift-install renders correctly 1`] 
       <FormSelect
         aria-label="Select architecture dropdown"
         className=""
+        data-test-id="arch-dropdown-aarch64-openshift-install"
         isDisabled={false}
         isIconSprite={false}
         isRequired={false}
@@ -98,6 +100,7 @@ exports[`DownloadAndOSSelection crc renders correctly 1`] = `
       <FormSelect
         aria-label="Select OS dropdown"
         className=""
+        data-test-id="os-dropdown-crc"
         isDisabled={false}
         isIconSprite={false}
         isRequired={false}
@@ -137,6 +140,7 @@ exports[`DownloadAndOSSelection crc renders correctly 1`] = `
       <FormSelect
         aria-label="Select architecture dropdown"
         className=""
+        data-test-id="arch-dropdown-crc"
         isDisabled={true}
         isIconSprite={false}
         isRequired={false}
@@ -270,6 +274,7 @@ exports[`DownloadAndOSSelection oc renders correctly 1`] = `
       <FormSelect
         aria-label="Select OS dropdown"
         className=""
+        data-test-id="os-dropdown-oc"
         isDisabled={false}
         isIconSprite={false}
         isRequired={false}
@@ -309,6 +314,7 @@ exports[`DownloadAndOSSelection oc renders correctly 1`] = `
       <FormSelect
         aria-label="Select architecture dropdown"
         className=""
+        data-test-id="arch-dropdown-oc"
         isDisabled={false}
         isIconSprite={false}
         isRequired={false}
@@ -371,6 +377,7 @@ exports[`DownloadAndOSSelection ocm renders correctly 1`] = `
       <FormSelect
         aria-label="Select OS dropdown"
         className=""
+        data-test-id="os-dropdown-ocm"
         isDisabled={false}
         isIconSprite={false}
         isRequired={false}
@@ -410,6 +417,7 @@ exports[`DownloadAndOSSelection ocm renders correctly 1`] = `
       <FormSelect
         aria-label="Select architecture dropdown"
         className=""
+        data-test-id="arch-dropdown-ocm"
         isDisabled={false}
         isIconSprite={false}
         isRequired={false}
@@ -472,6 +480,7 @@ exports[`DownloadAndOSSelection ppc64le-openshift-install renders correctly 1`] 
       <FormSelect
         aria-label="Select OS dropdown"
         className=""
+        data-test-id="os-dropdown-ppc64le-openshift-install"
         isDisabled={false}
         isIconSprite={false}
         isRequired={false}
@@ -506,6 +515,7 @@ exports[`DownloadAndOSSelection ppc64le-openshift-install renders correctly 1`] 
       <FormSelect
         aria-label="Select architecture dropdown"
         className=""
+        data-test-id="arch-dropdown-ppc64le-openshift-install"
         isDisabled={false}
         isIconSprite={false}
         isRequired={false}
@@ -558,6 +568,7 @@ exports[`DownloadAndOSSelection rosa renders correctly 1`] = `
       <FormSelect
         aria-label="Select OS dropdown"
         className=""
+        data-test-id="os-dropdown-rosa"
         isDisabled={false}
         isIconSprite={false}
         isRequired={false}
@@ -597,6 +608,7 @@ exports[`DownloadAndOSSelection rosa renders correctly 1`] = `
       <FormSelect
         aria-label="Select architecture dropdown"
         className=""
+        data-test-id="arch-dropdown-rosa"
         isDisabled={true}
         isIconSprite={false}
         isRequired={false}
@@ -644,6 +656,7 @@ exports[`DownloadAndOSSelection s390x-openshift-install renders correctly 1`] = 
       <FormSelect
         aria-label="Select OS dropdown"
         className=""
+        data-test-id="os-dropdown-s390x-openshift-install"
         isDisabled={false}
         isIconSprite={false}
         isRequired={false}
@@ -678,6 +691,7 @@ exports[`DownloadAndOSSelection s390x-openshift-install renders correctly 1`] = 
       <FormSelect
         aria-label="Select architecture dropdown"
         className=""
+        data-test-id="arch-dropdown-s390x-openshift-install"
         isDisabled={false}
         isIconSprite={false}
         isRequired={false}
@@ -730,6 +744,7 @@ exports[`DownloadAndOSSelection with pendoId should render 1`] = `
       <FormSelect
         aria-label="Select OS dropdown"
         className=""
+        data-test-id="os-dropdown-x86_64-openshift-install"
         isDisabled={false}
         isIconSprite={false}
         isRequired={false}
@@ -764,6 +779,7 @@ exports[`DownloadAndOSSelection with pendoId should render 1`] = `
       <FormSelect
         aria-label="Select architecture dropdown"
         className=""
+        data-test-id="arch-dropdown-x86_64-openshift-install"
         isDisabled={true}
         isIconSprite={false}
         isRequired={false}
@@ -812,6 +828,7 @@ exports[`DownloadAndOSSelection x86_64-openshift-install renders correctly 1`] =
       <FormSelect
         aria-label="Select OS dropdown"
         className=""
+        data-test-id="os-dropdown-x86_64-openshift-install"
         isDisabled={false}
         isIconSprite={false}
         isRequired={false}
@@ -846,6 +863,7 @@ exports[`DownloadAndOSSelection x86_64-openshift-install renders correctly 1`] =
       <FormSelect
         aria-label="Select architecture dropdown"
         className=""
+        data-test-id="arch-dropdown-x86_64-openshift-install"
         isDisabled={true}
         isIconSprite={false}
         isRequired={false}

@@ -23,6 +23,7 @@ exports[`<ClusterListEmptyState /> renders correctly 1`] = `
   >
     <Button
       className="pf-u-mt-xl"
+      data-test-id="create_cluster_btn"
     >
       Create cluster
     </Button>

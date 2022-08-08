@@ -4,6 +4,7 @@ exports[`<DownloadsCategoryDropdown /> should render 1`] = `
 <FormSelect
   aria-label="Select category"
   className=""
+  data-test-id="downloads-category-dropdown"
   isDisabled={false}
   isIconSprite={false}
   isRequired={false}

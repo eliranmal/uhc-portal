@@ -101,6 +101,7 @@ exports[`<CloudTab /> should render correctly with OSD Trial quota 1`] = `
                     >
                       <Button
                         className="create-trial-cluster"
+                        data-test-id="create_osd_trial-cluster_btn"
                       >
                         Create trial cluster
                       </Button>
@@ -357,7 +358,18 @@ exports[`<CloudTab /> should render correctly with OSD Trial quota 1`] = `
                   "Amazon Web Services",
                   "Flexible hourly billing",
                   <React.Fragment>
+<<<<<<< HEAD
                     <CreateClusterDropDown />
+=======
+                    <Button
+                      className="get-started-button"
+                      component={[Function]}
+                      data-test-id="create_rosa_cluster_btn"
+                      variant="primary"
+                    >
+                      Create cluster
+                    </Button>
+>>>>>>> 167b14c51 (updated snapshots)
                   </React.Fragment>,
                 ],
                 "isOpen": false,
@@ -652,6 +664,7 @@ exports[`<CloudTab /> should render correctly with quota 1`] = `
                     >
                       <Button
                         className=""
+                        data-test-id="create_osd_cluster_btn"
                       >
                         Create cluster
                       </Button>
@@ -908,7 +921,18 @@ exports[`<CloudTab /> should render correctly with quota 1`] = `
                   "Amazon Web Services",
                   "Flexible hourly billing",
                   <React.Fragment>
+<<<<<<< HEAD
                     <CreateClusterDropDown />
+=======
+                    <Button
+                      className="get-started-button"
+                      component={[Function]}
+                      data-test-id="create_rosa_cluster_btn"
+                      variant="primary"
+                    >
+                      Create cluster
+                    </Button>
+>>>>>>> 167b14c51 (updated snapshots)
                   </React.Fragment>,
                 ],
                 "isOpen": false,
@@ -1394,7 +1418,18 @@ exports[`<CloudTab /> should render correctly without quota 1`] = `
                   "Amazon Web Services",
                   "Flexible hourly billing",
                   <React.Fragment>
+<<<<<<< HEAD
                     <CreateClusterDropDown />
+=======
+                    <Button
+                      className="get-started-button"
+                      component={[Function]}
+                      data-test-id="create_rosa_cluster_btn"
+                      variant="primary"
+                    >
+                      Create cluster
+                    </Button>
+>>>>>>> 167b14c51 (updated snapshots)
                   </React.Fragment>,
                 ],
                 "isOpen": false,

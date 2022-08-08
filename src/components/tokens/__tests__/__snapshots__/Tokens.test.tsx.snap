@@ -216,6 +216,7 @@ exports[`<Tokens /> Renders screen with button 1`] = `
                 onClick={[Function]}
                 variant="primary"
               >
+<<<<<<< HEAD:src/components/tokens/__tests__/__snapshots__/Tokens.test.tsx.snap
                 Load token
               </Button>
             </Link>
@@ -366,6 +367,12 @@ exports[`<Tokens /> Renders screen with token 1`] = `
                   isButton={false}
                   noIcon={true}
                   variant="secondary"
+=======
+                <Button
+                  data-test-id="load-token-btn"
+                  onClick={[Function]}
+                  variant="primary"
+>>>>>>> 167b14c51 (updated snapshots):src/components/tokens/__tests__/__snapshots__/Tokens.test.jsx.snap
                 >
                   read more about setting up the ocm CLI
                 </ExternalLink>

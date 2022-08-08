@@ -11012,6 +11012,7 @@ exports[`<DownloadsPage> renders 1`] = `
                       to="/token"
                     >
                       <Button
+                        data-test-id="view-api-token-btn"
                         icon={
                           <ArrowRightIcon
                             color="currentColor"
