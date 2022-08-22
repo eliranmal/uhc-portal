@@ -61,6 +61,7 @@ describe('OSD cluster tests', () => {
       // click "next" until the cluster is created :)
       cy.get(CreateOSDWizardPage.primaryButton).click();
       CreateOSDWizardPage.isMachinePoolScreen();
+      cy.get('.spinner-loading-text').should('not.exist');
       cy.get(CreateOSDWizardPage.primaryButton).click();
       CreateOSDWizardPage.isNetworkingScreen();
       cy.get(CreateOSDWizardPage.primaryButton).click();

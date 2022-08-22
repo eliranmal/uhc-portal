@@ -243,10 +243,10 @@
     "stop": "yarn stop-insights-proxy; run/podman-or-docker.sh rm --force browser; pkill --full 'concurrently.*SERVER(prevent self match){0},MOCK'; pkill --full 'concurrently.*BROWSER(prevent self match){0},TEST'; true",
     "prepare": "husky install",
     "gen-types": "node scripts/gen-openapi-typescript.js && prettier --write 'src/types/**/*.ts'",
-    "e2e-test-cypress": "cypress open --config baseUrl='https://prod.foo.redhat.com:1337/openshift/'",
+    "cypress-open": "cypress open --config baseUrl='https://prod.foo.redhat.com:1337/openshift/'",
+    "cypress-headless": "cypress run --browser chrome --config baseUrl='https://prod.foo.redhat.com:1337/openshift/'",
     "e2e-test-code-coverage": "nyc report --reporter=text-summary",
-    "e2e-test-headless": "cypress run --browser chrome --config baseUrl='https://prod.foo.redhat.com:1337/openshift/'",
-    "e2e-test-ci": "rm -rf ./coverage/* && yarn e2e-test-headless && yarn e2e-test-code-coverage"
+    "e2e-test-ci": "rm -rf ./coverage/* && yarn cypress-headless && yarn e2e-test-code-coverage"
   },
   "insights": {
     "appname": "openshift"

@@ -86,7 +86,7 @@ describe('Downloads page', () => {
 
     Downloads.allDropdownOptions(
       'arch-dropdown-odo',
-      ['Select architecture', 'x86_64', 'aarch64', 'ppc64le', 's390x'],
+      ['Select architecture', 'x86_64'],
     );
 
     cy.getByTestId('download-btn-odo').invoke('attr', 'href')

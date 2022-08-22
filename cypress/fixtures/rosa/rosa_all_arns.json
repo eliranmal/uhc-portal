@@ -10,25 +10,25 @@
           "arn": "arn:aws:iam::8888:role/ManagedOpenShift-ControlPlane-Role",
           "type": "ControlPlane",
           "isAdmin": false,
-          "roleVersion": "4.9"
+          "roleVersion": "4.10"
         },
         {
           "arn": "arn:aws:iam::8888:role/ManagedOpenShift-Installer-Role",
           "type": "Installer",
           "isAdmin": false,
-          "roleVersion": "4.9"
+          "roleVersion": "4.10"
         },
         {
           "arn": "arn:aws:iam::8888:role/ManagedOpenShift-Support-Role",
           "type": "Support",
           "isAdmin": false,
-          "roleVersion": "4.9"
+          "roleVersion": "4.10"
         },
         {
           "arn": "arn:aws:iam::8888:role/ManagedOpenShift-Worker-Role",
           "type": "Worker",
           "isAdmin": false,
-          "roleVersion": "4.9"
+          "roleVersion": "4.10"
         }
       ]
     }

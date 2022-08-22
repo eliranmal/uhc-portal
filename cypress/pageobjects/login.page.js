@@ -16,6 +16,12 @@ class Login extends Page {
   isPasswordScreen = () => cy.contains('h1', 'Log in to your Red Hat account').should('be.visible');
 
   login() {
+    cy.on('uncaught:exception', (err, runnable) => {
+      // return false to prevent the error from failing this test
+      console.error(`Cypress caught exception: ${err.message}`);
+      return false;
+    });
+
     const { username, password } = getAuthConfig();
     cy.get(this.inputUsername).first().type(username); // there are 2 hidden username fields?!
     this.clickNextBtn();
@@ -30,7 +36,6 @@ class Login extends Page {
     // This might not work, it takes time for Pendo to pop up.
     const closePendoGuideBtn = '._pendo-close-guide';
     cy.get('body').then(($body) => {
-      cy.pause();
       if ($body.find(closePendoGuideBtn).length) {
         cy.get(closePendoGuideBtn)
           .should('be.visible')

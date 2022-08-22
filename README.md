@@ -227,6 +227,30 @@ For example, using this `inject`, it takes 1s for the request to return an AMS e
   "operation_id": "021187a5-5650-41ed-9027-27d6e9ed9075"
 }
 ```
+# Cypress tests
+
+To make it easier for developers to write tests, we've started to switch to the Cypress testing framework - [https://www.cypress.io/](https://www.cypress.io/).
+
+Cypress tests are stored in the `cypress/` directory. We use the "page objects" pattern, in `cypress/pageobjects` - these define selectors for various components.
+Test cases are in `cypress/e2e`.
+
+These instructions assume `yarn start` (or equivalent dev-env) is already running.  In another terminal:
+
+You'll need credentials in environment variables - `CYPRESS_TEST_WITHQUOTA_USER` and `CYPRESS_TEST_WITHQUOTA_PASSWORD` (ask team members).
+
+To launch the Cypress test runner:
+```
+  yarn cypress-open
+```
+
+To run Cypress in headless mode:
+```
+  yarn cypress-headless
+```
+To execute a specific test in headless mode:
+```
+yarn cypress-headless --spec 'cypress/e2e/RosaClusterWizard.js'
+```
 
 # Automated Selenium tests
 

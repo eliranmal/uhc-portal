@@ -156,7 +156,7 @@ describe('Rosa cluster tests', () => {
       it('tests for default version based on previous step', () => {
         CreateRosaWizardPage.isClusterDetailsScreen();
         cy.get(CreateRosaWizardPage.versionsDropdown).click();
-        CreateRosaWizardPage.isSelectedVersion('4.9.38');
+        CreateRosaWizardPage.isSelectedVersion('4.10.18');
       });
     });
   });
