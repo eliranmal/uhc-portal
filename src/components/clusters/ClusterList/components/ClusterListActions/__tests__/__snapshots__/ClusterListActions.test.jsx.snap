@@ -8,7 +8,9 @@ exports[`<ClusterListActions /> renders correctly 1`] = `
     <Link
       to="/create"
     >
-      <Button>
+      <Button
+        data-test-id="create_cluster_btn"
+      >
         Create cluster
       </Button>
     </Link>

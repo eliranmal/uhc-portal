@@ -188,6 +188,7 @@ exports[`DownloadAndOSSelection multi-openshift-install renders correctly 1`] = 
       <FormSelect
         aria-label="Select OS dropdown"
         className=""
+        data-test-id="os-dropdown-multi-openshift-install"
         isDisabled={false}
         isIconSprite={false}
         isRequired={false}
@@ -222,6 +223,7 @@ exports[`DownloadAndOSSelection multi-openshift-install renders correctly 1`] = 
       <FormSelect
         aria-label="Select architecture dropdown"
         className=""
+        data-test-id="arch-dropdown-multi-openshift-install"
         isDisabled={false}
         isIconSprite={false}
         isRequired={false}
