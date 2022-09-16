@@ -2,6 +2,10 @@
 
 # This script starts a podman pod that runs the Cypress tests.
 
+# TODO: remove these!
+export CYPRESS_TEST_WITHQUOTA_USER=ocm-selenium2
+export CYPRESS_TEST_WITHQUOTA_PASSWORD=***REMOVED***
+
 # Check that the required environment variables are set:
 if [ -z "${CYPRESS_TEST_WITHQUOTA_USER}" ]; then
   echo "Environment variable 'CYPRESS_TEST_WITHQUOTA_USER' is mandatory."
@@ -78,6 +82,7 @@ pod_id=$(
     --name "cypress-${build_number}" \
     --add-host "qa.foo.redhat.com:127.0.0.1" \
     --add-host "prod.foo.redhat.com:127.0.0.1" \
+    --add-host "registry-1.docker.io/v2/:127.0.0.0" \
     --publish "4444" \
     --publish "5900" \
     --share "net"
