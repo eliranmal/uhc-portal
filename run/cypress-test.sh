@@ -15,4 +15,4 @@ fi
 # yarn run wdio --hostname="${TEST_SELENIUM_WD_HOSTNAME}" --port="${TEST_SELENIUM_WD_PORT}" "$@"
 # yarn start &
 # yarn wait-on "https://prod.foo.redhat.com:1337/"
-yarn run e2e-test-prod-headless --spec './cypress/e2e/Tokens.js'
+yarn run cypress-headless --spec './cypress/e2e/Downloads.js'

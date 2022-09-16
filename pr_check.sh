@@ -61,7 +61,7 @@ timeout \
   --signal "TERM" \
   --kill-after "2m" \
   "10m" \
-  "run/selenium-pod.sh"
+  "run/cypress-pod.sh"
 
 make \
   go-lint
