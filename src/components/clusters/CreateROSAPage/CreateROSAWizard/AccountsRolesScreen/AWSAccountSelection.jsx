@@ -81,7 +81,6 @@ function AWSAccountSelection({
         ref={associateAWSAccountBtnRef}
         data-test-id="launch-associate-account-btn"
         variant="secondary"
-        data-test-id="refresh-aws-accounts"
         onClick={(event) => {
           track(trackEvents.AssociateAWS);
           launchModal(event);

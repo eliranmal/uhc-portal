@@ -35,4 +35,4 @@ Test:
     - yarn start &
     # yarn wait-on http://prod.foo.redhat.com:1337
     # run Cypress tests
-    - yarn e2e-test-prod-ci
+    - yarn cypress-headless --spec 'cypress/e2e/Downloads.js'

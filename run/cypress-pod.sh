@@ -5,6 +5,7 @@
 # TODO: remove these!
 export CYPRESS_TEST_WITHQUOTA_USER=ocm-selenium2
 export CYPRESS_TEST_WITHQUOTA_PASSWORD=***REMOVED***
+export ELECTRON_RUN_AS_NODE=1
 
 # Check that the required environment variables are set:
 if [ -z "${CYPRESS_TEST_WITHQUOTA_USER}" ]; then
@@ -17,6 +18,8 @@ if [ -z "${CYPRESS_TEST_WITHQUOTA_PASSWORD}" ]; then
 fi
 
 cd "$(dirname "$(dirname "$0")")"  # repo root directory (above run/ that contains this script)
+
+# yum install -y xorg-x11-server-Xvfb gtk2-devel gtk3-devel libnotify-devel GConf2 nss libXScrnSaver alsa-lib
 
 # Check that the application has been built:
 if [ ! -d "build" ]; then
@@ -33,7 +36,7 @@ if [ -z "${build_number}" ]; then
 fi
 
 # When running in the Cypress environment we need to use images from
-browser_image="cypress/included:10.0.1"
+browser_image="quay.io/openshifttest/cypress-included:10.9.0"
 proxy_image="quay.io/redhat-sd-devel/insights-proxy:3.2.1"
 
 # Make sure that the pod is always removed:
