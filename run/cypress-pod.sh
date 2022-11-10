@@ -38,6 +38,10 @@ fi
 # When running in the Cypress environment we need to use images from
 browser_image="quay.io/openshifttest/cypress-included:10.9.0"
 proxy_image="quay.io/redhat-sd-devel/insights-proxy:3.2.1"
+site_image="quay.io/app-sre/nginx:1.20.0"
+if [ -z "${JENKINS_HOME}" ]; then
+  site_image="docker.io/library/nginx:1.20.0"
+fi
 
 # Make sure that the pod is always removed:
 function cleanup() {
@@ -110,6 +114,7 @@ proxy_id=$(
 # is recommended in the Selenium containers documentation. But apparently the
 # container doesn't create any files in the `/dev/shm` directory, so this is
 # probably not necessary.
+echo "Starting cypress browser..."
 browser_id=$(
   podman run \
     --pod "${pod_id}" \
@@ -120,5 +125,98 @@ browser_id=$(
     "${browser_image}"
 )
 
+# Create a temporary file for the configuration of the web server:
+site_conf=$(mktemp)
+cat > "${site_conf}" <<'.'
+user root;
+worker_processes 1;
+pid /var/run/nginx.pid;
+error_log /dev/stderr;
+
+events {
+  worker_connections 1024;
+}
+
+http {
+  include /etc/nginx/mime.types;
+  access_log /dev/stdout;
+  server {
+    listen 8001;
+    location /apps/openshift {
+      root /site;
+    }
+    location /openshift {
+      root /site/openshift;
+      # SPA - route everything to index.html
+      try_files /index.html =404;
+    }
+  }
+}
+.
+
+# Create a temporary directory for the content of the web site. The Insights
+# proxy expects the static files in the `/apps/openshift` directory of the
+# web site, and the index page served for anything below `/openshift` directory.
+# In the development environment this is resolved by the Webpack development server,
+# but we won't be using that. Instead we create that directory structure and
+# use a simple web server that only handles static content.
+site_data=$(mktemp -d)
+mkdir "${site_data}/apps"
+cp --recursive "build/openshift" "${site_data}/apps"
+mkdir "${site_data}/openshift"
+mv "${site_data}/apps/openshift/index.html" "${site_data}/openshift"
+
+# Add to the pod the web server that serves the static content:
+site_id=$(
+  podman run \
+    --pod "${pod_id}" \
+    --name "site-${build_number}" \
+    --volume "${site_conf}:/etc/nginx/nginx.conf" \
+    --volume "${site_data}:/site" \
+    --security-opt label="disable" \
+    --detach \
+    "${site_image}"
+)
+
+# Find out the host IP and port that was mapped to the control port of the
+# browser:
+browser_addr=$(podman port "${browser_id}" 4444)
+browser_host=$(echo "${browser_addr}" | cut -d: -f1)
+if [ "${browser_host}" = "0.0.0.0" ]; then
+  browser_host="127.0.0.1"
+fi
+browser_port=$(echo "${browser_addr}" | cut -d: -f2)
+
+# Find out the host IP and port tha was mapped to the VNC port of the browser:
+vnc_addr=$(podman port "${browser_id}" 5900)
+vnc_host=$(echo "${vnc_addr}" | cut -d: -f1)
+if [ "${vnc_host}" = "0.0.0.0" ]; then
+  vnc_host="127.0.0.1"
+fi
+vnc_port=$(echo "${vnc_addr}" | cut -d: -f2)
+
+echo "browser_host:browser_port: '${browser_host}:${browser_port}'."
+echo "VNC address is '${vnc_host}:${vnc_port}'."
+
 # Run the tests:
-run/cypress-test.sh
+# run/cypress-test.sh
+
+# echo "Waiting on selenium browser..."
+# yarn wait-on "http-get://${TEST_SELENIUM_WD_HOSTNAME}:${TEST_SELENIUM_WD_PORT}/wd/hub/status"
+# echo "Selenium browser found!"
+
+# If not running in Jenkins ask the user to continue before running the tests:
+if [ -z "${JENKINS_HOME}" ]; then
+  echo "browser_host:browser_port: '${browser_host}:${browser_port}'."
+  echo "VNC address is '${vnc_host}:${vnc_port}'."
+  echo "Press enter to run the tests."
+  read
+fi
+
+podman run \
+    --pod "${pod_id}" \
+    --name "cyrpess-tests-${build_number}" \
+    --shm-size "2g" \
+    --security-opt label="disable" \
+    --detach \
+    "yarn run cypress-headless --spec './cypress/e2e/Downloads.js'"

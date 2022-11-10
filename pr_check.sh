@@ -15,6 +15,9 @@
 # limitations under the License.
 #
 
+export QUAY_USER=dtaylor113
+export QUAY_TOKEN=***REMOVED***
+
 # This script is executed by a Jenkins job for each change request. If it
 # doesn't succeed the change won't be merged.
 

@@ -15,4 +15,6 @@ fi
 # yarn run wdio --hostname="${TEST_SELENIUM_WD_HOSTNAME}" --port="${TEST_SELENIUM_WD_PORT}" "$@"
 # yarn start &
 # yarn wait-on "https://prod.foo.redhat.com:1337/"
-yarn run cypress-headless --spec './cypress/e2e/Downloads.js'
+echo "Waiting on selenium browser..."
+yarn wait-on "http-get://${TEST_SELENIUM_WD_HOSTNAME}:${TEST_SELENIUM_WD_PORT}/wd/hub/status"
+# yarn run cypress-headless --spec './cypress/e2e/Downloads.js'
