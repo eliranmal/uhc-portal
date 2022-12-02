@@ -365,6 +365,7 @@ exports[`CreateRosaGetStarted matches snapshot 1`] = `
                                   data-ouia-component-id="OUIA-Generated-FormSelect-default-3"
                                   data-ouia-component-type="PF4/FormSelect"
                                   data-ouia-safe="true"
+                                  data-test-id="os-dropdown-rosa"
                                 >
                                   <option
                                     class=""
@@ -403,6 +404,7 @@ exports[`CreateRosaGetStarted matches snapshot 1`] = `
                                   data-ouia-component-id="OUIA-Generated-FormSelect-default-4"
                                   data-ouia-component-type="PF4/FormSelect"
                                   data-ouia-safe="true"
+                                  data-test-id="arch-dropdown-rosa"
                                   disabled=""
                                 >
                                   <option
@@ -429,6 +431,7 @@ exports[`CreateRosaGetStarted matches snapshot 1`] = `
                                   data-ouia-component-id="OUIA-Generated-Button-secondary-5"
                                   data-ouia-component-type="PF4/Button"
                                   data-ouia-safe="true"
+                                  data-test-id="download-btn-rosa"
                                   download=""
                                   href="https://mirror.openshift.com/pub/openshift-v4/clients/rosa/latest/rosa-linux.tar.gz"
                                 >
