@@ -23,6 +23,7 @@ export QUAY_TOKEN=***REMOVED***
 
 # Log in to the image registry. This is needed because some of the images used
 # for the Selenium tests (the `nginx` image in particular) are private.
+set -x
 if [ -z "${QUAY_USER}" ]; then
   echo "Environment variable 'QUAY_USER' is mandatory."
   exit 1

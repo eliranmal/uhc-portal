@@ -3,23 +3,19 @@
 # This script starts a podman pod that runs the Cypress tests.
 
 # TODO: remove these!
-export CYPRESS_TEST_WITHQUOTA_USER=ocm-selenium2
-export CYPRESS_TEST_WITHQUOTA_PASSWORD=***REMOVED***
-export ELECTRON_RUN_AS_NODE=1
+set -x
 
 # Check that the required environment variables are set:
 if [ -z "${CYPRESS_TEST_WITHQUOTA_USER}" ]; then
   echo "Environment variable 'CYPRESS_TEST_WITHQUOTA_USER' is mandatory."
-  exit 1
+#  exit 1
 fi
 if [ -z "${CYPRESS_TEST_WITHQUOTA_PASSWORD}" ]; then
   echo "Environment variable 'CYPRESS_TEST_WITHQUOTA_PASSWORD' is mandatory."
-  exit 1
+#  exit 1
 fi
 
 cd "$(dirname "$(dirname "$0")")"  # repo root directory (above run/ that contains this script)
-
-# yum install -y xorg-x11-server-Xvfb gtk2-devel gtk3-devel libnotify-devel GConf2 nss libXScrnSaver alsa-lib
 
 # Check that the application has been built:
 if [ ! -d "build" ]; then
@@ -86,7 +82,7 @@ trap cleanup EXIT
 # relabel them.
 pod_id=$(
   podman pod create \
-    --name "cypress-${build_number}" \
+    --name "pod-${build_number}" \
     --add-host "qa.foo.redhat.com:127.0.0.1" \
     --add-host "prod.foo.redhat.com:127.0.0.1" \
     --add-host "registry-1.docker.io/v2/:127.0.0.0" \
@@ -108,22 +104,6 @@ proxy_id=$(
     "${proxy_image}"
 )
 
-# Add to the pod the Cypress runner.
-#
-# Note that the `/dev/shm` size is explicitly set to 2 GiB because that is what
-# is recommended in the Selenium containers documentation. But apparently the
-# container doesn't create any files in the `/dev/shm` directory, so this is
-# probably not necessary.
-echo "Starting cypress browser..."
-browser_id=$(
-  podman run \
-    --pod "${pod_id}" \
-    --name "browser-${build_number}" \
-    --shm-size "2g" \
-    --security-opt label="disable" \
-    --detach \
-    "${browser_image}"
-)
 
 # Create a temporary file for the configuration of the web server:
 site_conf=$(mktemp)
@@ -178,45 +158,28 @@ site_id=$(
     "${site_image}"
 )
 
-# Find out the host IP and port that was mapped to the control port of the
-# browser:
-browser_addr=$(podman port "${browser_id}" 4444)
-browser_host=$(echo "${browser_addr}" | cut -d: -f1)
-if [ "${browser_host}" = "0.0.0.0" ]; then
-  browser_host="127.0.0.1"
-fi
-browser_port=$(echo "${browser_addr}" | cut -d: -f2)
+# Add to the pod the Cypress runner.
+#
+# Note that the `/dev/shm` size is explicitly set to 2 GiB because that is what
+# is recommended in the Selenium containers documentation. But apparently the
+# container doesn't create any files in the `/dev/shm` directory, so this is
+# probably not necessary.
 
-# Find out the host IP and port tha was mapped to the VNC port of the browser:
-vnc_addr=$(podman port "${browser_id}" 5900)
-vnc_host=$(echo "${vnc_addr}" | cut -d: -f1)
-if [ "${vnc_host}" = "0.0.0.0" ]; then
-  vnc_host="127.0.0.1"
-fi
-vnc_port=$(echo "${vnc_addr}" | cut -d: -f2)
-
-echo "browser_host:browser_port: '${browser_host}:${browser_port}'."
-echo "VNC address is '${vnc_host}:${vnc_port}'."
-
-# Run the tests:
-# run/cypress-test.sh
-
-# echo "Waiting on selenium browser..."
-# yarn wait-on "http-get://${TEST_SELENIUM_WD_HOSTNAME}:${TEST_SELENIUM_WD_PORT}/wd/hub/status"
-# echo "Selenium browser found!"
-
-# If not running in Jenkins ask the user to continue before running the tests:
-if [ -z "${JENKINS_HOME}" ]; then
-  echo "browser_host:browser_port: '${browser_host}:${browser_port}'."
-  echo "VNC address is '${vnc_host}:${vnc_port}'."
-  echo "Press enter to run the tests."
-  read
-fi
-
-podman run \
+browser_id=$(
+  podman run \
     --pod "${pod_id}" \
     --name "cyrpess-tests-${build_number}" \
     --shm-size "2g" \
     --security-opt label="disable" \
-    --detach \
-    "yarn run cypress-headless --spec './cypress/e2e/Downloads.js'"
+    --volume "../cypress/e2e:/e2e" \
+    --env CYPRESS_BASE_URL=https://prod.foo.redhat.com:1337/openshift \
+    --env CYPRESS_TEST_WITHQUOTA_USER=ocm-selenium2 \
+    --env CYPRESS_TEST_WITHQUOTA_PASSWORD=***REMOVED*** \
+    --workdir "/e2e" \
+    --entrypoint=cypress \
+    "${browser_image}" \
+    info
+)
+
+# Run the tests:
+#run/cypress-test.sh
