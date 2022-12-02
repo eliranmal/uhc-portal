@@ -11,7 +11,7 @@ const DownloadsCategoryDropdown = ({ selectedCategory, setCategory }) => (
     onChange={setCategory}
     data-test-id="downloads-category-dropdown"
   >
-    {downloadsCategories.map(c => (
+    {downloadsCategories.map((c) => (
       <FormSelectOption key={c.key} value={c.key} label={c.title} />
     ))}
   </FormSelect>

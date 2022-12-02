@@ -111,7 +111,12 @@ export const architecturesForToolOS = (urls, tool, channel, OS) =>
   );
 
 export const operatingSystemDropdown = (urls, tool, channel, OS, setOS) => (
-  <FormSelect value={OS} data-test-id={`os-dropdown-${tool}`} onChange={setOS} aria-label="Select OS dropdown">
+  <FormSelect
+    value={OS}
+    data-test-id={`os-dropdown-${tool}`}
+    onChange={setOS}
+    aria-label="Select OS dropdown"
+  >
     <FormSelectOption key="select" value="select" label="Select OS" isDisabled />
     {allOperatingSystemsForTool(urls, tool, channel).map(({ value, label }) => (
       <FormSelectOption key={value} value={value} label={label} />
@@ -865,7 +870,12 @@ const tokenRows = (expanded, setExpanded, toolRefs, token) => (
         <Td>
           <AlignRight>
             <Link to="/token">
-              <Button variant="secondary" icon={<ArrowRightIcon />} data-test-id="view-api-token-btn" iconPosition="right">
+              <Button
+                variant="secondary"
+                icon={<ArrowRightIcon />}
+                data-test-id="view-api-token-btn"
+                iconPosition="right"
+              >
                 View API token
               </Button>
             </Link>
