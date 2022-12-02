@@ -15,9 +15,6 @@
 # limitations under the License.
 #
 
-export QUAY_USER=dtaylor113
-export QUAY_TOKEN=***REMOVED***
-
 # This script is executed by a Jenkins job for each change request. If it
 # doesn't succeed the change won't be merged.
 
@@ -51,9 +48,7 @@ node --version
 export CHROMEDRIVER_SKIP_DOWNLOAD=true
 
 make \
-  js-lint \
   app \
-  test \
   binaries
 
 export FORCE_COLOR=1

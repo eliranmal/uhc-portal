@@ -47,7 +47,13 @@ function cleanup() {
       podman logs "${proxy_id}" &> proxy.log
     fi
     if [ ! -z "${browser_id}" ]; then
-      podman logs "${browser_id}" &> browser.log
+      echo "In Cypress Browser cleanup"
+      cypressContainerID="cyrpess-tests-${build_number}"
+      podman logs "${cypressContainerID}" &> browser.log
+
+      # echo "cp container images & videos"
+      # podman cp "${PWD}":/cypress/videos/* "${PWD}"/run/output/embedded_files/
+      # podman cp "${PWD}":/cypress/screenshots/* "${PWD}"/run/output/embedded_files/
     fi
     if [ ! -z "${site_id}" ]; then
       podman logs "${site_id}" &> site.log
@@ -171,14 +177,16 @@ browser_id=$(
     --name "cyrpess-tests-${build_number}" \
     --shm-size "2g" \
     --security-opt label="disable" \
-    --volume "../cypress/e2e:/e2e" \
+    --volume "${PWD}/cypress.config.js:/cypress.config.js" \
+    --volume "${PWD}/tsconfig.json:/tsconfig.json" \
+    --volume "${PWD}/cypress:/cypress" \
+    --volume "${PWD}/node_modules:/node_modules" \
     --env CYPRESS_BASE_URL=https://prod.foo.redhat.com:1337/openshift \
-    --env CYPRESS_TEST_WITHQUOTA_USER=ocm-selenium2 \
-    --env CYPRESS_TEST_WITHQUOTA_PASSWORD=***REMOVED*** \
-    --workdir "/e2e" \
+    --env CYPRESS_TEST_WITHQUOTA_USER="${TEST_SELENIUM_WITHQUOTA_USER}" \
+    --env CYPRESS_TEST_WITHQUOTA_PASSWORD="${TEST_SELENIUM_WITHQUOTA_PASSWORD}" \
     --entrypoint=cypress \
     "${browser_image}" \
-    info
+    run --browser chrome --spec cypress/e2e/Downloads.js
 )
 
 # Run the tests:
