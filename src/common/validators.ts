@@ -832,10 +832,7 @@ const subnetCidrs = (
 
   const erroredSubnets: ErroredSubnet[] = [];
 
-  const startingIP = (cidr: string) => {
-    const ip = new IPCIDR(cidr);
-    return ip.start().toString();
-  };
+  const startingIP = (cidr: string) => new IPCIDR(cidr).start().toString();
 
   const compareCidrs = (shouldInclude: boolean) => {
     if (shouldInclude) {
