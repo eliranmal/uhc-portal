@@ -38,26 +38,46 @@ describe('OSD Wizard validation tests(OCP-54134,OCP-73204)', { tags: ['smoke'] }
         CreateOSDWizardPage.acknowlegePrerequisitesCheckbox().check();
 
         if (clusterProperties.CloudProvider.includes('GCP')) {
-          CreateOSDWizardPage.wizardNextButton().click();
-          CreateOSDWizardPage.isTextContainsInPage(
-            ClustersValidation.ClusterSettings.CloudProvider.GCP.EmptyGCPServiceJSONFieldError,
-          );
-          CreateOSDWizardPage.uploadGCPServiceAccountJSON(
-            ClustersValidation.ClusterSettings.CloudProvider.GCP.InvalidFormatGCPServiceJSONValues,
-          );
-          CreateOSDWizardPage.wizardNextButton().click();
-          CreateOSDWizardPage.isTextContainsInPage(
-            ClustersValidation.ClusterSettings.CloudProvider.GCP
-              .InvalidFormatGCPServiceJSONFieldError,
-          );
-          CreateOSDWizardPage.uploadGCPServiceAccountJSON(
-            ClustersValidation.ClusterSettings.CloudProvider.GCP.InvalidGCPServiceJSONValues,
-          );
-          CreateOSDWizardPage.wizardNextButton().click();
-          CreateOSDWizardPage.isTextContainsInPage(
-            ClustersValidation.ClusterSettings.CloudProvider.GCP.InvalidGCPServiceJSONFieldError,
-          );
-          CreateOSDWizardPage.uploadGCPServiceAccountJSON(JSON.stringify(QE_GCP));
+          if (clusterProperties.AuthenticationType.includes('ServiceAccount')) {
+            CreateOSDWizardPage.wizardNextButton().click();
+            CreateOSDWizardPage.isTextContainsInPage(
+              ClustersValidation.ClusterSettings.CloudProvider.GCP.EmptyGCPServiceJSONFieldError,
+            );
+            CreateOSDWizardPage.uploadGCPServiceAccountJSON(
+              ClustersValidation.ClusterSettings.CloudProvider.GCP
+                .InvalidFormatGCPServiceJSONValues,
+            );
+            CreateOSDWizardPage.wizardNextButton().click();
+            CreateOSDWizardPage.isTextContainsInPage(
+              ClustersValidation.ClusterSettings.CloudProvider.GCP
+                .InvalidFormatGCPServiceJSONFieldError,
+            );
+            CreateOSDWizardPage.uploadGCPServiceAccountJSON(
+              ClustersValidation.ClusterSettings.CloudProvider.GCP.InvalidGCPServiceJSONValues,
+            );
+            CreateOSDWizardPage.wizardNextButton().click();
+            CreateOSDWizardPage.isTextContainsInPage(
+              ClustersValidation.ClusterSettings.CloudProvider.GCP.InvalidGCPServiceJSONFieldError,
+            );
+            CreateOSDWizardPage.uploadGCPServiceAccountJSON(JSON.stringify(QE_GCP));
+          } else {
+            CreateOSDWizardPage.workloadIdentityFederationButton().click();
+            CreateOSDWizardPage.wizardNextButton().click();
+            CreateOSDWizardPage.isTextContainsInPage(
+              ClustersValidation.ClusterSettings.CloudProvider.GCP.NoWIFConfigSelectionError,
+            );
+            CreateOSDWizardPage.isTextContainsInPage(
+              ClustersValidation.ClusterSettings.CloudProvider.Common.AcknowledgementUncheckedError,
+            );
+            CreateOSDWizardPage.gcpWIFCommandInput().should(
+              'have.value',
+              ClustersValidation.ClusterSettings.CloudProvider.GCP.WIFCommandValue,
+            );
+            CreateOSDWizardPage.acknowlegePrerequisitesCheckbox().check();
+            CreateOSDWizardPage.selectWorkloadIdentityConfiguration(
+              Cypress.env('QE_GCP_WIF_CONFIG'),
+            );
+          }
         } else {
           CreateOSDWizardPage.awsSecretKeyInput().type(awsSecretKey);
           CreateOSDWizardPage.wizardNextButton().click();

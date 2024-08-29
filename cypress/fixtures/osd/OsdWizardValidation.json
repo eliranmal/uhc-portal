@@ -18,7 +18,14 @@
     {
       "CloudProvider": "GCP",
       "SubscriptionType": "Annual: Fixed capacity subscription from Red Hat",
-      "InfrastructureType": "Customer cloud subscription"
+      "InfrastructureType": "Customer cloud subscription",
+      "AuthenticationType": "Service Account"
+    },
+    {
+      "CloudProvider": "GCP",
+      "SubscriptionType": "Annual: Fixed capacity subscription from Red Hat",
+      "InfrastructureType": "Customer cloud subscription",
+      "AuthenticationType": "Workload Identity Federation"
     }
   ],
   "ClustersValidation": {
@@ -39,7 +46,11 @@
           "InvalidFormatGCPServiceJSONFieldError": "Invalid JSON format",
           "InvalidGCPServiceJSONValues": "{\"testing\":\"samples\"}",
           "InvalidGCPServiceJSONFieldError": "The provided JSON does not meet the requirements: requires property \"type\"",
-          "EmptyGCPServiceJSONFieldError": "Field is required"
+          "EmptyGCPServiceJSONFieldError": "Field is required",
+          "NoWIFConfigSelectionError": "Wif configuration is required",
+          "NoMatchingWIFConfigValue": "nomatchingwif",
+          "NoMatchingWIFConfigError": "No results found",
+          "WIFCommandValue": "ocm gcp create wif-config --name $WIF_NAME --project $GCP_PROJECT_ID"
         }
       },
       "Details": {

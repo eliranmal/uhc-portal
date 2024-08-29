@@ -74,6 +74,8 @@ class CreateOSDCluster extends Page {
 
   awsCloudProviderCard = () => cy.getByTestId('aws-provider-card');
 
+  gcpWIFCommandInput = () => cy.getByTestId('gcp-wif-command').find('input');
+
   awsAccountIDInput = () => cy.get('input[id="account_id"]');
 
   awsAccessKeyInput = () => cy.get('input[id="access_key_id"]');
@@ -81,6 +83,10 @@ class CreateOSDCluster extends Page {
   awsSecretKeyInput = () => cy.get('input[id="secret_access_key"]');
 
   gcpCloudProviderCard = () => cy.getByTestId('gcp-provider-card');
+
+  workloadIdentityFederationButton = () => cy.get('button[id="workloadIdentityFederation"]');
+
+  serviceAccountButton = () => cy.get('button[id="serviceAccounts"]');
 
   clusterDetailsTree = () => cy.get('button[id="cluster-settings-details"]').contains('Details');
 
@@ -149,6 +155,8 @@ class CreateOSDCluster extends Page {
     cy.getByTestId('Secure-Boot-support-for-Shielded-VMs').find('div');
 
   availabilityValue = () => cy.getByTestId('Availability').find('div');
+
+  authenticationTypeValue = () => cy.getByTestId('Authentication-type').find('div');
 
   clusterDomainPrefixLabelValue = () => cy.getByTestId('Domain-prefix').should('exist');
 
@@ -531,6 +539,11 @@ class CreateOSDCluster extends Page {
       .invoke('val', jsonContent)
       .trigger('input');
     cy.get('textarea[aria-label="File upload"]').type(' {backspace}');
+  }
+  selectWorkloadIdentityConfiguration(wifConfig) {
+    cy.get('button[aria-labelledby=" gcp_wif_config"]').click();
+    cy.get('input[placeholder="Filter by name / ID"]').clear().type(wifConfig);
+    cy.contains(wifConfig).scrollIntoView().click();
   }
 }
 

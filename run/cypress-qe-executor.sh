@@ -62,6 +62,7 @@ cat > cypress.env.json << EOF
 "QE_ACCOUNT_ROLE_PREFIX" : "cypress-account-roles",
 "QE_OCM_ROLE_PREFIX" : "cypress-ocm-role",
 "QE_USER_ROLE_PREFIX" : "cypress-user-role",
+"QE_GCP_WIF_CONFIG" : "cypress-ocmui-wif",
 "QE_USE_OFFLINE_TOKEN" : false,
 "ROSACLI_LOGS": "cli-logs.txt"
 }

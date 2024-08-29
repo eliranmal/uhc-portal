@@ -68,7 +68,14 @@ const WorkloadIdentityFederation = (props: WorkloadIdentityFederationProps) => {
         </TextContent>
       </StackItem>
       <StackItem>
-        <ClipboardCopy isReadOnly hoverTip="Copy" clickTip="Copied" isCode isBlock>
+        <ClipboardCopy
+          data-testid="gcp-wif-command"
+          isReadOnly
+          hoverTip="Copy"
+          clickTip="Copied"
+          isCode
+          isBlock
+        >
           ocm gcp create wif-config --name $WIF_NAME --project $GCP_PROJECT_ID
         </ClipboardCopy>
       </StackItem>

@@ -33,15 +33,20 @@ describe('OSD Marketplace cluster creation tests(OCP-67514)', { tags: ['smoke'] 
         CreateOSDWizardPage.awsCloudProviderCard().should('have.attr', 'aria-disabled', 'true');
       }
       CreateOSDWizardPage.selectCloudProvider(clusterProperties.CloudProvider);
-      CreateOSDWizardPage.acknowlegePrerequisitesCheckbox().check();
 
       if (clusterProperties.CloudProvider.includes('GCP')) {
-        CreateOSDWizardPage.uploadGCPServiceAccountJSON(JSON.stringify(QE_GCP));
+        if (clusterProperties.AuthenticationType.includes('Service Account')) {
+          CreateOSDWizardPage.uploadGCPServiceAccountJSON(JSON.stringify(QE_GCP));
+        } else {
+          CreateOSDWizardPage.workloadIdentityFederationButton().click();
+          CreateOSDWizardPage.selectWorkloadIdentityConfiguration(Cypress.env('QE_GCP_WIF_CONFIG'));
+        }
       } else {
         CreateOSDWizardPage.awsAccountIDInput().type(awsAccountID);
         CreateOSDWizardPage.awsAccessKeyInput().type(awsAccessKey);
         CreateOSDWizardPage.awsSecretKeyInput().type(awsSecretKey);
       }
+      CreateOSDWizardPage.acknowlegePrerequisitesCheckbox().check();
       cy.get(CreateOSDWizardPage.primaryButton).click();
     });
 
@@ -95,6 +100,11 @@ describe('OSD Marketplace cluster creation tests(OCP-67514)', { tags: ['smoke'] 
       CreateOSDWizardPage.subscriptionTypeValue().contains(clusterProperties.SubscriptionType);
       CreateOSDWizardPage.infrastructureTypeValue().contains(clusterProperties.InfrastructureType);
       CreateOSDWizardPage.cloudProviderValue().contains(clusterProperties.CloudProvider);
+      if (clusterProperties.CloudProvider.includes('GCP')) {
+        CreateOSDWizardPage.authenticationTypeValue().contains(
+          clusterProperties.AuthenticationType,
+        );
+      }
       CreateOSDWizardPage.clusterNameValue().contains(clusterProperties.ClusterName);
       CreateOSDWizardPage.regionValue().contains(clusterProperties.Region.split(',')[0]);
       CreateOSDWizardPage.availabilityValue().contains(clusterProperties.Availability);
