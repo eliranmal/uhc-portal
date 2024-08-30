@@ -35,16 +35,22 @@ describe(
       it(`OSD ${clusterProperties.CloudProvider} wizard - Cluster Settings - Cloud provider definitions`, () => {
         CreateOSDWizardPage.isCloudProviderSelectionScreen();
         CreateOSDWizardPage.selectCloudProvider(clusterProperties.CloudProvider);
-        CreateOSDWizardPage.acknowlegePrerequisitesCheckbox().check();
 
         if (clusterProperties.CloudProvider.includes('GCP')) {
-          CreateOSDWizardPage.uploadGCPServiceAccountJSON(JSON.stringify(QE_GCP));
+          if (clusterProperties.AuthenticationType.includes('Service Account')) {
+            CreateOSDWizardPage.uploadGCPServiceAccountJSON(JSON.stringify(QE_GCP));
+          } else {
+            CreateOSDWizardPage.workloadIdentityFederationButton().click();
+            CreateOSDWizardPage.selectWorkloadIdentityConfiguration(
+              Cypress.env('QE_GCP_WIF_CONFIG'),
+            );
+          }
         } else {
           CreateOSDWizardPage.awsAccountIDInput().type(awsAccountID);
           CreateOSDWizardPage.awsAccessKeyInput().type(awsAccessKey);
           CreateOSDWizardPage.awsSecretKeyInput().type(awsSecretKey);
         }
-
+        CreateOSDWizardPage.acknowlegePrerequisitesCheckbox().check();
         cy.get(CreateOSDWizardPage.primaryButton).click();
       });
 
@@ -108,6 +114,11 @@ describe(
           clusterProperties.InfrastructureType,
         );
         CreateOSDWizardPage.cloudProviderValue().contains(clusterProperties.CloudProvider);
+        if (clusterProperties.CloudProvider.includes('GCP')) {
+          CreateOSDWizardPage.authenticationTypeValue().contains(
+            clusterProperties.AuthenticationType,
+          );
+        }
         CreateOSDWizardPage.clusterDomainPrefixLabelValue().contains(
           clusterProperties.ClusterDomainPrefix,
         );

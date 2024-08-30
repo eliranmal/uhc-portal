@@ -57,6 +57,8 @@ function setup_rosa_resources()
   QE_OCM_ROLE_PREFIX=`echo "$config_json" | jq -r '.QE_OCM_ROLE_PREFIX'`
   QE_USER_ROLE_PREFIX=`echo "$config_json" | jq -r '.QE_USER_ROLE_PREFIX'`
   QE_USE_OFFLINE_TOKEN=`echo "$config_json" | jq -r '.QE_USE_OFFLINE_TOKEN'`
+  QE_GCP_PROJECT_ID=`echo "$config_json" | jq -r '.QE_GCP_OSDCCSADMIN_JSON.project_id'`
+  QE_GCP_WIF_CONFIG=`echo "$config_json" | jq -r '.QE_GCP_WIF_CONFIG'`
 
   # Executing ROSA commands for pre-config step.
   echo "Executing ROSA pre-config commands"
@@ -105,6 +107,20 @@ function setup_rosa_resources()
 
   rosa create account-roles --prefix ${QE_ACCOUNT_ROLE_PREFIX} --mode auto -y
   echo "Completed ROSA pre-config commands!"
+
+  echo "Starting OCM configs commands.."
+  echo "Listing current WIF configs and create one for tests"
+  current_wif=$(ocm gcp list wif-config | awk '$2 == "${QE_GCP_WIF_CONFIG}" { print $1 }')
+  if [ ! -z $current_wif ];then
+    ocm gcp delete wif-config  $current_wif
+  fi
+  current_wif=$(ocm gcp list wif-config | awk '$2 == "${QE_GCP_WIF_CONFIG}" { print $1 }')
+
+  if [ -z $current_wif ];then
+    ocm gcp create wif-config --name $QE_GCP_WIF_CONFIG --project $QE_GCP_PROJECT_ID
+  fi
+  echo "Completed OCM config commands"
+
 }
 
 function setup_cloud_resources()
