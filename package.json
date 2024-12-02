@@ -74,7 +74,7 @@
     "redux-form": "^8.3.10",
     "redux-promise-middleware": "^6.2.0",
     "rehype-raw": "^5.1.0",
-    "remark-gfm": "^1",
+    "remark-gfm": "^4.0.0",
     "reselect": "^5.0.0",
     "screenfull": "^6.0.0",
     "semver": "^7.6.3",
