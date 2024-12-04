@@ -143,7 +143,7 @@ export const doOffline = (onDone: (tokenOrError: string, errorReason?: string) =
 
     // Open an iframe to the token sso URL and with a redirect of the current page
     const iframe = document.createElement('iframe');
-    const src = kc.createLoginUrl({
+    const src = await kc.createLoginUrl({
       prompt: 'none',
       redirectUri,
       scope: `offline_access${partnerScope ? ` ${partnerScope}` : ''}`,

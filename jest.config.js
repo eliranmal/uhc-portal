@@ -29,6 +29,7 @@ const config = {
     '^~/(.*)$': '<rootDir>/src/$1',
     '^src/components/common/TechnologyPreview$': '<rootDir>/__mocks__/technologyPreviewFake.tsx',
     '@scalprum/react-core': '<rootDir>/__mocks__/scalprumComponentMock.tsx',
+    'keycloak-js': '<rootDir>/__mocks__/keycloakMock.ts',
   },
   globals: {
     APP_DEVMODE: false,
@@ -37,6 +38,7 @@ const config = {
     // Warning! Moving this config to the "ts-jes" transform makes the test slower and close to double the used heap size
     'ts-jest': {
       isolatedModules: true,
+      tsconfig: { module: 'esnext', moduleResolution: 'node' },
     },
   },
   moduleFileExtensions: ['js', 'jsx', 'ts', 'tsx', 'json', 'node', 'mjs'],

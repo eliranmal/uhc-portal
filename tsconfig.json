@@ -3,7 +3,7 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "outDir": "./dist/",
     "target": "es2018",
     "jsx": "react",
