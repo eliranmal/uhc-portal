@@ -197,11 +197,11 @@ function Details() {
     setFieldValue(FieldId.MachinePoolsSubnets, mpSubnetsReset);
   };
 
-  const handleVersionChange = (clusterVersion?: Version) => {
+  const handleVersionChange = (clusterVersion: Version) => {
     // If features become incompatible with the new version, clear their settings
     const canDefineSecurityGroups = !getIncompatibleVersionReason(
       SupportedFeature.SECURITY_GROUPS,
-      clusterVersion?.raw_id,
+      clusterVersion.raw_id,
       { day1: true },
     );
     if (!canDefineSecurityGroups) {
@@ -212,7 +212,7 @@ function Details() {
         worker: [],
       });
     }
-    if (!canConfigureDayOnePrivateServiceConnect(clusterVersion?.raw_id ?? '')) {
+    if (!canConfigureDayOnePrivateServiceConnect(clusterVersion.raw_id || '')) {
       setFieldValue(FieldId.PrivateServiceConnect, false);
     }
   };

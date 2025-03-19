@@ -264,7 +264,7 @@ export const MachinePool = () => {
                   {},
                   { isDefaultMachinePool: true, isByoc, isMultiAz },
                 )}
-                clusterVersion={version?.raw_id}
+                clusterVersion={version.raw_id}
                 allow249NodesOSDCCSROSA={allow249Nodes}
               />
             </GridItem>

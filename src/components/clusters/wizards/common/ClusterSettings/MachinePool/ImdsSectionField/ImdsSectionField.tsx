@@ -19,7 +19,7 @@ export const ImdsSectionField = () => {
     setFieldValue,
   } = useFormState();
 
-  const isDisabled = clusterVersion && !canSelectImds(clusterVersion.raw_id);
+  const isDisabled = !canSelectImds(clusterVersion.raw_id);
 
   const onChange = (value: IMDSType) => {
     setFieldValue(FieldId.IMDS, value);

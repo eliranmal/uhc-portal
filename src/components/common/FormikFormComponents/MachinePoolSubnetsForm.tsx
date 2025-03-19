@@ -6,10 +6,9 @@ import { MinusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/minus-ci
 import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 
 import { scrollToFirstField } from '~/common/helpers';
-import { validateMultipleMachinePoolsSubnets } from '~/common/validators';
+import { FormSubnet, validateMultipleMachinePoolsSubnets } from '~/common/validators';
 import { SubnetSelectField } from '~/components/clusters/common/SubnetSelectField';
 import { emptyAWSSubnet, FieldId } from '~/components/clusters/wizards/common/constants';
-import { FormSubnet } from '~/components/clusters/wizards/common/FormSubnet';
 import { getScrollErrorIds } from '~/components/clusters/wizards/form/utils';
 import { useFormState } from '~/components/clusters/wizards/hooks';
 import { CloudVpc } from '~/types/clusters_mgmt.v1';

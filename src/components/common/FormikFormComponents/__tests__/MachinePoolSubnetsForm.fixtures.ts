@@ -1,4 +1,4 @@
-import { FormSubnet } from '~/components/clusters/wizards/common/FormSubnet';
+import { FormSubnet } from '~/common/validators';
 
 export const repeatedSubnets: FormSubnet[] = [
   {

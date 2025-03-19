@@ -6,6 +6,7 @@ import { ocmResourceType, TrackEvent, trackEvents } from '~/common/analytics';
 import links from '~/common/installLinks.mjs';
 import { getDefaultSecurityGroupsSettings } from '~/common/securityGroupsHelpers';
 import { normalizedProducts } from '~/common/subscriptionTypes';
+import { FormSubnet } from '~/common/validators';
 import { isExactMajorMinor } from '~/common/versionHelpers';
 import { constants } from '~/components/clusters/common/CreateOSDFormConstants';
 import {
@@ -25,8 +26,6 @@ import ExternalLink from '~/components/common/ExternalLink';
 import useAnalytics from '~/hooks/useAnalytics';
 import { PRIVATE_SERVICE_CONNECT } from '~/queries/featureGates/featureConstants';
 import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
-
-import { FormSubnet } from '../../common/FormSubnet';
 
 import { ApplicationIngressType, ClusterPrivacyType } from './constants';
 import { DefaultIngressFields } from './DefaultIngressFields';
@@ -58,13 +57,11 @@ export const Configuration = () => {
     cloudProvider === CloudProviderType.Aws || (cloudProvider === CloudProviderType.Gcp && isByoc);
   const showConfigureProxy =
     isByoc && [normalizedProducts.OSD, normalizedProducts.OSDTrial].includes(product);
-  const clusterVersionRawId: string | undefined = clusterVersion?.raw_id;
   const showPrivateServiceConnect =
     isByoc &&
     isGCP &&
     [normalizedProducts.OSD, normalizedProducts.OSDTrial].includes(product) &&
-    clusterVersionRawId &&
-    canConfigureDayOnePrivateServiceConnect(clusterVersionRawId) &&
+    canConfigureDayOnePrivateServiceConnect(clusterVersion.raw_id) &&
     hasPSCFeatureGate;
   const isWifAuth = authTypeFormValue === GCPAuthType.WorkloadIdentityFederation;
   const PSCPrivateWifWarning =
@@ -76,9 +73,8 @@ export const Configuration = () => {
     product === normalizedProducts.ROSA ? ocmResourceType.MOA : ocmResourceType.OSD;
 
   const showIngressSection = isByoc;
-  const isManagedIngressAllowed =
-    clusterVersionRawId && canConfigureDayOneManagedIngress(clusterVersionRawId);
-  const isOcp413 = clusterVersionRawId && isExactMajorMinor(clusterVersionRawId, 4, 13);
+  const isManagedIngressAllowed = canConfigureDayOneManagedIngress(clusterVersion.raw_id);
+  const isOcp413 = isExactMajorMinor(clusterVersion.raw_id, 4, 13);
 
   React.useEffect(() => {
     if (isWifAuth && showPrivateServiceConnect && isPrivateCluster) {

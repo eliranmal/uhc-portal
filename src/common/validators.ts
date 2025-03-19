@@ -5,7 +5,6 @@ import { ValidationError, Validator } from 'jsonschema';
 import { get, indexOf, inRange } from 'lodash';
 
 import { Subnet } from '~/common/helpers';
-import { FormSubnet } from '~/components/clusters/wizards/common/FormSubnet';
 import { FieldId } from '~/components/clusters/wizards/osd/constants';
 import { clusterService } from '~/services';
 import type { Gcp, Taint } from '~/types/clusters_mgmt.v1';
@@ -1489,6 +1488,12 @@ const validateRequiredPublicSubnetId = (
   allValues: unknown,
   props?: { pristine: boolean },
 ) => (!props?.pristine && !publicSubnetId ? 'Subnet is required' : undefined);
+
+export type FormSubnet = {
+  availabilityZone: string;
+  privateSubnetId: string;
+  publicSubnetId: string;
+};
 
 // Validating multiple MPs
 const hasRepeatedSubnets = (

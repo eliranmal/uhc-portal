@@ -43,7 +43,7 @@ import Details from './ClusterSettings/Details/Details';
 import ControlPlaneScreen from './ControlPlaneScreen/ControlPlaneScreen';
 import NetworkScreen from './NetworkScreen/NetworkScreen';
 import UpdatesScreen from './UpdatesScreen/UpdatesScreen';
-import { VPCScreen } from './VPCScreen/VPCScreen';
+import VPCScreen from './VPCScreen/VPCScreen';
 import AccountsRolesScreen from './AccountsRolesScreen';
 import ClusterProxyScreen from './ClusterProxyScreen';
 import { FieldId, initialTouched, initialValues, initialValuesRestrictedEnv } from './constants';

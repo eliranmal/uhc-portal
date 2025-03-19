@@ -151,14 +151,15 @@ const initialState: State = {
 
 const filterAndSortClusterVersions = (versions: Version[]) => {
   const now = Date.now();
+  const filteredVersions = versions.filter((version) => {
+    if (!version.end_of_life_timestamp) {
+      return true;
+    }
+    const eolTimestamp = new Date(version.end_of_life_timestamp).getTime();
+    return eolTimestamp > now;
+  });
   // descending version numbers
-  return versions
-    .filter((e) => e)
-    .filter(
-      (version) =>
-        !version.end_of_life_timestamp || new Date(version.end_of_life_timestamp).getTime() > now,
-    )
-    .sort((e1, e2) => versionComparator(e2.raw_id!, e1.raw_id!));
+  return filteredVersions.sort((e1, e2) => versionComparator(e2.raw_id!, e1.raw_id!));
 };
 
 const clustersReducer = (
