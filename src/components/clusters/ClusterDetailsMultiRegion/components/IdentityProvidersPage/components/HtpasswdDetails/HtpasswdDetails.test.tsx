@@ -1,4 +1,5 @@
 import React from 'react';
+import * as reactRedux from 'react-redux';
 
 import { useFetchHtpasswdUsers } from '~/queries/ClusterDetailsQueries/AccessControlTab/UserQueries/useFetchHtpasswdUsers';
 import { checkAccessibility, render, screen, within } from '~/testUtils';
@@ -12,6 +13,11 @@ jest.mock(
     useFetchHtpasswdUsers: jest.fn(),
   }),
 );
+
+jest.mock('react-redux', () => ({
+  __esModule: true,
+  ...jest.requireActual('react-redux'),
+}));
 
 const createUsers = (numberOfUsers: number) => {
   const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'];
@@ -38,10 +44,18 @@ const getDataRows = () => {
 const defaultProps = {
   idpId: 'myIdpId',
   clusterId: 'myClusterId',
+  idpActions: {
+    list: true,
+    update: true,
+    delete: true,
+  },
 };
 
 describe('<HtpasswdDetails />', () => {
   const useFetchHtpasswdUsersMocked = useFetchHtpasswdUsers as jest.Mock;
+  const useDispatchMock = jest.spyOn(reactRedux, 'useDispatch');
+  const mockedDispatch = jest.fn();
+  useDispatchMock.mockReturnValue(mockedDispatch);
 
   afterEach(() => {
     jest.clearAllMocks();
@@ -69,7 +83,6 @@ describe('<HtpasswdDetails />', () => {
 
     it('in table', () => {
       // NOTE this assumes that the items are initially sorted by username asc
-
       const users = createUsers(20);
       const usersSorted = [...users].sort((a, b) =>
         (a.username as string).localeCompare(b.username as string),
@@ -91,6 +104,33 @@ describe('<HtpasswdDetails />', () => {
         const firstCell = within(row).getAllByRole('cell')[0];
         // @ts-ignore
         expect(firstCell).toHaveTextContent(usersSorted[index].username);
+      });
+    });
+
+    it('shows a change password action', async () => {
+      const users = createUsers(1);
+      useFetchHtpasswdUsersMocked.mockReturnValue({
+        isLoading: false,
+        users,
+        isError: false,
+        error: null,
+      });
+      const { user } = render(<HtpasswdDetails {...defaultProps} />);
+      const dataRows = getDataRows();
+      const cells = within(dataRows[0]).getAllByRole('cell');
+      const actionCell = cells[cells.length - 1];
+
+      expect(screen.queryByRole('menuitem', { name: 'Change password' })).not.toBeInTheDocument();
+
+      await user.click(within(actionCell).getByRole('button', { name: 'Kebab toggle' }));
+
+      await user.click(screen.getByRole('menuitem', { name: 'Change password' }));
+
+      expect(mockedDispatch.mock.calls[0][0].type).toEqual('OPEN_MODAL');
+      expect(mockedDispatch.mock.calls[0][0].payload.name).toEqual('EDIT_HTPASSWD_USER');
+      expect(mockedDispatch.mock.calls[0][0].payload.data.user).toEqual({
+        username: 'a0-user',
+        id: 'a0-id',
       });
     });
 
@@ -405,5 +445,46 @@ describe('<HtpasswdDetails />', () => {
       });
       expect(pageTextBox).toHaveValue(1);
     });
+  });
+
+  describe('add user', () => {
+    it('button is not shown if user does not have update access', () => {
+      const users = createUsers(20);
+
+      useFetchHtpasswdUsersMocked.mockReturnValue({
+        isLoading: false,
+        users,
+        isError: false,
+        error: null,
+      });
+
+      const newProps = { ...defaultProps, idpActions: { update: false } };
+
+      render(<HtpasswdDetails {...newProps} />);
+
+      expect(screen.queryByRole('button', { name: 'Add user' })).not.toBeInTheDocument();
+    });
+
+    it('modal is opened when user clicks on "add user" button', async () => {
+      const users = createUsers(20);
+
+      useFetchHtpasswdUsersMocked.mockReturnValue({
+        isLoading: false,
+        users,
+        isError: false,
+        error: null,
+      });
+
+      const newProps = { ...defaultProps, idpActions: { update: true } };
+
+      const { user } = render(<HtpasswdDetails {...newProps} />);
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Add user' }));
+
+      expect(mockedDispatch.mock.calls[0][0].type).toEqual('OPEN_MODAL');
+      expect(mockedDispatch.mock.calls[0][0].payload.name).toEqual('ADD_HTPASSWD_USER');
+    }, 20000);
   });
 });

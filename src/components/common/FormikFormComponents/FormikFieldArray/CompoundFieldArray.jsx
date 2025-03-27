@@ -77,6 +77,7 @@ const MinusButtonGridItem = ({ index, fields, onClick, minusButtonDisabledMessag
         onClick={onClick}
         icon={<MinusCircleIcon />}
         variant="link"
+        aria-label="Remove"
       />
     </GridItem>
   );
@@ -125,7 +126,7 @@ const FieldGridItemComponent = (props) => {
           id={`users.${index}.username`}
           name={`users.${index}.username`}
           type="text"
-          disabled={disabled}
+          disabled={disabled || compoundFields[0]?.disabled}
           input={{
             ...getFieldProps(`users.${index}.username`),
             onChange: (_, value) => {
@@ -238,6 +239,7 @@ export const CompoundFieldArray = (props) => {
     addMoreButtonDisabled,
     minusButtonDisabledMessage,
     isGroupError,
+    onlySingleItem,
   } = props;
   const [areFieldsFilled, setAreFieldsFilled] = React.useState([]);
   const [touched, setTouched] = React.useState(false);
@@ -291,19 +293,24 @@ export const CompoundFieldArray = (props) => {
       name={FieldId.USERS}
       render={({ remove, insert }) => (
         <>
-          <LabelGridItem
-            fieldSpan={fieldSpan}
-            label={`${label} (${usersData?.length})`}
-            isRequired={isRequired}
-            helpText={helpText}
-          />
-          <AddMoreButtonGridItem
-            addNewField={() => addNewField(insert)}
-            areFieldsFilled={areFieldsFilled}
-            label={addMoreTitle}
-            title={addMoreTitle}
-            addMoreButtonDisabled={addMoreButtonDisabled}
-          />
+          {onlySingleItem ? null : (
+            <>
+              <LabelGridItem
+                fieldSpan={fieldSpan}
+                label={`${label} (${usersData?.length})`}
+                isRequired={isRequired}
+                helpText={helpText}
+              />
+              <AddMoreButtonGridItem
+                addNewField={() => addNewField(insert)}
+                areFieldsFilled={areFieldsFilled}
+                label={addMoreTitle}
+                title={addMoreTitle}
+                addMoreButtonDisabled={addMoreButtonDisabled}
+              />
+            </>
+          )}
+
           {usersData?.map((_, index) => (
             <React.Fragment key={`${usersData[index]}`}>
               <FieldGridItemComponent
@@ -315,12 +322,14 @@ export const CompoundFieldArray = (props) => {
                 fieldSpan={fieldSpan}
                 {...props}
               />
-              <MinusButtonGridItem
-                index={index}
-                fields={usersData}
-                onClick={() => removeField(index, remove)}
-                minusButtonDisabledMessage={minusButtonDisabledMessage}
-              />
+              {onlySingleItem ? null : (
+                <MinusButtonGridItem
+                  index={index}
+                  fields={usersData}
+                  onClick={() => removeField(index, remove)}
+                  minusButtonDisabledMessage={minusButtonDisabledMessage}
+                />
+              )}
               <FieldArrayErrorGridItem
                 isLast={index === usersData.length - 1}
                 errorMessage={getFieldMeta('users').error}
@@ -345,4 +354,5 @@ CompoundFieldArray.propTypes = {
   addMoreButtonDisabled: PropTypes.bool,
   minusButtonDisabledMessage: PropTypes.string,
   isGroupError: PropTypes.bool,
+  onlySingleItem: PropTypes.bool,
 };
