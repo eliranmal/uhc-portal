@@ -67,8 +67,9 @@ const SHP_CLI_LATEST =
 
 const DOCS_BASE = 'https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html';
 const OSD_DOCS_BASE = 'https://docs.redhat.com/en/documentation/openshift_dedicated/4/html';
-const ROSA_DOCS_BASE = 'https://docs.openshift.com/rosa';
-const ROSA_HCP_DOCS_BASE = `${ROSA_DOCS_BASE}/rosa_hcp`;
+const ROSA_DOCS_BASE =
+  'https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html';
+const ROSA_HCP_DOCS_BASE = `${ROSA_DOCS_BASE}/install_rosa_with_hcp_clusters`;
 const ROSA_CP_DOCS_BASE =
   'https://access.redhat.com/documentation/en-us/red_hat_openshift_service_on_aws/4/html';
 
@@ -145,7 +146,7 @@ const links = {
   OSD_LIFE_CYCLE: `${OSD_DOCS_BASE}/introduction_to_openshift_dedicated/policies-and-service-definition#osd-life-cycle`,
   OSD_Z_STREAM: `${OSD_DOCS_BASE}/upgrading/osd-upgrades#upgrade-auto_osd-upgrades`,
   OSD_SERVICE_DEFINITION_COMPUTE: `${OSD_DOCS_BASE}/introduction_to_openshift_dedicated/policies-and-service-definition#instance-types_osd-service-definition`,
-  ROSA_SERVICE_DEFINITION_COMPUTE: `${ROSA_DOCS_BASE}/rosa_architecture/rosa_policy_service_definition/rosa-service-definition.html#rosa-sdpolicy-instance-types_rosa-service-definition`,
+  ROSA_SERVICE_DEFINITION_COMPUTE: `${ROSA_DOCS_BASE}/introduction_to_rosa/policies-and-service-definition#rosa-sdpolicy-instance-types_rosa-service-definition`,
   OSD_ETCD_ENCRYPTION: `${OSD_DOCS_BASE}/introduction_to_openshift_dedicated/policies-and-service-definition#etcd-encryption_osd-service-definition_dedicated/policies-and-service-definition#sdpolicy-account-management_osd-service-definition`,
   OSD_AWS_PRIVATE_CONNECTIONS: `${OSD_DOCS_BASE}/cluster_administration/configuring-private-connections#enable-aws-access`,
   OSD_PRIVATE_CLUSTER: `${OSD_DOCS_BASE}/cluster_administration/configuring-private-connections#private-cluster`,
@@ -154,15 +155,15 @@ const links = {
   OSD_LIMITED_SUPPORT_DEFINITION: `${OSD_DOCS_BASE}/introduction_to_openshift_dedicated/policies-and-service-definition#limited-support_osd-service-definition`,
   OSD_MONITORING_STACK: `${OSD_DOCS_BASE}/monitoring/monitoring-overview#understanding-the-monitoring-stack_monitoring-overview`,
   OSD_CIDR_MACHINE: `${OSD_DOCS_BASE}/networking/cidr-range-definitions#machine-cidr-description`,
-  ROSA_CIDR_MACHINE: `${ROSA_DOCS_BASE}/networking/cidr-range-definitions.html#machine-cidr-description`,
+  ROSA_CIDR_MACHINE: `${ROSA_DOCS_BASE}/networking/cidr-range-definitions#machine-cidr-description`,
   OSD_CIDR_SERVICE: `${OSD_DOCS_BASE}/networking/cidr-range-definitions#service-cidr-description`,
-  ROSA_CIDR_SERVICE: `${ROSA_DOCS_BASE}/networking/cidr-range-definitions.html#service-cidr-description`,
+  ROSA_CIDR_SERVICE: `${ROSA_DOCS_BASE}/networking/cidr-range-definitions#service-cidr-description`,
   OSD_CIDR_POD: `${OSD_DOCS_BASE}/networking/cidr-range-definitions#pod-cidr-description`,
-  ROSA_CIDR_POD: `${ROSA_DOCS_BASE}/networking/cidr-range-definitions.html#pod-cidr-description`,
+  ROSA_CIDR_POD: `${ROSA_DOCS_BASE}/networking/cidr-range-definitions#pod-cidr-description`,
   OSD_CIDR_HOST: `${OSD_DOCS_BASE}/networking/cidr-range-definitions#host-prefix-description`,
-  ROSA_CIDR_HOST: `${ROSA_DOCS_BASE}/networking/cidr-range-definitions.html#host-prefix-description`,
+  ROSA_CIDR_HOST: `${ROSA_DOCS_BASE}/networking/cidr-range-definitions#host-prefix-description`,
   OSD_CLUSTER_AUTOSCALING: `${OSD_DOCS_BASE}/cluster_administration/osd-cluster-autoscaling`,
-  ROSA_CLUSTER_AUTOSCALING: `${ROSA_DOCS_BASE}/rosa_cluster_admin/rosa-cluster-autoscaling.html`,
+  ROSA_CLUSTER_AUTOSCALING: `${ROSA_DOCS_BASE}/cluster_administration/rosa-cluster-autoscaling`,
   OSD_SECURITY_GROUPS: `${OSD_DOCS_BASE}/planning_your_environment/aws-ccs#osd-security-groups-custom_aws-ccs `,
 
   CLI_TOOLS_OCP_GETTING_STARTED: `${DOCS_BASE}/cli_tools/openshift-cli-oc#cli-about-cli_cli-developer-commands`,
@@ -309,33 +310,33 @@ const links = {
 
   ROSA_GET_STARTED: `https://cloud.redhat.com/learn/getting-started-red-hat-openshift-service-aws-rosa`,
   ROSA_DOCS_ENTRY: `${ROSA_DOCS_BASE}/about/welcome-index`,
-  ROSA_MONITORING: `${ROSA_DOCS_BASE}/monitoring/monitoring-overview.html#understanding-the-monitoring-stack_monitoring-overview`,
-  ROSA_AUTOSCALING: `${ROSA_DOCS_BASE}/rosa_cluster_admin/rosa_nodes/rosa-nodes-about-autoscaling-nodes.html`,
-  ROSA_SECURITY_GROUPS: `${ROSA_DOCS_BASE}/rosa_planning/rosa-sts-aws-prereqs.html#rosa-security-groups-custom_rosa-sts-aws-prereqs `,
+  ROSA_MONITORING: `${ROSA_DOCS_BASE}/monitoring/monitoring-overview#understanding-the-monitoring-stack_monitoring-overview`,
+  ROSA_AUTOSCALING: `${ROSA_DOCS_BASE}/cluster_administration/manage-nodes-using-machine-pools#rosa-nodes-about-autoscaling-nodes`,
+  ROSA_SECURITY_GROUPS: `${ROSA_DOCS_BASE}/prepare_your_environment/rosa-sts-aws-prereqs`,
   ROSA_CLI_DOCS: `${ROSA_CP_DOCS_BASE}/rosa_cli/rosa-get-started-cli`,
-  ROSA_AWS_PREREQUISITES: `${ROSA_DOCS_BASE}/rosa_install_access_delete_clusters/rosa_getting_started_iam/rosa-aws-prereqs.html`,
-  ROSA_INSTALLING: `${ROSA_DOCS_BASE}/rosa_install_access_delete_clusters/rosa_getting_started_iam/rosa-installing-rosa.html`,
-  ROSA_LIFE_CYCLE: `${ROSA_DOCS_BASE}/rosa_architecture/rosa_policy_service_definition/rosa-life-cycle.html`,
-  ROSA_Z_STREAM: `${ROSA_DOCS_BASE}/rosa_architecture/rosa_policy_service_definition/rosa-life-cycle.html#rosa-patch-versions_rosa-life-cycle`,
-  ROSA_RESPONSIBILITY_MATRIX: `${ROSA_DOCS_BASE}/rosa_architecture/rosa_policy_service_definition/rosa-policy-responsibility-matrix.html`,
-  ROSA_SERVICE_DEFINITION: `${ROSA_DOCS_BASE}/rosa_architecture/rosa_policy_service_definition/rosa-service-definition.html`,
-  ROSA_WORKER_NODE_COUNT: `${ROSA_DOCS_BASE}/rosa_architecture/rosa_policy_service_definition/rosa-service-definition.html#rosa-sdpolicy-compute_rosa-service-definition`,
-  ROSA_SERVICE_ETCD_ENCRYPTION: `${ROSA_DOCS_BASE}/rosa_architecture/rosa_policy_service_definition/rosa-service-definition.html#rosa-sdpolicy-etcd-encryption_rosa-service-definition`,
-  ROSA_CLUSTER_WIDE_PROXY: `${ROSA_DOCS_BASE}/networking/configuring-cluster-wide-proxy.html`,
-  ROSA_UPGRADES: `${ROSA_DOCS_BASE}/upgrading/rosa-upgrading-sts.html`,
-  ROSA_LIMITED_SUPPORT_DEFINITION: `${ROSA_DOCS_BASE}/rosa_architecture/rosa_policy_service_definition/rosa-service-definition.html#rosa-limited-support_rosa-service-definition`,
-  ROSA_SHARED_VPC: `${ROSA_DOCS_BASE}/rosa_install_access_delete_clusters/rosa-shared-vpc-config.html`,
-  ROSA_PRIVATE_CONNECTIONS: `${ROSA_DOCS_BASE}/rosa_cluster_admin/cloud_infrastructure_access/rosa-configuring-private-connections.html`,
+  ROSA_AWS_PREREQUISITES: `${ROSA_DOCS_BASE}/install_rosa_classic_clusters/deploying-rosa-without-aws-sts#prerequisites`,
+  ROSA_INSTALLING: `${ROSA_DOCS_BASE}/install_rosa_classic_clusters/deploying-rosa-without-aws-sts`,
+  ROSA_LIFE_CYCLE: `${ROSA_DOCS_BASE}/introduction_to_rosa/policies-and-service-definition#life-cycle-overview_rosa-life-cycle`,
+  ROSA_Z_STREAM: `${ROSA_DOCS_BASE}/introduction_to_rosa/policies-and-service-definition#rosa-patch-versions_rosa-hcp-life-cycle`,
+  ROSA_RESPONSIBILITY_MATRIX: `${ROSA_DOCS_BASE}/introduction_to_rosa/policies-and-service-definition#rosa-policy-responsibility-matrix`,
+  ROSA_SERVICE_DEFINITION: `${ROSA_DOCS_BASE}/introduction_to_rosa/policies-and-service-definition#rosa-sdpolicy-account-management_rosa-service-definition`,
+  ROSA_WORKER_NODE_COUNT: `${ROSA_DOCS_BASE}/introduction_to_rosa/policies-and-service-definition#rosa-sdpolicy-compute_rosa-service-definition`,
+  ROSA_SERVICE_ETCD_ENCRYPTION: `${ROSA_DOCS_BASE}/introduction_to_rosa/policies-and-service-definition#rosa-sdpolicy-etcd-encryption_rosa-service-definition`,
+  ROSA_CLUSTER_WIDE_PROXY: `${ROSA_DOCS_BASE}/networking/configuring-a-cluster-wide-proxy`,
+  ROSA_UPGRADES: `${ROSA_DOCS_BASE}/upgrading/rosa-upgrading-sts`,
+  ROSA_LIMITED_SUPPORT_DEFINITION: `${ROSA_DOCS_BASE}/introduction_to_rosa/policies-and-service-definition#rosa-limited-support_rosa-service-definition`,
+  ROSA_SHARED_VPC: `${ROSA_DOCS_BASE}/install_rosa_classic_clusters/rosa-shared-vpc-config`,
+  ROSA_PRIVATE_CONNECTIONS: `${ROSA_DOCS_BASE}/cluster_administration/configuring-private-connections#rosa-configuring-private-connections`,
 
-  ROSA_AWS_STS_PREREQUISITES: `${ROSA_DOCS_BASE}/rosa_planning/rosa-sts-aws-prereqs.html`,
-  ROSA_AWS_ACCOUNT_ASSOCIATION: `${ROSA_DOCS_BASE}/rosa_planning/rosa-sts-aws-prereqs.html#rosa-associating-account_rosa-sts-aws-prereqs`,
-  ROSA_AWS_MULTIPLE_ACCOUNT_ASSOCIATION: `${ROSA_DOCS_BASE}/rosa_planning/rosa-sts-aws-prereqs.html#rosa-associating-multiple-account_rosa-sts-aws-prereqs`,
+  ROSA_AWS_STS_PREREQUISITES: `${ROSA_DOCS_BASE}/prepare_your_environment/rosa-sts-aws-prereqs`,
+  ROSA_AWS_ACCOUNT_ASSOCIATION: `${ROSA_DOCS_BASE}/prepare_your_environment/rosa-sts-aws-prereqs#rosa-account_rosa-sts-aws-prereqs`,
+  ROSA_AWS_MULTIPLE_ACCOUNT_ASSOCIATION: `${ROSA_DOCS_BASE}/prepare_your_environment/rosa-sts-aws-prereqs#rosa-associating-multiple-account_rosa-sts-aws-prereqs`,
   ROSA_AWS_SERVICE_QUOTAS: `${ROSA_CP_DOCS_BASE}/prepare_your_environment/rosa-sts-required-aws-service-quotas#rosa-required-aws-service-quotas_rosa-sts-required-aws-service-quotas`,
-  ROSA_AWS_LIMITS_SCALE: `${ROSA_DOCS_BASE}/rosa_planning/rosa-limits-scalability.html#node-scaling-after-installation_rosa-limits-scalability`,
+  ROSA_AWS_LIMITS_SCALE: `${ROSA_DOCS_BASE}/prepare_your_environment/rosa-limits-scalability`,
   ROSA_AWS_IAM_RESOURCES: `${ROSA_CP_DOCS_BASE}/introduction_to_rosa/rosa-sts-about-iam-resources`,
-  ROSA_AWS_IAM_ROLES: `${ROSA_DOCS_BASE}/rosa_architecture/rosa-sts-about-iam-resources.html#rosa-sts-account-wide-roles-and-policies_rosa-sts-about-iam-resources`,
-  ROSA_AWS_ACCOUNT_ROLES: `${ROSA_DOCS_BASE}/rosa_architecture/rosa-sts-about-iam-resources.html#rosa-sts-understanding-ocm-role_rosa-sts-about-iam-resources`,
-  ROSA_AWS_OPERATOR_ROLE_PREFIX: `${ROSA_DOCS_BASE}/rosa_architecture/rosa-sts-about-iam-resources.html#rosa-sts-about-operator-role-prefixes_rosa-sts-about-iam-resources`,
+  ROSA_AWS_IAM_ROLES: `${ROSA_DOCS_BASE}/introduction_to_rosa/rosa-sts-about-iam-resources`,
+  ROSA_AWS_ACCOUNT_ROLES: `${ROSA_DOCS_BASE}/introduction_to_rosa/rosa-sts-about-iam-resources#rosa-sts-account-wide-roles-and-policies_rosa-sts-about-iam-resources`,
+  ROSA_AWS_OPERATOR_ROLE_PREFIX: `${ROSA_DOCS_BASE}/introduction_to_rosa/rosa-sts-about-iam-resources#rosa-sts-operator-roles_rosa-sts-about-iam-resources`,
   ROSA_HCP_EXT_AUTH: `${ROSA_CP_DOCS_BASE}/install_rosa_with_hcp_clusters/rosa-hcp-sts-creating-a-cluster-ext-auth`,
   ROSA_HCP_BREAK_GLASS: `${ROSA_CP_DOCS_BASE}/install_rosa_with_hcp_clusters/rosa-hcp-sts-creating-a-cluster-ext-auth#rosa-hcp-sts-accessing-a-break-glass-cred-cli_rosa-hcp-sts-creating-a-cluster-ext-auth`,
 
@@ -376,15 +377,15 @@ const links = {
   CIDR_RANGE_DEFINITIONS_OSD: `${OSD_DOCS_BASE}/networking/cidr-range-definitions`,
   CONFIGURE_PROXY_URL: `${OSD_DOCS_BASE}/networking`,
   VIRTUAL_PRIVATE_CLOUD_URL:
-    'https://docs.openshift.com/rosa/rosa_planning/rosa-sts-aws-prereqs.html#rosa-vpc_rosa-sts-aws-prereqs',
+    'https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/prepare_your_environment/prerequisites-checklist-for-deploying-rosa-using-sts#vpc-requirements-for-privatelink-clusters',
   AWS_CONTROL_PLANE_URL: `${DOCS_BASE}/architecture/control-plane#control-plane`,
 
   ROSA_AWS_FEDRAMP: 'https://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-rosa.html',
   FEDRAMP_ACCESS_REQUEST_FORM: 'https://console.redhat.com/openshift/create/rosa/govcloud',
-  TERRAFORM_ROSA_HCP_URL: `${ROSA_HCP_DOCS_BASE}/terraform/rosa-hcp-creating-a-cluster-quickly-terraform.html`,
+  TERRAFORM_ROSA_HCP_URL: `${ROSA_HCP_DOCS_BASE}/creating-a-rosa-cluster-using-terraform#rosa-hcp-creating-a-cluster-quickly-terraform`,
   TERRAFORM_REGISTRY_ROSA_HCP:
     'https://registry.terraform.io/providers/terraform-redhat/rhcs/latest/docs/guides/hosted-control-planes',
-  ROSA_HCP_CLI_URL: `${ROSA_HCP_DOCS_BASE}/rosa-hcp-sts-creating-a-cluster-quickly.html#rosa-hcp-sts-creating-a-cluster-cli_rosa-hcp-sts-creating-a-cluster-quickly`,
+  ROSA_HCP_CLI_URL: `${ROSA_HCP_DOCS_BASE}/rosa-hcp-sts-creating-a-cluster-quickly`,
   ROSA_CREATE_NETWORK: `https://access.redhat.com/articles/7096266`,
   CREATE_VPC_WAYS: `https://docs.aws.amazon.com/rosa/latest/userguide/getting-started-hcp.html#create-vpc-hcp`,
 };
