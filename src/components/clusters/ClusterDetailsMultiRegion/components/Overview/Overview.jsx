@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import get from 'lodash/get';
 import PropTypes from 'prop-types';
 
-import * as OCM from '@openshift-assisted/ui-lib/ocm';
 import {
   Alert,
   AlertActionCloseButton,
@@ -15,6 +14,7 @@ import {
 } from '@patternfly/react-core';
 
 import { HAD_INFLIGHT_ERROR_LOCALSTORAGE_KEY } from '~/common/localStorageConstants';
+import AIDetailCard from '~/components/AIComponents/AIDetailCard';
 import { isRestrictedEnv } from '~/restrictedEnv';
 import { SubscriptionCommonFieldsStatus } from '~/types/accounts_mgmt.v1';
 
@@ -23,7 +23,6 @@ import isAssistedInstallSubscription, {
   isUninstalledAICluster,
 } from '../../../../../common/isAssistedInstallerCluster';
 import clusterStates, {
-  getClusterAIPermissions,
   hasInflightEgressErrors,
   isHibernating,
 } from '../../../common/clusterStates';
@@ -39,8 +38,6 @@ import { shouldShowLogs } from './InstallationLogView';
 import SubscriptionSettings from './SubscriptionSettings';
 
 import './Overview.scss';
-
-const { AssistedInstallerDetailCard } = OCM;
 
 const Overview = (props) => {
   const {
@@ -183,12 +180,7 @@ const Overview = (props) => {
               }
             />
           )}
-          {showAssistedInstallerDetailCard && (
-            <AssistedInstallerDetailCard
-              permissions={getClusterAIPermissions(cluster)}
-              aiClusterId={cluster.aiCluster.id}
-            />
-          )}
+          {showAssistedInstallerDetailCard && <AIDetailCard cluster={cluster} />}
           {showResourceUsage && !showSidePanel && resourceUsage}
           {showDetailsCard && (
             <Card className="ocm-c-overview-details__card">

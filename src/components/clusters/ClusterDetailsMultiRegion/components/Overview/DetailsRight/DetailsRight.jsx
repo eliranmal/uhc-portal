@@ -12,6 +12,7 @@ import {
 
 import { getQueryParam } from '~/common/queryHelpers';
 import { hasSecurityGroupIds } from '~/common/securityGroupsHelpers';
+import AIClusterStatus from '~/components/AIComponents/AIClusterStatus';
 import { OverviewBillingAccount } from '~/components/clusters/ClusterDetailsMultiRegion/components/Overview/BillingAccount/OverviewBillingAccount';
 import clusterStates, {
   canViewMachinePoolTab,
@@ -21,7 +22,6 @@ import clusterStates, {
 import ClusterStatusErrorDisplay from '~/components/clusters/common/ClusterStatusErrorDisplay';
 import { useAWSVPCFromCluster } from '~/components/clusters/common/useAWSVPCFromCluster';
 import { IMDSType } from '~/components/clusters/wizards/common';
-import AIClusterStatus from '~/components/common/AIClusterStatus';
 import useCanClusterAutoscale from '~/hooks/useCanClusterAutoscale';
 import { useFetchMachineOrNodePools } from '~/queries/ClusterDetailsQueries/MachinePoolTab/useFetchMachineOrNodePools';
 import { isRestrictedEnv } from '~/restrictedEnv';
