@@ -9,7 +9,7 @@
   "author": "David Taylor",
   "license": "ISC",
   "dependencies": {
-    "@babel/core": "^7.0.0",
+    "@babel/core": "^7.26.10",
     "@babel/helper-plugin-utils": "^7.22.5",
     "@babel/types": "^7.23.9"
   }
