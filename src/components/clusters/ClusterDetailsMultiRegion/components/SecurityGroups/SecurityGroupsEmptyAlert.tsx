@@ -1,14 +1,11 @@
 import React from 'react';
 
-import { Alert, AlertActionLink } from '@patternfly/react-core';
+import { Alert } from '@patternfly/react-core';
 
 import links from '~/common/installLinks.mjs';
 import ExternalLink from '~/components/common/ExternalLink';
 
-type SecurityGroupsEmptyAlertProps = {
-  refreshVPCCallback?: () => void;
-};
-const SecurityGroupsEmptyAlert = ({ refreshVPCCallback }: SecurityGroupsEmptyAlertProps) => (
+const SecurityGroupsEmptyAlert = () => (
   <Alert
     variant="info"
     isInline
@@ -16,8 +13,7 @@ const SecurityGroupsEmptyAlert = ({ refreshVPCCallback }: SecurityGroupsEmptyAle
   >
     To add security groups, go to the{' '}
     <ExternalLink href={links.AWS_CONSOLE_SECURITY_GROUPS}>Security groups section</ExternalLink> of
-    your AWS console. <br />
-    <AlertActionLink onClick={refreshVPCCallback}>Refresh Security Groups</AlertActionLink>
+    your AWS console.{' '}
   </Alert>
 );
 

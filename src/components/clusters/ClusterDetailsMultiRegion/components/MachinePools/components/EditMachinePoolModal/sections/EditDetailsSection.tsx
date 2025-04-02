@@ -10,7 +10,7 @@ import { ClusterFromSubscription } from '~/types/types';
 
 import InstanceTypeField from '../fields/InstanceTypeField';
 import SelectField from '../fields/SelectField';
-import { SubnetField } from '../fields/SubnetField';
+import SubnetField from '../fields/SubnetField';
 
 type EditDetailsSectionProps = {
   cluster: ClusterFromSubscription;

@@ -2,9 +2,7 @@ import React from 'react';
 
 import {
   Badge,
-  Button,
   FormGroup,
-  Grid,
   GridItem,
   MenuToggle,
   MenuToggleElement,
@@ -12,9 +10,7 @@ import {
   SelectList,
   SelectOption,
   SelectProps,
-  Tooltip,
 } from '@patternfly/react-core';
-import RedoIcon from '@patternfly/react-icons/dist/esm/icons/redo-icon';
 
 import { truncateTextWithEllipsis } from '~/common/helpers';
 import { validateSecurityGroups } from '~/common/validators';
@@ -33,8 +29,6 @@ export interface EditSecurityGroupsProps {
   isReadOnly: boolean;
   isHypershift: boolean;
   onChange: (securityGroupIds: string[]) => void;
-  refreshVPCCallback?: () => void;
-  isVPCLoading?: boolean;
 }
 
 const getDisplayName = (securityGroupName: string) => {
@@ -53,8 +47,6 @@ const EditSecurityGroups = ({
   onChange,
   isReadOnly,
   isHypershift,
-  refreshVPCCallback,
-  isVPCLoading,
 }: EditSecurityGroupsProps) => {
   const [isOpen, setIsOpen] = React.useState<boolean>(false);
 
@@ -131,55 +123,42 @@ const EditSecurityGroups = ({
   return (
     <GridItem>
       <FormGroup fieldId="securityGroupIds" label={label} className="pf-v5-u-mt-md">
-        <Grid>
-          <GridItem span={10}>
-            <SecurityGroupsViewList
-              securityGroups={selectedOptions}
-              isReadOnly={false}
-              onClickItem={onDeleteGroup}
-            />
-            <Select
-              role="menu"
-              isOpen={isOpen}
-              selected={selectedGroupIds}
-              toggle={toggle}
-              onSelect={onSelect}
-              onOpenChange={(isOpen) => setIsOpen(isOpen)}
-              data-testid="securitygroups-id"
-              aria-labelledby="Select AWS security groups"
-              maxMenuHeight="300px"
-            >
-              <SelectList>
-                {vpcSecurityGroups.map(({ id = '', name = '' }) => {
-                  const { displayName, isCut } = getDisplayName(name);
-                  return (
-                    <SelectOption
-                      key={id}
-                      value={id}
-                      description={id}
-                      title={isCut ? name : ''}
-                      hasCheckbox
-                      isSelected={selectedGroupIds.includes(id)}
-                    >
-                      {displayName}
-                    </SelectOption>
-                  );
-                })}
-              </SelectList>
-            </Select>
-          </GridItem>
-          <GridItem span={2} style={{ textAlign: 'right' }}>
-            <Tooltip content="Refretch Security Groups list">
-              <Button
-                id="refreshSecurityGroupsButton"
-                isDisabled={isVPCLoading}
-                variant="plain"
-                onClick={refreshVPCCallback}
-                icon={<RedoIcon />}
-              />
-            </Tooltip>
-          </GridItem>
-        </Grid>
+        <>
+          <SecurityGroupsViewList
+            securityGroups={selectedOptions}
+            isReadOnly={false}
+            onClickItem={onDeleteGroup}
+          />
+          <Select
+            role="menu"
+            isOpen={isOpen}
+            selected={selectedGroupIds}
+            toggle={toggle}
+            onSelect={onSelect}
+            onOpenChange={(isOpen) => setIsOpen(isOpen)}
+            data-testid="securitygroups-id"
+            aria-labelledby="Select AWS security groups"
+            maxMenuHeight="300px"
+          >
+            <SelectList>
+              {vpcSecurityGroups.map(({ id = '', name = '' }) => {
+                const { displayName, isCut } = getDisplayName(name);
+                return (
+                  <SelectOption
+                    key={id}
+                    value={id}
+                    description={id}
+                    title={isCut ? name : ''}
+                    hasCheckbox
+                    isSelected={selectedGroupIds.includes(id)}
+                  >
+                    {displayName}
+                  </SelectOption>
+                );
+              })}
+            </SelectList>
+          </Select>
+        </>
       </FormGroup>
       <FormGroupHelperText touched error={validationError} />
     </GridItem>
