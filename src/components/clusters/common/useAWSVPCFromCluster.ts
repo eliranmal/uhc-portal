@@ -129,7 +129,7 @@ export const useAWSVPCFromCluster = (cluster: ClusterFromSubscription, region?: 
   const roleArn = cluster.aws?.sts?.role_arn;
   const regionId = cluster.region?.id || '';
 
-  React.useEffect(() => {
+  const fetchVPC = () => {
     const loadVpcByStsCredentials = async () => {
       const request = {
         awsCredentials: { sts: { role_arn: roleArn } },
@@ -142,7 +142,9 @@ export const useAWSVPCFromCluster = (cluster: ClusterFromSubscription, region?: 
     if (isHypershift && roleArn && subnetId && regionId) {
       loadVpcByStsCredentials();
     }
-  }, [isHypershift, subnetId, roleArn, regionId, region]);
+  };
 
-  return { clusterVpc, isLoading, hasError, errorReason };
+  React.useEffect(fetchVPC, [isHypershift, subnetId, roleArn, regionId, region]);
+
+  return { clusterVpc, isLoading, hasError, errorReason, refreshVPC: fetchVPC };
 };

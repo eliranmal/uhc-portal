@@ -1,7 +1,7 @@
 import React from 'react';
 import { Field } from 'formik';
 
-import { Alert, AlertVariant, Spinner } from '@patternfly/react-core';
+import { Alert, AlertActionLink, AlertVariant } from '@patternfly/react-core';
 
 import { SupportedFeature } from '~/common/featureCompatibility';
 import { validateSecurityGroups } from '~/common/validators';
@@ -15,7 +15,11 @@ import { FieldId } from '~/components/clusters/wizards/common';
 import { useFormState } from '~/components/clusters/wizards/hooks';
 import { ClusterFromSubscription } from '~/types/types';
 
-export interface EditSecurityGroupsFieldProps {
+import { RefreshClusterVPCAlert } from '../../../common/RefreshClusterVPCAlert';
+
+import { EditSecurityGroupsFieldLoading } from './EditSecurityGroupsFieldLoading';
+
+interface EditSecurityGroupsFieldProps {
   cluster: ClusterFromSubscription;
   isReadOnly: boolean;
 }
@@ -27,51 +31,59 @@ const EditSecurityGroupsField = ({ cluster, isReadOnly }: EditSecurityGroupsFiel
     setFieldTouched,
   } = useFormState();
 
-  const { clusterVpc, isLoading, errorReason } = useAWSVPCFromCluster(cluster);
-
-  if (isLoading) {
-    return <Spinner aria-label="Loading...">Loading security groups</Spinner>;
-  }
-
-  if (!clusterVpc) {
-    return (
-      <Alert variant={AlertVariant.warning} title="Could not load the cluster's VPC" isInline>
-        {errorReason || 'Please try refreshing the machine pool details'}
-      </Alert>
-    );
-  }
-  if ((clusterVpc.aws_security_groups || []).length === 0) {
-    return <SecurityGroupsEmptyAlert />;
-  }
+  const { clusterVpc, isLoading, errorReason, refreshVPC } = useAWSVPCFromCluster(cluster);
 
   const isHypershift = isHypershiftCluster(cluster);
+
   const incompatibleReason = getIncompatibleVersionReason(
     SupportedFeature.SECURITY_GROUPS,
     cluster.openshift_version,
     { day2: true, isHypershift },
   );
-  return incompatibleReason ? (
-    <Alert variant={AlertVariant.warning} title={incompatibleReason} isInline />
-  ) : (
-    <>
-      <SecurityGroupsNoChangeAlert isRosa={isROSA(cluster)} />
-      <Field
-        component={EditSecurityGroups}
-        name={FieldId.SecurityGroupIds}
-        onChange={(values: string[]) => {
-          setFieldValue(FieldId.SecurityGroupIds, values, true);
-          setFieldTouched(FieldId.SecurityGroupIds, true, false);
-        }}
-        validate={(securityGroupIds: string[]) =>
-          validateSecurityGroups(securityGroupIds, isHypershift)
-        }
-        selectedVPC={clusterVpc}
-        isReadOnly={isReadOnly}
-        selectedGroupIds={selectedGroupIds}
-        isHypershift={isHypershift}
-      />
-    </>
-  );
+
+  switch (true) {
+    case isLoading === true:
+      return <EditSecurityGroupsFieldLoading />;
+    case clusterVpc === undefined:
+      return (
+        <RefreshClusterVPCAlert
+          isLoading={isLoading}
+          refreshVPC={refreshVPC}
+          errorReason={errorReason}
+        />
+      );
+    case (clusterVpc?.aws_security_groups || []).length === 0:
+      return <SecurityGroupsEmptyAlert refreshVPCCallback={refreshVPC} />;
+    case incompatibleReason?.trim().length > 0:
+      return (
+        <Alert variant={AlertVariant.warning} title={incompatibleReason} isInline>
+          <AlertActionLink onClick={refreshVPC}>Refresh Security Groups</AlertActionLink>
+        </Alert>
+      );
+    default:
+      return (
+        <>
+          <SecurityGroupsNoChangeAlert isRosa={isROSA(cluster)} />
+          <Field
+            component={EditSecurityGroups}
+            name={FieldId.SecurityGroupIds}
+            onChange={(values: string[]) => {
+              setFieldValue(FieldId.SecurityGroupIds, values, true);
+              setFieldTouched(FieldId.SecurityGroupIds, true, false);
+            }}
+            validate={(securityGroupIds: string[]) =>
+              validateSecurityGroups(securityGroupIds, isHypershift)
+            }
+            selectedVPC={clusterVpc}
+            isReadOnly={isReadOnly}
+            selectedGroupIds={selectedGroupIds}
+            isHypershift={isHypershift}
+            refreshVPCCallback={refreshVPC}
+            isVPCLoading={isLoading}
+          />
+        </>
+      );
+  }
 };
 
 export default EditSecurityGroupsField;
