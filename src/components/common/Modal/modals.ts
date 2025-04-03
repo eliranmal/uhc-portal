@@ -27,5 +27,7 @@ const modals = {
   UPDATE_MACHINE_POOL_VERSION: 'update-machine-pool-version',
   UPGRADE_TRIAL_CLUSTER: 'upgrade-trial-cluster',
   UPGRADE_WIZARD: 'upgrade-wizard',
+  ADD_HTPASSWD_USER: 'ADD_HTPASSWD_USER',
+  EDIT_HTPASSWD_USER: 'EDIT_HTPASSWD_USER',
 };
 export default modals;

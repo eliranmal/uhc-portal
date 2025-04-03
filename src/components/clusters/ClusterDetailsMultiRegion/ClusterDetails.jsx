@@ -17,10 +17,11 @@ import PropTypes from 'prop-types';
 import { useDispatch } from 'react-redux';
 import { useLocation, useParams } from 'react-router-dom';
 
-import * as OCM from '@openshift-assisted/ui-lib/ocm';
+import { getAddHostsTabState } from '@openshift-assisted/ui-lib/ocm';
 import { PageSection, Spinner, TabContent, Tooltip } from '@patternfly/react-core';
 
 import { Navigate, useNavigate } from '~/common/routing';
+import AIHostsClusterDetailTab from '~/components/AIComponents/AIHostsClusterDetailTab';
 import { AppPage } from '~/components/App/AppPage';
 import { modalActions } from '~/components/common/Modal/ModalActions';
 import DrawerPanel from '~/components/overview/components/common/DrawerPanel';
@@ -105,8 +106,6 @@ import AddNotificationContactDialog from './components/Support/components/AddNot
 import TabsRow from './components/TabsRow/TabsRow';
 import UpgradeSettingsTab from './components/UpgradeSettings';
 import { eventTypes } from './clusterDetailsHelper';
-
-const { HostsClusterDetailTab, getAddHostsTabState } = OCM;
 
 const PAGE_TITLE = 'Red Hat OpenShift Cluster Manager';
 
@@ -751,7 +750,7 @@ const ClusterDetails = (props) => {
               hidden
             >
               <ErrorBoundary>
-                <HostsClusterDetailTab
+                <AIHostsClusterDetailTab
                   cluster={cluster}
                   isVisible={selectedTab === ClusterTabsId.ADD_ASSISTED_HOSTS}
                 />

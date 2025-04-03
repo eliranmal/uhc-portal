@@ -17,9 +17,8 @@ limitations under the License.
 import React, { useEffect } from 'react';
 import get from 'lodash/get';
 import { connect } from 'react-redux';
-import { HistoryRouterProps, Route, Routes, useLocation } from 'react-router-dom';
+import { Route, Routes, useLocation } from 'react-router-dom';
 
-import { UILibRoutes as AssistedInstallerRoutes } from '@openshift-assisted/ui-lib/ocm';
 import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
 
 import { Navigate, ocmBaseName } from '~/common/routing';
@@ -33,6 +32,7 @@ import { isRestrictedEnv } from '~/restrictedEnv';
 import apiRequest from '~/services/apiRequest';
 
 import { normalizedProducts } from '../../common/subscriptionTypes';
+import AIRootApp from '../AIComponents/AIRootApp';
 import CLILoginPage from '../CLILoginPage/CLILoginPage';
 import ArchivedClusterListMultiRegion from '../clusters/ArchivedClusterListMultiRegion';
 import ClusterDetailsSubscriptionIdMultiRegion from '../clusters/ClusterDetailsMultiRegion/ClusterDetailsSubscriptionIdMultiRegion';
@@ -117,12 +117,6 @@ import { AppPage } from './AppPage';
 import NotFoundError from './NotFoundError';
 import { is404, metadataByRoute } from './routeMetadata';
 
-const AssistedUiRouterPage: typeof AssistedInstallerRoutes = (props: any) => (
-  <AppPage>
-    <AssistedInstallerRoutes {...props} />
-  </AppPage>
-);
-
 interface RouterProps {
   planType: string;
   clusterId: string;
@@ -134,7 +128,6 @@ const Router: React.FC<RouterProps> = ({ planType, clusterId, externalClusterId 
 
   const {
     segment: { setPageMetadata },
-    chromeHistory,
   } = useChrome();
 
   const isHypershiftWizardEnabled = useFeatureGate(HYPERSHIFT_WIZARD_FEATURE);
@@ -375,17 +368,7 @@ const Router: React.FC<RouterProps> = ({ planType, clusterId, externalClusterId 
         <Route path="/overview/osd" element={<ServicePage serviceName="OSD" />} />
         <Route path="/overview" element={<Overview />} />
         <Route path="/releases" element={<Releases />} />
-        <Route
-          path="/assisted-installer/*"
-          element={
-            <AssistedUiRouterPage
-              allEnabledFeatures={{}}
-              // @ts-ignore this throws a type error
-              history={chromeHistory as unknown as HistoryRouterProps['history']}
-              basename={ocmBaseName}
-            />
-          }
-        />
+        <Route path="/assisted-installer/*" element={<AIRootApp />} />
         {/* TODO: remove these redirects once links from trials and demo system emails are updated */}
         <Route
           path="/services/rosa/demo"

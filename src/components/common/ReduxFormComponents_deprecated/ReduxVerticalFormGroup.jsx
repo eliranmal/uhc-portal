@@ -89,8 +89,8 @@ const ReduxVerticalFormGroup = ({
 
     onBlur = (...args) => {
       if (
-        args[0].relatedTarget.attributes?.role?.nodeValue !== 'menuitem' &&
-        args[0].relatedTarget.id !== redoId
+        args[0].relatedTarget?.attributes?.role?.nodeValue !== 'menuitem' &&
+        args[0].relatedTarget?.id !== redoId
       ) {
         setIsAutocompleteOpen(false);
       }

@@ -437,6 +437,18 @@ class CreateRosaCluster extends Page {
     cy.contains(vpcName).scrollIntoView().click();
   }
 
+  selectFirstVPC() {
+    cy.get('[aria-label="select VPC"]').first().click();
+  }
+
+  selectFirstAvailabilityZone() {
+    cy.get('[aria-label="availability zone list"]').children().first().click();
+  }
+
+  selectFirstPrivateSubnet() {
+    cy.get('[aria-label="Private subnet"]').contains('private').first().click();
+  }
+
   selectMachinePoolPrivateSubnet(privateSubnetNameOrId, machinePoolIndex = 1) {
     let mpIndex = machinePoolIndex - 1;
     cy.get(`button[id="machinePoolsSubnets[${mpIndex}].privateSubnetId"]`).click();

@@ -271,6 +271,7 @@ module.exports = async (_env, argv) => {
         rewrites: [
           { from: /^\/src\/.*\.[a-zA-Z0-9]+$/, to: (context) => context.parsedUrl.pathname },
           // Add other rewrites or leave existing rewrites here
+          { from: /^\/assisted-installer(.*)$/, to: '/assisted-installer-app$1' },
         ],
       },
       setupMiddlewares: (middlewares, devServer) => {

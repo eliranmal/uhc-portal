@@ -233,6 +233,7 @@ const IdentityProvidersPage = (props) => {
             idpId={htpasswd.id}
             clusterId={cluster.id}
             region={region}
+            idpActions={cluster.idpActions}
           />
         ) : (
           <Formik

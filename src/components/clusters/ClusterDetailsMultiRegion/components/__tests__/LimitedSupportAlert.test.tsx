@@ -132,7 +132,7 @@ describe('<LimitedSupportAlert />', () => {
     expect(singleActionLink).toHaveTextContent(/Learn more/);
     expect(singleActionLink).toHaveAttribute(
       'href',
-      'https://docs.openshift.com/rosa/rosa_architecture/rosa_policy_service_definition/rosa-service-definition.html#rosa-limited-support_rosa-service-definition',
+      'https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/introduction_to_rosa/policies-and-service-definition#rosa-limited-support_rosa-service-definition',
     );
   });
 

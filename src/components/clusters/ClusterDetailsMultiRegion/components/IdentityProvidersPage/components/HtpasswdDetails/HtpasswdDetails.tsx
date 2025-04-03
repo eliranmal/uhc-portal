@@ -1,6 +1,9 @@
 import React from 'react';
+import { useDispatch } from 'react-redux';
 
 import {
+  Button,
+  ButtonVariant,
   Card,
   CardBody,
   Pagination,
@@ -11,22 +14,36 @@ import {
   ToolbarContent,
   ToolbarItem,
 } from '@patternfly/react-core';
-import { Table, Tbody, Td, Th, Thead, ThProps, Tr } from '@patternfly/react-table';
+import { ActionsColumn, Table, Tbody, Td, Th, Thead, ThProps, Tr } from '@patternfly/react-table';
 
 import ErrorBox from '~/components/common/ErrorBox';
+import ConnectedModal from '~/components/common/Modal/ConnectedModal';
+import { openModal } from '~/components/common/Modal/ModalActions';
+import modals from '~/components/common/Modal/modals';
 import { useFetchHtpasswdUsers } from '~/queries/ClusterDetailsQueries/AccessControlTab/UserQueries/useFetchHtpasswdUsers';
 import { HtPasswdUser } from '~/types/clusters_mgmt.v1';
 
+import AddUserModal from './AddUserModal';
+import EditUserModal from './EditUserModal';
 import EmptyState from './EmptyState';
 
 type Props = {
   idpId: string;
   clusterId: string;
+  idpActions?: {
+    [action: string]: boolean;
+  };
   region?: string;
+  idpName?: string;
 };
 
-const HtpasswdDetails = ({ idpId, clusterId, region }: Props) => {
-  const { isLoading, users, isError, error } = useFetchHtpasswdUsers(clusterId, idpId, region);
+const HtpasswdDetails = ({ idpId, clusterId, region, idpName, idpActions }: Props) => {
+  const dispatch = useDispatch();
+  const { isLoading, users, isError, error, refetch } = useFetchHtpasswdUsers(
+    clusterId,
+    idpId,
+    region,
+  );
 
   const [activeSortIndex, setActiveSortIndex] = React.useState<number>(0);
   const [activeSortDirection, setActiveSortDirection] = React.useState<'asc' | 'desc'>('asc');
@@ -110,15 +127,29 @@ const HtpasswdDetails = ({ idpId, clusterId, region }: Props) => {
             {header.name}
           </Th>
         ))}
+        <Th screenReaderText="User actions" />
       </Tr>
     </Thead>
   );
 
-  const userRow = (user: HtPasswdUser) => (
-    <Tr key={user.id}>
-      <Td className="pf-v6-u-text-break-word">{user.username}</Td>
-    </Tr>
-  );
+  const userRow = (user: HtPasswdUser) => {
+    const actions = [
+      {
+        title: 'Change password',
+        onClick: () => {
+          dispatch(openModal(modals.EDIT_HTPASSWD_USER, { clusterId, idpId, user, region }));
+        },
+      },
+    ];
+    return (
+      <Tr key={user.id}>
+        <Td className="pf-v6-u-text-break-word">{user.username}</Td>
+        <Td isActionCell>
+          {actions && idpActions?.update ? <ActionsColumn items={actions} /> : null}
+        </Td>
+      </Tr>
+    );
+  };
 
   if (isLoading) {
     return (
@@ -171,6 +202,20 @@ const HtpasswdDetails = ({ idpId, clusterId, region }: Props) => {
                 aria-label="Filter by username"
               />
             </ToolbarItem>
+            {idpActions?.update ? (
+              <ToolbarItem>
+                <Button
+                  variant={ButtonVariant.secondary}
+                  onClick={() => {
+                    dispatch(
+                      openModal(modals.ADD_HTPASSWD_USER, { idpName, clusterId, idpId, region }),
+                    );
+                  }}
+                >
+                  Add user
+                </Button>
+              </ToolbarItem>
+            ) : null}
             <ToolbarItem align={{ default: 'alignRight' }} variant="pagination">
               <Pagination {...paginationProps} isCompact aria-label="Pagination top" />
             </ToolbarItem>
@@ -197,6 +242,22 @@ const HtpasswdDetails = ({ idpId, clusterId, region }: Props) => {
           titles={{ paginationAriaLabel: 'Pagination bottom' }}
         />
       </CardBody>
+
+      <ConnectedModal
+        // @ts-ignore
+        ModalComponent={AddUserModal}
+        onSuccess={() => {
+          refetch();
+        }}
+      />
+
+      <ConnectedModal
+        // @ts-ignore
+        ModalComponent={EditUserModal}
+        onSuccess={() => {
+          refetch();
+        }}
+      />
     </Card>
   );
 };
