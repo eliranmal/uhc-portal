@@ -33,3 +33,5 @@ yalc.lock
 openapi/*.json
 
 .env*
+
+/unitTestCoverage

@@ -308,7 +308,11 @@ describe('Cluster Actions Dropdown Items', () => {
 
   describe('Can transfer ownership', () => {
     it('shows transfer ownership option', () => {
-      const newProps = { ...Fixtures.selfManagedProps, canTransferClusterOwnership: true };
+      const newProps = {
+        ...Fixtures.selfManagedProps,
+        canTransferClusterOwnership: true,
+        isClusterOwner: true,
+      };
       render(<DropDownItemsRenderHelper {...newProps} />);
 
       expect(
@@ -321,7 +325,12 @@ describe('Cluster Actions Dropdown Items', () => {
         ...Fixtures.selfManagedProps.cluster,
         subscription: { ...Fixtures.selfManagedProps.cluster.subscription, released: true },
       };
-      const newProps = { ...Fixtures.selfManagedProps, cluster, canTransferClusterOwnership: true };
+      const newProps = {
+        ...Fixtures.selfManagedProps,
+        cluster,
+        canTransferClusterOwnership: true,
+        isClusterOwner: true,
+      };
       render(<DropDownItemsRenderHelper {...newProps} />);
 
       expect(

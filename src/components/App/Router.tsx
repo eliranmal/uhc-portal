@@ -23,10 +23,7 @@ import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
 
 import { Navigate, ocmBaseName } from '~/common/routing';
 import ClusterDetailsClusterOrExternalIdMR from '~/components/clusters/ClusterDetailsMultiRegion/ClusterDetailsClusterOrExternalId';
-import {
-  CLUSTER_OWNERSHIP_TRANSFER,
-  HYPERSHIFT_WIZARD_FEATURE,
-} from '~/queries/featureGates/featureConstants';
+import { HYPERSHIFT_WIZARD_FEATURE } from '~/queries/featureGates/featureConstants';
 import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 import { isRestrictedEnv } from '~/restrictedEnv';
 import apiRequest from '~/services/apiRequest';
@@ -132,8 +129,6 @@ const Router: React.FC<RouterProps> = ({ planType, clusterId, externalClusterId 
 
   const isHypershiftWizardEnabled = useFeatureGate(HYPERSHIFT_WIZARD_FEATURE);
 
-  const isClusterTransferEnabled = useFeatureGate(CLUSTER_OWNERSHIP_TRANSFER);
-
   // For testing purposes, show which major features are enabled/disabled
   React.useEffect(() => {
     // eslint-disable-next-line no-console
@@ -142,7 +137,7 @@ const Router: React.FC<RouterProps> = ({ planType, clusterId, externalClusterId 
       `HYPERSHIFT_WIZARD_FEATURE: ${isHypershiftWizardEnabled ? 'Enabled' : 'Disabled'}\n`,
       '-------------------------------------',
     );
-  }, [isHypershiftWizardEnabled, isClusterTransferEnabled]);
+  }, [isHypershiftWizardEnabled]);
 
   useEffect(() => {
     setPageMetadata({

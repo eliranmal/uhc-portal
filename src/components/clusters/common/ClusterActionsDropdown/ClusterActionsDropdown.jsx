@@ -6,6 +6,7 @@ import { Dropdown, MenuToggle, Tooltip } from '@patternfly/react-core';
 import EllipsisVIcon from '@patternfly/react-icons/dist/esm/icons/ellipsis-v-icon';
 
 import { useToggleSubscriptionReleased } from '~/queries/ClusterActionsQueries/useToggleSubscriptionReleased';
+import { useGlobalState } from '~/redux/hooks';
 
 import { openModal } from '../../../common/Modal/ModalActions';
 
@@ -15,6 +16,7 @@ const ClusterActionsDropdown = (props) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const dispatch = useDispatch();
+  const username = useGlobalState((state) => state.userProfile.keycloakProfile.username);
 
   const {
     cluster,
@@ -23,9 +25,12 @@ const ClusterActionsDropdown = (props) => {
     disabled,
     canSubscribeOCP,
     canTransferClusterOwnership,
+    isAutoClusterTransferOwnershipEnabled,
     canHibernateCluster,
     refreshFunc,
   } = props;
+
+  const isClusterOwner = cluster.subscription?.creator?.username === username;
 
   const onToggle = () => {
     setIsOpen(!isOpen);
@@ -43,6 +48,8 @@ const ClusterActionsDropdown = (props) => {
     openModal: (modalName, data) => dispatch(openModal(modalName, data)),
     canSubscribeOCP,
     canTransferClusterOwnership,
+    isAutoClusterTransferOwnershipEnabled,
+    isClusterOwner,
     canHibernateCluster,
     refreshFunc,
     inClusterList: false,
@@ -98,6 +105,7 @@ ClusterActionsDropdown.propTypes = {
   disabled: PropTypes.bool,
   canSubscribeOCP: PropTypes.bool.isRequired,
   canTransferClusterOwnership: PropTypes.bool.isRequired,
+  isAutoClusterTransferOwnershipEnabled: PropTypes.bool.isRequired,
   canHibernateCluster: PropTypes.bool.isRequired,
   refreshFunc: PropTypes.func.isRequired,
 };

@@ -85,7 +85,7 @@ export const Configuration = () => {
       setFieldValue(FieldId.InstallToVpc, true);
       setFieldValue(FieldId.PrivateServiceConnect, true);
     }
-  }, [isWifAuth, showPrivateServiceConnect, isPrivateCluster, installToVpc, setFieldValue]);
+  }, [isWifAuth, showPrivateServiceConnect, isPrivateCluster, setFieldValue]);
 
   const trackCheckedState = (trackEvent: TrackEvent, checked: boolean) =>
     track(trackEvent, {

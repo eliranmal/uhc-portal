@@ -50,6 +50,23 @@
           "PodCIDR": "10.128.0.0/14",
           "Hostprefix": "/23"
         }
+      },
+      "AccessControl": {
+        "TransferOwnership": {
+          "AccountDetails": {
+            "Username": "ocmui-orgmem",
+            "AccountID": "1234589",
+            "OrganizationID": "2DZHskSzxcsQx3XpynjfbYg67hy"
+          },
+          "AccountValidations": {
+            "LongUserNameIDs": "longest-characterslimtgreaterthan60testingssssssssssssssssssssssssssssssssssssssssssssssssssss",
+            "LongCharacterLengthError": "Must be 64 characters or less",
+            "TransferYourselfError": "Username must be different from the current owner",
+            "InvalidAccountOrgID": "[{}]|invalidAccountOrOrg:';<,>'!@~1$%^&&*(-=)",
+            "InvalidAccountIDError": "Account ID must be an alpha numeric with no symbols",
+            "InvalidOrganizationIDError": "Organization ID must be an alpha numeric with no symbols"
+          }
+        }
       }
     }
   },

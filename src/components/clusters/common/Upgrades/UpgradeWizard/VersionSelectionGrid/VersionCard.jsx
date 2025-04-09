@@ -24,7 +24,7 @@ const getReleaseNotesLink = (version) => {
   if (major !== '4' || patch !== undefined) {
     return null;
   }
-  const docURL = `https://docs.openshift.com/container-platform/${major}.${minor}/release_notes/ocp-${major}-${minor}-release-notes.html#ocp-${major}-${minor}-${revision}`;
+  const docURL = `https://docs.redhat.com/en/documentation/openshift_container_platform/${major}.${minor}/html/release_notes/ocp-${major}-${minor}-release-notes.html#ocp-${major}-${minor}-${revision}`;
   return (
     <ExternalLink href={docURL} className="pf-c-button pf-m-link card-footer-button">
       View release notes

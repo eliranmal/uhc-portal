@@ -45,6 +45,18 @@ const config = {
   },
   moduleFileExtensions: ['js', 'jsx', 'ts', 'tsx', 'json', 'node', 'mjs'],
   testTimeout: 10000,
+  collectCoverageFrom: ['src/**/*.{js,jsx,ts,tsx}'],
+  coveragePathIgnorePatterns: [
+    '<rootDir>/src/.*fixtures.*',
+    '<rootDir>/src/.*mock.*',
+    '<rootDir>/src/.*index.*',
+    '<rootDir>/src/.*stories.*',
+    '<rootDir>/src/.*styles.*',
+    '<rootDir>/src/.*types.*',
+    '<rootDir>/src/.*constants.*',
+  ],
+  coverageDirectory: 'unitTestCoverage',
+  coverageReporters: ['html', 'json-summary', 'text-summary'],
 };
 
 module.exports = config;

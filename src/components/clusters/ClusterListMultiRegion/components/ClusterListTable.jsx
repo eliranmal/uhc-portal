@@ -31,8 +31,11 @@ import { global_warning_color_100 as warningColor } from '@patternfly/react-toke
 import { Link } from '~/common/routing';
 import AIClusterStatus from '~/components/AIComponents/AIClusterStatus';
 import { useToggleSubscriptionReleased } from '~/queries/ClusterActionsQueries/useToggleSubscriptionReleased';
+import { AUTO_CLUSTER_TRANSFER_OWNERSHIP } from '~/queries/featureGates/featureConstants';
+import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 import { findRegionalInstance } from '~/queries/helpers';
 import { useFetchGetAvailableRegionalInstances } from '~/queries/RosaWizardQueries/useFetchGetAvailableRegionalInstances';
+import { useGlobalState } from '~/redux/hooks';
 
 import getClusterName, { UNNAMED_CLUSTER } from '../../../../common/getClusterName';
 import { isAISubscriptionWithoutMetrics } from '../../../../common/isAssistedInstallerCluster';
@@ -117,6 +120,8 @@ function ClusterListTable(props) {
   const { mutate: toggleSubscriptionReleasedMultiRegion } = useToggleSubscriptionReleased();
 
   const { data: availableRegionalInstances } = useFetchGetAvailableRegionalInstances(true);
+  const isAutoClusterTransferOwnershipEnabled = useFeatureGate(AUTO_CLUSTER_TRANSFER_OWNERSHIP);
+  const username = useGlobalState((state) => state.userProfile.keycloakProfile.username);
 
   const getSortParams = (columnIndex) => ({
     sortBy: {
@@ -302,6 +307,7 @@ function ClusterListTable(props) {
         <ClusterUpdateLink cluster={cluster} openModal={openModal} hideOSDUpdates />
       </span>
     );
+    const isClusterOwner = cluster.subscription?.creator?.username === username;
 
     return (
       <Tr key={cluster.id}>
@@ -336,6 +342,8 @@ function ClusterListTable(props) {
                 canSubscribeOCPList[cluster.id] || false,
                 canHibernateClusterList[cluster.id] || false,
                 canTransferClusterOwnershipList[cluster.id] || false,
+                isAutoClusterTransferOwnershipEnabled,
+                isClusterOwner,
                 toggleSubscriptionReleasedMultiRegion,
                 refreshFunc,
                 true,

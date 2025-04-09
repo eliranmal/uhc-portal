@@ -23,6 +23,7 @@ const modals = {
   RESUME_CLUSTER: 'resume-cluster',
   SCALE_CLUSTER: 'edit-cluster',
   TRANSFER_CLUSTER_OWNERSHIP: 'transfer-cluster-ownership',
+  TRANSFER_CLUSTER_OWNERSHIP_AUTO: 'transfer-cluster-ownership-auto',
   UNARCHIVE_CLUSTER: 'unarchive-cluster',
   UPDATE_MACHINE_POOL_VERSION: 'update-machine-pool-version',
   UPGRADE_TRIAL_CLUSTER: 'upgrade-trial-cluster',

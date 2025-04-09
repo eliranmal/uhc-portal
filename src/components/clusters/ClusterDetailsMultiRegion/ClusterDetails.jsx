@@ -45,6 +45,8 @@ import {
   invalidateCloudProviders,
   useFetchCloudProviders,
 } from '~/queries/common/useFetchCloudProviders';
+import { AUTO_CLUSTER_TRANSFER_OWNERSHIP } from '~/queries/featureGates/featureConstants';
+import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 import { findRegionalInstance } from '~/queries/helpers';
 import { useFetchGetAvailableRegionalInstances } from '~/queries/RosaWizardQueries/useFetchGetAvailableRegionalInstances';
 import { clearListVpcs } from '~/redux/actions/ccsInquiriesActions';
@@ -131,6 +133,7 @@ const ClusterDetails = (props) => {
   const isSubscriptionSettingsRequestPending = useGlobalState((state) =>
     get(state, 'subscriptionSettings.requestState.pending', false),
   );
+  const isAutoClusterTransferOwnershipEnabled = useFeatureGate(AUTO_CLUSTER_TRANSFER_OWNERSHIP);
 
   const navigate = useNavigate();
   const params = useParams();
@@ -506,6 +509,7 @@ const ClusterDetails = (props) => {
             errorMessage={error?.errorObj.response.data.reason}
             canSubscribeOCP={canSubscribeOCP}
             canTransferClusterOwnership={canTransferClusterOwnership}
+            isAutoClusterTransferOwnershipEnabled={isAutoClusterTransferOwnershipEnabled}
             canHibernateCluster={canHibernateCluster}
             autoRefreshEnabled={!anyModalOpen}
             toggleSubscriptionReleased={toggleSubscriptionReleased}
@@ -628,6 +632,7 @@ const ClusterDetails = (props) => {
                   cluster={cluster}
                   refreshEvent={refreshEvent}
                   region={cluster.subscription.rh_region_id}
+                  isAutoClusterTransferOwnershipEnabled={isAutoClusterTransferOwnershipEnabled}
                 />
               </ErrorBoundary>
             </TabContent>

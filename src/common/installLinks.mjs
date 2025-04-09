@@ -294,7 +294,7 @@ const links = {
 
   COREOS_INSTALLER_DOCS: `${DOCS_BASE}/installing_on_any_platform/installing-platform-agnostic`,
 
-  ARGO_CD_DOCS: `https://docs.openshift.com/gitops/1.13/installing_gitops/installing-argocd-gitops-cli.html`,
+  ARGO_CD_DOCS: `https://docs.redhat.com/en/documentation/red_hat_openshift_gitops/1.13/html/installing_gitops/installing-argocd-gitops-cli`,
 
   SHP_CLI_DOCS: `https://docs.redhat.com/en/documentation/builds_for_red_hat_openshift/1.1/html-single/work_with_builds/index`,
 
@@ -372,8 +372,7 @@ const links = {
 
   FINDING_AWS_ACCOUNT_IDENTIFIERS:
     'https://docs.aws.amazon.com/accounts/latest/reference/manage-acct-identifiers.html',
-  CIDR_RANGE_DEFINITIONS_ROSA:
-    'https://docs.openshift.com/rosa/networking/cidr-range-definitions.html',
+  CIDR_RANGE_DEFINITIONS_ROSA: `${ROSA_DOCS_BASE}/networking/cidr-range-definitions`,
   CIDR_RANGE_DEFINITIONS_OSD: `${OSD_DOCS_BASE}/networking/cidr-range-definitions`,
   CONFIGURE_PROXY_URL: `${OSD_DOCS_BASE}/networking`,
   VIRTUAL_PRIVATE_CLOUD_URL:

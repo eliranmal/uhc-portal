@@ -88,6 +88,7 @@ function ClusterDetailsTop(props) {
     children,
     canSubscribeOCP,
     canTransferClusterOwnership,
+    isAutoClusterTransferOwnershipEnabled,
     canHibernateCluster,
     autoRefreshEnabled,
     toggleSubscriptionReleased,
@@ -212,6 +213,7 @@ function ClusterDetailsTop(props) {
       showConsoleButton={false}
       canSubscribeOCP={canSubscribeOCP}
       canTransferClusterOwnership={canTransferClusterOwnership}
+      isAutoClusterTransferOwnershipEnabled={isAutoClusterTransferOwnershipEnabled}
       toggleSubscriptionReleased={toggleSubscriptionReleased}
       canHibernateCluster={canHibernateCluster}
       refreshFunc={refreshClusterDetails}
@@ -409,6 +411,7 @@ ClusterDetailsTop.propTypes = {
   canSubscribeOCP: PropTypes.bool.isRequired,
   canHibernateCluster: PropTypes.bool.isRequired,
   canTransferClusterOwnership: PropTypes.bool.isRequired,
+  isAutoClusterTransferOwnershipEnabled: PropTypes.bool.isRequired,
   autoRefreshEnabled: PropTypes.bool,
   toggleSubscriptionReleased: PropTypes.func.isRequired,
   showPreviewLabel: PropTypes.bool.isRequired,

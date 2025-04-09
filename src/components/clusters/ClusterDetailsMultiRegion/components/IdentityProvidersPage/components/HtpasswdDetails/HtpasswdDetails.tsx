@@ -18,28 +18,29 @@ import { ActionsColumn, Table, Tbody, Td, Th, Thead, ThProps, Tr } from '@patter
 
 import ErrorBox from '~/components/common/ErrorBox';
 import ConnectedModal from '~/components/common/Modal/ConnectedModal';
-import { openModal } from '~/components/common/Modal/ModalActions';
+import { modalActions, openModal } from '~/components/common/Modal/ModalActions';
 import modals from '~/components/common/Modal/modals';
 import { useFetchHtpasswdUsers } from '~/queries/ClusterDetailsQueries/AccessControlTab/UserQueries/useFetchHtpasswdUsers';
 import { HtPasswdUser } from '~/types/clusters_mgmt.v1';
 
 import AddUserModal from './AddUserModal';
+import DeleteHtpasswdUserDialog from './DeleteHtpasswdUserDialog';
 import EditUserModal from './EditUserModal';
 import EmptyState from './EmptyState';
 
 type Props = {
+  idpName: string;
   idpId: string;
   clusterId: string;
   idpActions?: {
     [action: string]: boolean;
   };
   region?: string;
-  idpName?: string;
 };
 
 const HtpasswdDetails = ({ idpId, clusterId, region, idpName, idpActions }: Props) => {
   const dispatch = useDispatch();
-  const { isLoading, users, isError, error, refetch } = useFetchHtpasswdUsers(
+  const { isLoading, users, isError, error, isFetching, refetch } = useFetchHtpasswdUsers(
     clusterId,
     idpId,
     region,
@@ -52,6 +53,12 @@ const HtpasswdDetails = ({ idpId, clusterId, region, idpName, idpActions }: Prop
   const [searchValue, setSearchValue] = React.useState('');
 
   const [filteredUsers, setFilteredUsers] = React.useState(users);
+
+  const refreshHtpasswdUsers = () => {
+    if (!isLoading && !isError) {
+      refetch();
+    }
+  };
 
   // Pagination
   const onSetPage = (
@@ -140,6 +147,21 @@ const HtpasswdDetails = ({ idpId, clusterId, region, idpName, idpActions }: Prop
           dispatch(openModal(modals.EDIT_HTPASSWD_USER, { clusterId, idpId, user, region }));
         },
       },
+      {
+        title: 'Delete',
+        onClick: () => {
+          dispatch(
+            modalActions.openModal('delete-htpasswd-user', {
+              clusterId,
+              idpId,
+              idpName,
+              htpasswdUserName: user.username,
+              htpasswdUserId: user.id,
+              region,
+            }),
+          );
+        },
+      },
     ];
     return (
       <Tr key={user.id}>
@@ -151,7 +173,7 @@ const HtpasswdDetails = ({ idpId, clusterId, region, idpName, idpActions }: Prop
     );
   };
 
-  if (isLoading) {
+  if (isLoading || isFetching) {
     return (
       <Card>
         <CardBody>
@@ -189,76 +211,82 @@ const HtpasswdDetails = ({ idpId, clusterId, region, idpName, idpActions }: Prop
   };
 
   return (
-    <Card>
-      <CardBody>
-        <Toolbar>
-          <ToolbarContent>
-            <ToolbarItem>
-              <SearchInput
-                placeholder="Filter by username"
-                value={searchValue}
-                onChange={(_event, value) => setSearchValue(value)}
-                onClear={() => setSearchValue('')}
-                aria-label="Filter by username"
-              />
-            </ToolbarItem>
-            {idpActions?.update ? (
+    <>
+      <Card>
+        <CardBody>
+          <Toolbar>
+            <ToolbarContent>
               <ToolbarItem>
-                <Button
-                  variant={ButtonVariant.secondary}
-                  onClick={() => {
-                    dispatch(
-                      openModal(modals.ADD_HTPASSWD_USER, { idpName, clusterId, idpId, region }),
-                    );
-                  }}
-                >
-                  Add user
-                </Button>
+                <SearchInput
+                  placeholder="Filter by username"
+                  value={searchValue}
+                  onChange={(_event, value) => setSearchValue(value)}
+                  onClear={() => setSearchValue('')}
+                  aria-label="Filter by username"
+                />
               </ToolbarItem>
-            ) : null}
-            <ToolbarItem align={{ default: 'alignRight' }} variant="pagination">
-              <Pagination {...paginationProps} isCompact aria-label="Pagination top" />
-            </ToolbarItem>
-          </ToolbarContent>
-        </Toolbar>
+              {idpActions?.update ? (
+                <ToolbarItem>
+                  <Button
+                    variant={ButtonVariant.secondary}
+                    onClick={() => {
+                      dispatch(
+                        openModal(modals.ADD_HTPASSWD_USER, { idpName, clusterId, idpId, region }),
+                      );
+                    }}
+                  >
+                    Add user
+                  </Button>
+                </ToolbarItem>
+              ) : null}
+              <ToolbarItem align={{ default: 'alignRight' }} variant="pagination">
+                <Pagination {...paginationProps} isCompact aria-label="Pagination top" />
+              </ToolbarItem>
+            </ToolbarContent>
+          </Toolbar>
 
-        <Table>
-          {headerRow}
-          <Tbody>
-            {filteredUsers.length > 0 ? (
-              filteredUsers.slice(startIndex, endIndex).map((user: HtPasswdUser) => userRow(user))
-            ) : (
-              <Tr>
-                <Td colSpan={headers.length}>
-                  <EmptyState showClearFilterButton={!!searchValue} resetFilters={setSearchValue} />
-                </Td>
-              </Tr>
-            )}
-          </Tbody>
-        </Table>
-        <Pagination
-          {...paginationProps}
-          variant={PaginationVariant.bottom}
-          titles={{ paginationAriaLabel: 'Pagination bottom' }}
+          <Table>
+            {headerRow}
+            <Tbody>
+              {filteredUsers.length > 0 ? (
+                filteredUsers.slice(startIndex, endIndex).map((user: HtPasswdUser) => userRow(user))
+              ) : (
+                <Tr>
+                  <Td colSpan={headers.length}>
+                    <EmptyState
+                      showClearFilterButton={!!searchValue}
+                      resetFilters={setSearchValue}
+                    />
+                  </Td>
+                </Tr>
+              )}
+            </Tbody>
+          </Table>
+          <Pagination
+            {...paginationProps}
+            variant={PaginationVariant.bottom}
+            titles={{ paginationAriaLabel: 'Pagination bottom' }}
+          />
+        </CardBody>
+
+        <ConnectedModal
+          // @ts-ignore
+          ModalComponent={AddUserModal}
+          onSuccess={() => {
+            refetch();
+          }}
         />
-      </CardBody>
 
-      <ConnectedModal
-        // @ts-ignore
-        ModalComponent={AddUserModal}
-        onSuccess={() => {
-          refetch();
-        }}
-      />
-
-      <ConnectedModal
-        // @ts-ignore
-        ModalComponent={EditUserModal}
-        onSuccess={() => {
-          refetch();
-        }}
-      />
-    </Card>
+        <ConnectedModal
+          // @ts-ignore
+          ModalComponent={EditUserModal}
+          onSuccess={() => {
+            refetch();
+          }}
+        />
+      </Card>
+      <DeleteHtpasswdUserDialog refreshHtpasswdUsers={refreshHtpasswdUsers} />
+    </>
   );
 };
 

@@ -41,8 +41,6 @@ jest.mock('./SupportStatusLabel');
 const checkForValue = (label, value) => {
   expect(screen.getByText(label)).toBeInTheDocument();
   if (value) {
-    expect(screen.getByText(value)).toBeInTheDocument();
-
     // Verify that the value is below the label
     // Cannot use roles of "term" and "definition" because there are children elements
     const labelObj = screen.getByText(label);
@@ -664,42 +662,7 @@ describe('<DetailsLeft />', () => {
   });
 
   describe('Owner', () => {
-    it('shows creator name as the owner', async () => {
-      // Arrange
-      const OSDClusterFixture = {
-        ...fixtures.clusterDetails.cluster,
-        subscription: {
-          ...fixtures.clusterDetails.cluster.subscription,
-          creator: { name: 'creator name' },
-        },
-      };
-
-      const props = { ...defaultProps, cluster: OSDClusterFixture };
-      render(<DetailsLeft {...props} />);
-      await checkIfRendered();
-
-      // Assert
-      checkForValue(componentText.OWNER.label, 'creator name');
-    });
-
-    it('shows creator username if name is not available as owner ', async () => {
-      // Arrange
-      const OSDClusterFixture = {
-        ...fixtures.clusterDetails.cluster,
-        subscription: {
-          ...fixtures.clusterDetails.cluster.subscription,
-          creator: { username: 'creator username', name: undefined },
-        },
-      };
-
-      const props = { ...defaultProps, cluster: OSDClusterFixture };
-      render(<DetailsLeft {...props} />);
-      await checkIfRendered();
-
-      // Assert
-      checkForValue(componentText.OWNER.label, 'creator username');
-    });
-
+    // Moved most tests into separate test file for Owner component
     it('shows "N/A" as the owner if creator name and creator username are not available', async () => {
       // Arrange
       const OSDClusterFixture = {

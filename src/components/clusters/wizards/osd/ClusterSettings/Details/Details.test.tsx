@@ -10,12 +10,18 @@ import {
   providersResponse,
 } from '~/common/__tests__/regions.fixtures';
 import * as quotaSelectors from '~/components/clusters/common/quotaSelectors';
+import {
+  lifecycleResponseData,
+  versionsData,
+} from '~/components/clusters/wizards/common/ClusterSettings/Details/VersionSelectField.fixtures';
 import { FieldId, initialValues } from '~/components/clusters/wizards/osd/constants';
 import ocpLifeCycleStatuses from '~/components/releases/__mocks__/ocpLifeCycleStatuses';
 import { UNSTABLE_CLUSTER_VERSIONS } from '~/queries/featureGates/featureConstants';
 import clusterService from '~/services/clusterService';
 import getOCPLifeCycleStatus from '~/services/productLifeCycleService';
 import { mockUseFeatureGate, render, screen, withState } from '~/testUtils';
+
+import { ClusterPrivacyType } from '../../Networking/constants';
 
 import Details from './Details';
 
@@ -127,5 +133,108 @@ describe('<Details />', () => {
       const multiAzInput = screen.getByRole('radio', { name: /Multi-zone/i });
       expect(multiAzInput).toBeChecked();
     });
+  });
+
+  describe('Version Change', () => {
+    const loaded = {
+      error: false,
+      pending: false,
+      versions: versionsData,
+      fulfilled: true,
+      meta: {
+        isMarketplaceGcp: false,
+        isWIF: false,
+        includeUnstableVersions: false,
+      },
+    };
+    const loadedState = {
+      clusters: {
+        clusterVersions: loaded,
+      },
+      features: {
+        [UNSTABLE_CLUSTER_VERSIONS]: false,
+      },
+    };
+    beforeEach(() => {
+      (getOCPLifeCycleStatus as jest.Mock).mockReturnValue({ data: lifecycleResponseData });
+      (clusterService.getInstallableVersions as jest.Mock).mockReturnValue({
+        data: { items: versionsData, kind: 'VersionList', page: 1, size: 1, total: 5 },
+      });
+    });
+    it.each([
+      [
+        'PSC remains undefined when cluster is external',
+        undefined,
+        false,
+        ClusterPrivacyType.External,
+        '4.18.1',
+        undefined,
+        false,
+      ],
+      [
+        'PSC and InstalltoVpc to true on PSC enabled version change',
+        undefined,
+        false,
+        ClusterPrivacyType.Internal,
+        '4.18.1',
+        true,
+        true,
+      ],
+      [
+        'PSC to false when version does not support it',
+        undefined,
+        false,
+        ClusterPrivacyType.Internal,
+        '4.13.1',
+        false,
+        false,
+      ],
+    ])(
+      '"%s"',
+      async (
+        description: string,
+        pscInitial: boolean | undefined,
+        vpcInitial: boolean | undefined,
+        privacy: ClusterPrivacyType,
+        version: string,
+        pscFinal: boolean | undefined,
+        vpcFinal: boolean | undefined,
+      ) => {
+        const formValues = {
+          ...initialValues,
+          [FieldId.PrivateServiceConnect]: pscInitial,
+          [FieldId.InstallToVpc]: vpcInitial,
+          [FieldId.ClusterPrivacy]: privacy,
+        };
+        const handleSubmit = jest.fn();
+        const { user } = withState(loadedState).render(
+          <Formik initialValues={formValues} onSubmit={() => {}}>
+            {({ values }) => (
+              <div>
+                <Details />
+                <button type="button" onClick={() => handleSubmit(values)}>
+                  test
+                </button>
+              </div>
+            )}
+          </Formik>,
+        );
+
+        expect(await screen.findByText('Version')).toBeInTheDocument();
+        // Need to click on the version dropdown to open it
+        await user.click(screen.getByRole('button', { name: 'Options menu' }));
+        await user.click(screen.getByText(version));
+
+        await user.click(screen.getByRole('button', { name: 'test' }));
+
+        expect(handleSubmit).toHaveBeenCalledTimes(1);
+        expect(handleSubmit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            [FieldId.PrivateServiceConnect]: pscFinal,
+            [FieldId.InstallToVpc]: vpcFinal,
+          }),
+        );
+      },
+    );
   });
 });

@@ -9,6 +9,7 @@ import {
   DescriptionListTerm,
 } from '@patternfly/react-core';
 
+import { Owner } from '~/components/clusters/ClusterDetailsMultiRegion/components/Overview/Owner/Owner';
 import { isCCS, isGCP, isHypershiftCluster } from '~/components/clusters/common/clusterStates';
 import getBillingModelLabel from '~/components/clusters/common/getBillingModelLabel';
 import { OSD_GCP_WIF } from '~/queries/featureGates/featureConstants';
@@ -190,13 +191,7 @@ function DetailsLeft({ cluster, cloudProviders, showAssistedId }) {
           <Timestamp value={get(cluster, 'creation_timestamp', 'N/A')} />
         </DescriptionListDescription>
       </DescriptionListGroup>
-      <DescriptionListGroup>
-        <DescriptionListTerm>Owner</DescriptionListTerm>
-        <DescriptionListDescription>
-          {get(cluster, 'subscription.creator.name') ||
-            get(cluster, 'subscription.creator.username', 'N/A')}
-        </DescriptionListDescription>
-      </DescriptionListGroup>
+      <Owner />
       {cluster.managed && !isROSA && (
         <>
           <DescriptionListGroup>

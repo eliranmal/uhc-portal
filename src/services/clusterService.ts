@@ -207,6 +207,11 @@ export function getClusterService(apiRequest: APIRequest = defaultApiRequest) {
         { password },
       ),
 
+    deleteHtpasswdUser: (clusterID: string, idpID: string, htpasswdUserID: string) =>
+      apiRequest.delete<unknown>(
+        `/api/clusters_mgmt/v1/clusters/${clusterID}/identity_providers/${idpID}/htpasswd_users/${htpasswdUserID}`,
+      ),
+
     getClusterGroupUsers: (clusterID: string) =>
       apiRequest.get<{
         /**

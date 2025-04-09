@@ -1648,9 +1648,10 @@ const validateHTPasswdUsername = (username: string): string | undefined => {
   if (
     indexOf(username, '%') !== -1 ||
     indexOf(username, ':') !== -1 ||
-    indexOf(username, '/') !== -1
+    indexOf(username, '/') !== -1 ||
+    indexOf(username, ' ') !== -1
   ) {
-    return 'Username must not contain /, :, or %.';
+    return 'Username must not contain /, :, %, or empty spaces.';
   }
   return undefined;
 };

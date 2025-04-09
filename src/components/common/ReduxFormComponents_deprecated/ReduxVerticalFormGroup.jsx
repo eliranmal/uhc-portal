@@ -108,7 +108,11 @@ const ReduxVerticalFormGroup = ({
               actions={
                 <MenuItemAction
                   icon={<RedoIcon aria-hidden />}
-                  onClick={regenerateAutocomplete}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    regenerateAutocomplete();
+                  }}
                   actionId="redo"
                   id={redoId}
                   aria-label="Redo"

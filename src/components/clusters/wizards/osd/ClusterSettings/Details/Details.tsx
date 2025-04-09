@@ -68,6 +68,8 @@ import {
 } from '~/types/accounts_mgmt.v1';
 import { Version } from '~/types/clusters_mgmt.v1';
 
+import { ClusterPrivacyType } from '../../Networking/constants';
+
 function Details() {
   const dispatch = useDispatch();
   const {
@@ -78,6 +80,7 @@ function Details() {
       [FieldId.BillingModel]: billingModel,
       [FieldId.Region]: region,
       [FieldId.CloudProvider]: cloudProvider,
+      [FieldId.ClusterPrivacy]: clusterPrivacy,
       [FieldId.CustomerManagedKey]: hasCustomerManagedKey,
       [FieldId.KmsKeyArn]: kmsKeyArn,
       [FieldId.ClusterVersion]: selectedVersion,
@@ -214,6 +217,9 @@ function Details() {
     }
     if (!canConfigureDayOnePrivateServiceConnect(clusterVersion?.raw_id || '')) {
       setFieldValue(FieldId.PrivateServiceConnect, false);
+    } else if (clusterPrivacy === ClusterPrivacyType.Internal) {
+      setFieldValue(FieldId.PrivateServiceConnect, true);
+      setFieldValue(FieldId.InstallToVpc, true);
     }
   };
 

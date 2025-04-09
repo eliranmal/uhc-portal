@@ -24,6 +24,8 @@ class ClusterList extends Page {
 
   showActiveClusters = () => cy.get('a').contains('Show active clusters');
 
+  clusterKebabIcon = () => cy.get('button[aria-label="Kebab toggle"]').should('be.visible');
+
   itemPerPage = () => cy.get('#options-menu-bottom-toggle').last();
 
   goToLastPageBtn = () => cy.get('button[aria-label="Go to last page"]').last();
@@ -112,6 +114,12 @@ class ClusterList extends Page {
       .click({ force: true });
   }
 
+  clickKebabMenuItem(menuText) {
+    cy.get('div[data-popper-placement="bottom-end"]').within(() => {
+      cy.contains(menuText).click();
+    });
+  }
+
   clickClusterListExtraActions() {
     cy.getByTestId('cluster-list-extra-actions-dropdown').should('be.visible').click();
   }
@@ -156,6 +164,21 @@ class ClusterList extends Page {
 
   waitForDataReady() {
     cy.get('div[data-ready="true"]', { timeout: 60000 }).should('exist');
+  }
+
+  waitForClusterInClusterList(clusterName) {
+    cy.getByTestId('clusterListTableBody').within(() => {
+      cy.get('a').contains(clusterName, { timeout: 60000 }).should('exist');
+      cy.get('span').contains('loading cluster status', { timeout: 60000 }).should('not.exist');
+    });
+  }
+
+  clickClusterKebabIcon(clusterName) {
+    cy.get(`a:contains(${clusterName})`)
+      .parents('tr')
+      .within(() => {
+        cy.get('button[aria-label="Kebab toggle"]').click();
+      });
   }
 
   waitForArchiveDataReady() {

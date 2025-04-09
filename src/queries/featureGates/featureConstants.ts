@@ -21,6 +21,7 @@ export const ENABLE_MACHINE_CONFIGURATION = 'enable-machine-configuration';
 export const CLI_SSO_AUTHORIZATION = 'cli-sso-authorization';
 export const MULTIREGION_PREVIEW_ENABLED = 'multi-region-support';
 export const CLUSTER_OWNERSHIP_TRANSFER = 'cluster-ownership-transfer';
+export const AUTO_CLUSTER_TRANSFER_OWNERSHIP = 'ocmui-cluster-ownership-transfer';
 export const OSD_GCP_WIF = 'gcp-workload-identity-federation';
 export const CREATE_CLUSTER_YAML_EDITOR = 'enable-create-cluster-yaml-editor';
 export const UNSTABLE_CLUSTER_VERSIONS = 'ocmui-unstable-cluster-versions';
@@ -32,6 +33,7 @@ export const MAX_NODES_TOTAL_249 = 'ocmui-max-nodes-total-249';
 export const ENHANCED_HTPASSWRD = 'ocmui-enhanced-htpasswrd';
 
 export default {
+  AUTO_CLUSTER_TRANSFER_OWNERSHIP,
   HYPERSHIFT_WIZARD_FEATURE,
   HCP_USE_UNMANAGED,
   ENABLE_MACHINE_CONFIGURATION,

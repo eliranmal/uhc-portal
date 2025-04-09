@@ -11,6 +11,8 @@ class ClusterDetails extends Page {
 
   editConsoleURLDialogInput = () => cy.get('input[id="edit-console-url-input"]');
 
+  clusterOwnerLink = () => cy.getByTestId('ownerTranswerOverviewLink');
+
   editConsoleURLDialogConfirm = () =>
     cy
       .get('div[aria-label="Add console URL"]')
@@ -164,6 +166,8 @@ class ClusterDetails extends Page {
   editDisplayNameInput = () => cy.get('#edit-display-name-input');
 
   editButton = () => cy.get('button').contains('Edit');
+
+  clusterOwnerLink = () => cy.getByTestId('ownerTranswerOverviewLink');
 
   clusterInfrastructureBillingModelValue = () =>
     cy.getByTestId('infrastructure-billing-model').find('div');

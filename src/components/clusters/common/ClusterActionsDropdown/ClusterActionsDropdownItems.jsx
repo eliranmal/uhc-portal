@@ -4,6 +4,7 @@ import get from 'lodash/get';
 import { DropdownItem, DropdownList } from '@patternfly/react-core';
 import { addNotification } from '@redhat-cloud-services/frontend-components-notifications';
 
+import { isCompatibleFeature, SupportedFeature } from '~/common/featureCompatibility';
 import { SubscriptionCommonFieldsStatus } from '~/types/accounts_mgmt.v1';
 
 import getClusterName from '../../../../common/getClusterName';
@@ -42,6 +43,8 @@ function actionResolver(
   canSubscribeOCP,
   canHibernateCluster,
   canTransferClusterOwnership,
+  isAutoClusterTransferOwnershipEnabled,
+  isClusterOwner,
   toggleSubscriptionReleased,
   refreshFunc,
   inClusterList,
@@ -89,7 +92,9 @@ function actionResolver(
   const consoleDisabledMessage = !consoleURL && (
     <span>Admin console is not yet available for this cluster</span>
   );
-
+  const allowAutoTransferClusterOwnership =
+    isAutoClusterTransferOwnershipEnabled &&
+    isCompatibleFeature(SupportedFeature.AUTO_CLUSTER_TRANSFER_OWNERSHIP, cluster);
   const getKey = (item) => `${cluster.id}.menu.${item}`;
   const clusterName = getClusterName(cluster);
   const isProductOSDTrial = cluster.product && cluster.product.id === normalizedProducts.OSDTrial;
@@ -291,6 +296,12 @@ function actionResolver(
               },
             },
           );
+        } else if (allowAutoTransferClusterOwnership) {
+          openModal(modals.TRANSFER_CLUSTER_OWNERSHIP_AUTO, {
+            subscription: cluster.subscription,
+            shouldDisplayClusterName: inClusterList,
+            region: cluster.subscription.rh_region_id,
+          });
         } else {
           openModal(modals.TRANSFER_CLUSTER_OWNERSHIP, {
             subscription: cluster.subscription,
@@ -355,8 +366,10 @@ function actionResolver(
   ].includes(product);
   const showTransferClusterOwnership =
     cluster.canEdit &&
+    isClusterOwner &&
+    isClusterReady &&
     canTransferClusterOwnership &&
-    isAllowedProducts &&
+    (isAllowedProducts || allowAutoTransferClusterOwnership) &&
     get(cluster, 'subscription.status') !== SubscriptionCommonFieldsStatus.Archived;
   const showUpgradeTrialCluster = isClusterReady && cluster.canEdit && isProductOSDTrial;
 
@@ -382,6 +395,8 @@ function dropDownItems({
   openModal,
   canSubscribeOCP,
   canTransferClusterOwnership,
+  isAutoClusterTransferOwnershipEnabled,
+  isClusterOwner,
   canHibernateCluster,
   refreshFunc,
   inClusterList,
@@ -395,6 +410,8 @@ function dropDownItems({
     canSubscribeOCP,
     canHibernateCluster,
     canTransferClusterOwnership,
+    isAutoClusterTransferOwnershipEnabled,
+    isClusterOwner,
     toggleSubscriptionReleased,
     refreshFunc,
     inClusterList,

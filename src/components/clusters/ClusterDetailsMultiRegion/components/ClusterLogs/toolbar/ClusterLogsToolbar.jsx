@@ -21,7 +21,6 @@ class ClusterLogsToolbar extends React.PureComponent {
   render() {
     const {
       viewOptions,
-      history,
       setFlags,
       setFilter,
       externalClusterID,
@@ -57,8 +56,6 @@ class ClusterLogsToolbar extends React.PureComponent {
             </ToolbarGroup>
             <ToolbarItem>
               <ClusterLogsConditionalFilter
-                view={viewConstants.CLUSTER_LOGS_VIEW}
-                history={history}
                 currentFilter={currentFilter}
                 currentFlags={currentFlags}
                 setFilter={setFilter}

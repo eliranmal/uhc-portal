@@ -168,7 +168,7 @@ const Releases = () => {
                   </StackItem>
                   <StackItem>
                     <ExternalLink
-                      href={`https://docs.openshift.com/container-platform/${latestVersion}/updating/understanding_updates/understanding-update-channels-release.html`}
+                      href={`https://docs.redhat.com/en/documentation/openshift_container_platform/${latestVersion}/html/updating_clusters/understanding-openshift-updates-1#understanding-update-channels-releases`}
                       noIcon
                     >
                       Learn more about updating channels

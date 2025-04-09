@@ -42,6 +42,7 @@ const getDataRows = () => {
 };
 
 const defaultProps = {
+  idpName: 'myIdpName',
   idpId: 'myIdpId',
   clusterId: 'myClusterId',
   idpActions: {

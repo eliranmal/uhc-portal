@@ -2,7 +2,8 @@ import React from 'react';
 
 import { normalizedProducts } from '~/common/subscriptionTypes';
 import clusterStates from '~/components/clusters/common/clusterStates';
-import { screen, withState } from '~/testUtils';
+import { AUTO_CLUSTER_TRANSFER_OWNERSHIP } from '~/queries/featureGates/featureConstants';
+import { mockUseFeatureGate, screen, withState } from '~/testUtils';
 
 import AccessControl from './AccessControl';
 
@@ -30,7 +31,9 @@ const initialState = {
 };
 
 describe('<AccessControl />', () => {
-  const buildComponent = (cluster) => <AccessControl cluster={cluster || buildCluster({})} />;
+  const buildComponent = (cluster) => (
+    <AccessControl cluster={cluster || buildCluster({})} isAutoClusterTransferOwnershipEnabled />
+  );
 
   describe('Tab grouping', () => {
     it('has "single-tab" class if only one section is shown', () => {
@@ -185,6 +188,56 @@ describe('<AccessControl />', () => {
       withState(initialState, true).render(buildComponent(hypershiftCluster));
 
       expect(screen.getByRole('tab', { name: 'Cluster Roles and Access' })).toBeInTheDocument();
+    });
+  });
+
+  describe('Transfer Ownership section', () => {
+    mockUseFeatureGate([[AUTO_CLUSTER_TRANSFER_OWNERSHIP, true]]);
+
+    it('is hidden for invalid clusters', () => {
+      const testCluster = buildCluster({
+        clusterProps: {
+          hypershift: { enabled: true },
+          state: clusterStates.INSTALLING,
+          idpActions: {
+            get: false,
+            list: false,
+            create: false,
+            update: false,
+            delete: false,
+          },
+        },
+        subscriptionProps: {
+          plan: { id: normalizedProducts.ROSA_HyperShift },
+        },
+        consoleUrl: '',
+      });
+      withState(initialState, true).render(buildComponent(testCluster));
+
+      expect(screen.queryByRole('tab', { name: 'Transfer Ownership' })).not.toBeInTheDocument();
+    });
+
+    it('is shown for ROSA cluster', () => {
+      const testCluster = buildCluster({
+        clusterProps: {
+          hypershift: { enabled: false },
+          product: { id: 'ROSA' },
+          idpActions: {
+            get: false,
+            list: false,
+            create: false,
+            update: false,
+            delete: false,
+          },
+        },
+        subscriptionProps: {
+          plan: { id: normalizedProducts.ROSA },
+        },
+        consoleUrl: '',
+      });
+      withState(initialState, true).render(buildComponent(testCluster));
+
+      expect(screen.getByRole('tab', { name: 'Transfer Ownership' })).toBeInTheDocument();
     });
   });
 });
