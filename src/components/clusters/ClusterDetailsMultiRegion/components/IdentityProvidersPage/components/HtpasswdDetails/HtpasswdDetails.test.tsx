@@ -488,4 +488,53 @@ describe('<HtpasswdDetails />', () => {
       expect(mockedDispatch.mock.calls[0][0].payload.name).toEqual('ADD_HTPASSWD_USER');
     }, 20000);
   });
+
+  describe('single user htpasswd', () => {
+    it('add button is not shown when a single htpasswd', () => {
+      const users = createUsers(1);
+
+      useFetchHtpasswdUsersMocked.mockReturnValue({
+        isLoading: false,
+        users,
+        isError: false,
+        error: null,
+      });
+
+      const newProps = {
+        ...defaultProps,
+        idpActions: { update: true },
+        isSingleUserHtpasswd: true,
+      };
+
+      render(<HtpasswdDetails {...newProps} />);
+
+      expect(screen.queryByRole('button', { name: 'Add user' })).not.toBeInTheDocument();
+    });
+
+    it('actions are not shown for user', () => {
+      const users = createUsers(1);
+
+      useFetchHtpasswdUsersMocked.mockReturnValue({
+        isLoading: false,
+        users,
+        isError: false,
+        error: null,
+      });
+
+      const newProps = {
+        ...defaultProps,
+        idpActions: { update: true },
+        isSingleUserHtpasswd: true,
+      };
+
+      render(<HtpasswdDetails {...newProps} />);
+
+      const dataRows = getDataRows();
+
+      expect(dataRows).toHaveLength(1);
+      const cells = within(dataRows[0]).getAllByRole('cell');
+      const actionsCell = cells[cells.length - 1];
+      expect(actionsCell).toBeEmptyDOMElement();
+    });
+  });
 });

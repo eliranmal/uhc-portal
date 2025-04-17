@@ -63,7 +63,7 @@ const AddUserForm = ({ onSuccess }: { onSuccess: () => void }) => {
       }}
       isPending={isPending}
       onSecondaryClick={closeAddUserModal}
-      isPrimaryDisabled={!isValid || isError}
+      isPrimaryDisabled={!isValid}
     >
       <Form>
         <p>
@@ -78,9 +78,8 @@ const AddUserForm = ({ onSuccess }: { onSuccess: () => void }) => {
               operationID: error?.operationID,
             }}
           />
-        ) : (
-          <HTPasswdForm onlySingleItem />
-        )}
+        ) : null}
+        <HTPasswdForm onlySingleItem />
       </Form>
     </Modal>
   );

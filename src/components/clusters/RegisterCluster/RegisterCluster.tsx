@@ -3,6 +3,7 @@ import { Field, Formik } from 'formik';
 import { get } from 'lodash';
 import { useDispatch } from 'react-redux';
 
+import PageHeader from '@patternfly/react-component-groups/dist/dynamic/PageHeader';
 import {
   Button,
   Card,
@@ -20,7 +21,6 @@ import {
   Tooltip,
   TooltipPosition,
 } from '@patternfly/react-core';
-import { PageHeader, PageHeaderTitle } from '@redhat-cloud-services/frontend-components/PageHeader';
 
 import { Link, Navigate } from '~/common/routing';
 import { AppPage } from '~/components/App/AppPage';
@@ -129,12 +129,15 @@ const RegisterCluster = () => {
 
   return (
     <AppPage>
-      <PageHeader>
-        <Breadcrumbs
-          path={[{ label: 'Cluster List' }, { label: 'Register disconnected cluster' }]}
-        />
-        <PageHeaderTitle title="Register disconnected cluster" />
-      </PageHeader>
+      <PageHeader
+        title="Register disconnected cluster"
+        subtitle=""
+        breadcrumbs={
+          <Breadcrumbs
+            path={[{ label: 'Cluster List' }, { label: 'Register disconnected cluster' }]}
+          />
+        }
+      />
       <PageSection>
         {errorModal}
         <Formik

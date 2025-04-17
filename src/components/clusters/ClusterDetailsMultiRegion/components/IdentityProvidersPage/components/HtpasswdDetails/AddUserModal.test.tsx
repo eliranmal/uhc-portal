@@ -130,6 +130,11 @@ describe('<AddUserModal />', () => {
     expect(screen.getByText('I am an error')).toBeInTheDocument();
     expect(screen.getByRole('alert')).toBeInTheDocument();
 
-    expect(screen.getByRole('button', { name: 'Add user' })).toBeDisabled();
+    // the form is still showing
+    expect(screen.getByRole('textbox', { name: 'Username' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Password *')).toBeInTheDocument();
+    expect(screen.getByLabelText('Confirm password *')).toBeInTheDocument();
+
+    expect(screen.getByRole('button', { name: 'Add user' })).not.toBeDisabled();
   });
 });

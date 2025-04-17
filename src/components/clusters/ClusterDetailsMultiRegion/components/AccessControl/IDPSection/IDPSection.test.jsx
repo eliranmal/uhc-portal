@@ -14,6 +14,7 @@ import {
 } from '~/testUtils';
 
 import fixtures from '../../../__tests__/ClusterDetails.fixtures';
+import { singleUserHtpasswdMessage } from '../../IdentityProvidersPage/components/HtpasswdDetails/htpasswdUtilities';
 
 import IDPSection from './IDPSection';
 
@@ -147,53 +148,6 @@ describe('<IDPSection />', () => {
       await checkAccessibility(container);
     });
 
-    it('displays expandable section with htpasswd users', async () => {
-      mockUseFeatureGate([[ENHANCED_HTPASSWRD, true]]);
-      useFetchIDPSWithHTPUsersMock.mockReturnValue({
-        data: [
-          {
-            name: 'hello',
-            type: 'HTPasswdIdentityProvider',
-            id: 'id1',
-            htpUsers: [
-              {
-                kind: 'HTPasswdUser',
-                id: 'userId1',
-                username: 'user1',
-              },
-              {
-                kind: 'HTPasswdUser',
-                id: 'userId2',
-                username: 'user2',
-              },
-              {
-                kind: 'HTPasswdUser',
-                id: 'userId3',
-                username: 'user3',
-              },
-            ],
-          },
-          {
-            name: 'hi',
-            type: 'HTPasswdIdentityProvider',
-            id: 'id2',
-          },
-        ],
-        isLoading: false,
-        isError: false,
-      });
-
-      const { container } = render(<IDPSection {...props} />);
-      expect(await screen.findByRole('grid')).toBeInTheDocument();
-      expect(await screen.findByRole('cell', { name: 'hi' })).toBeInTheDocument();
-      expect(await screen.findByRole('cell', { name: 'hello' })).toBeInTheDocument();
-
-      const expandRowToggle = screen.getByTestId('expandable-row');
-      expect(expandRowToggle).toBeInTheDocument();
-      expect(container.querySelectorAll('.pf-v5-c-skeleton').length).toBe(0);
-      await checkAccessibility(container);
-    });
-
     it('should call open delete IDP modal', async () => {
       const useDispatchMock = jest.spyOn(reactRedux, 'useDispatch');
       const mockedDispatch = jest.fn();
@@ -252,6 +206,7 @@ describe('<IDPSection />', () => {
     });
 
     it('shows tooltip for idp actions where the user does not have access', async () => {
+      mockUseFeatureGate([[ENHANCED_HTPASSWRD, true]]);
       useFetchIDPSWithHTPUsersMock.mockReturnValue({
         data: [
           {
@@ -295,6 +250,165 @@ describe('<IDPSection />', () => {
           },
         ),
       ).toBeInTheDocument();
+    });
+
+    it('shows tooltip if single user htpasswd', async () => {
+      useFetchIDPSWithHTPUsersMock.mockReturnValue({
+        data: [
+          {
+            name: 'myHtpasswd',
+            type: 'HTPasswdIdentityProvider',
+            id: 'id2',
+            htpasswd: {
+              username: 'mySingleUserName',
+            },
+          },
+        ],
+        isLoading: false,
+        isError: false,
+      });
+      const newProps = {
+        ...props,
+        isHypershift: true,
+        idpActions: {
+          list: true,
+          update: true,
+          delete: true,
+        },
+      };
+      const { user } = render(<IDPSection {...newProps} />);
+      expect(await screen.findByRole('grid')).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Kebab toggle' }));
+
+      expect(screen.getByRole('menuitem', { name: 'Edit' })).toHaveAttribute(
+        'aria-disabled',
+        'true',
+      );
+
+      await user.click(screen.getByRole('menuitem', { name: 'Edit' }));
+
+      expect(
+        within(screen.getByRole('tooltip')).getByText(singleUserHtpasswdMessage),
+      ).toBeInTheDocument();
+    });
+  });
+  describe('htpasswd', () => {
+    const createUsers = (num) =>
+      [...Array(num)].map((user, index) => ({
+        kind: 'HTPasswdUser',
+        id: `userId${index}`,
+        username: `user${index}`,
+      }));
+
+    it('displays expandable section with htpasswd users', async () => {
+      mockUseFeatureGate([[ENHANCED_HTPASSWRD, true]]);
+      useFetchIDPSWithHTPUsersMock.mockReturnValue({
+        data: [
+          {
+            name: 'hello',
+            type: 'HTPasswdIdentityProvider',
+            id: 'id1',
+            htpUsers: createUsers(3),
+          },
+          {
+            name: 'hi',
+            type: 'HTPasswdIdentityProvider',
+            id: 'id2',
+          },
+        ],
+        isLoading: false,
+        isError: false,
+      });
+
+      const { container } = render(<IDPSection {...props} />);
+      expect(await screen.findByRole('grid')).toBeInTheDocument();
+      expect(await screen.findByRole('cell', { name: 'hi' })).toBeInTheDocument();
+      expect(await screen.findByRole('cell', { name: 'hello' })).toBeInTheDocument();
+
+      const expandRowToggle = screen.getByTestId('expandable-row');
+      expect(expandRowToggle).toBeInTheDocument();
+      expect(container.querySelectorAll('.pf-v5-c-skeleton').length).toBe(0);
+      await checkAccessibility(container);
+    });
+
+    it('does not show how many more users text when there are less than 5 users', async () => {
+      mockUseFeatureGate([[ENHANCED_HTPASSWRD, true]]);
+      useFetchIDPSWithHTPUsersMock.mockReturnValue({
+        data: [
+          {
+            name: 'hello',
+            type: 'HTPasswdIdentityProvider',
+            id: 'id1',
+            htpUsers: createUsers(3),
+          },
+        ],
+      });
+      const { user } = render(<IDPSection {...props} />);
+
+      await user.click(screen.getByRole('button', { name: 'Details' }));
+      expect(screen.getAllByRole('listitem')).toHaveLength(3);
+    });
+
+    it('shows text of how many more users when does not have update access', async () => {
+      const newProps = {
+        ...props,
+        isHypershift: true,
+        idpActions: {
+          list: true,
+          update: false,
+          delete: false,
+        },
+      };
+      useFetchIDPSWithHTPUsersMock.mockReturnValue({
+        data: [
+          {
+            name: 'hello',
+            type: 'HTPasswdIdentityProvider',
+            id: 'id1',
+            htpUsers: createUsers(7),
+          },
+        ],
+      });
+      const { user } = render(<IDPSection {...newProps} />);
+
+      await user.click(screen.getByRole('button', { name: 'Details' }));
+
+      const listItems = screen.getAllByRole('listitem');
+      expect(listItems).toHaveLength(6);
+
+      expect(listItems[listItems.length - 1]).toHaveTextContent('(2 more)');
+    });
+
+    it('shows link of how may more users when user does have update access ', async () => {
+      const newProps = {
+        ...props,
+        isHypershift: true,
+        idpActions: {
+          list: true,
+          update: true,
+          delete: false,
+        },
+      };
+      useFetchIDPSWithHTPUsersMock.mockReturnValue({
+        data: [
+          {
+            name: 'hello',
+            type: 'HTPasswdIdentityProvider',
+            id: 'id1',
+            htpUsers: createUsers(7),
+          },
+        ],
+      });
+      const { user } = render(<IDPSection {...newProps} />);
+
+      await user.click(screen.getByRole('button', { name: 'Details' }));
+
+      const listItems = screen.getAllByRole('listitem');
+      expect(listItems).toHaveLength(6);
+
+      expect(within(listItems[listItems.length - 1]).getByRole('link')).toHaveTextContent(
+        'View all users (7)',
+      );
     });
   });
 });

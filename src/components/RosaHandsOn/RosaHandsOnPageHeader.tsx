@@ -1,5 +1,6 @@
 import React from 'react';
 
+import PageHeader from '@patternfly/react-component-groups/dist/dynamic/PageHeader';
 import {
   Divider,
   Flex,
@@ -9,7 +10,6 @@ import {
   Text,
   TextContent,
 } from '@patternfly/react-core';
-import { PageHeader } from '@redhat-cloud-services/frontend-components';
 
 import Breadcrumbs from '../common/Breadcrumbs';
 import ExternalLink from '../common/ExternalLink';
@@ -18,17 +18,22 @@ import OpenshiftIcon from './RosaHandsOnIcons/OpenshiftIcon';
 import { rosaHandsOnLinks } from './constants';
 
 const RosaHandsOnPageHeader = () => (
-  <PageHeader>
-    <Breadcrumbs
-      path={[
-        { label: 'Overview', path: `/overview` },
-        {
-          label: 'Red Hat OpenShift Service on AWS (ROSA)',
-          path: '/overview/rosa',
-        },
-        { label: 'Hands-on Experience' },
-      ]}
-    />
+  <PageHeader
+    title=""
+    subtitle=""
+    breadcrumbs={
+      <Breadcrumbs
+        path={[
+          { label: 'Overview', path: `/overview` },
+          {
+            label: 'Red Hat OpenShift Service on AWS (ROSA)',
+            path: '/overview/rosa',
+          },
+          { label: 'Hands-on Experience' },
+        ]}
+      />
+    }
+  >
     <Flex direction={{ default: 'row' }} flexWrap={{ default: 'nowrap' }}>
       <FlexItem alignSelf={{ default: 'alignSelfFlexStart' }}>
         <OpenshiftIcon />

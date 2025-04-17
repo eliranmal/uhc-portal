@@ -47,11 +47,17 @@ class RosaGetstarted extends Page {
   }
 
   isCompleteAWSPrerequisitesHeaderShown() {
-    cy.contains('h2', 'Complete AWS prerequisites').should('be.exist').should('be.visible');
+    cy.contains('h2', 'Complete AWS prerequisites')
+      .scrollIntoView()
+      .should('be.exist')
+      .should('be.visible');
   }
 
   isCompleteROSAPrerequisitesHeaderShown() {
-    cy.contains('h2', 'Complete ROSA prerequisites').should('be.exist').should('be.visible');
+    cy.contains('h2', 'Complete ROSA prerequisites')
+      .scrollIntoView()
+      .should('be.exist')
+      .should('be.visible');
   }
 
   isDeployClusterAndSetupAccessHeaderShown() {

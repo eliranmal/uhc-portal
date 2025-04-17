@@ -133,6 +133,11 @@ describe('<EditUserModal />', () => {
     expect(screen.getByText('I am an error')).toBeInTheDocument();
     expect(screen.getByRole('alert')).toBeInTheDocument();
 
-    expect(screen.getByRole('button', { name: 'Edit user' })).toBeDisabled();
+    // the form is still showing
+    expect(screen.getByRole('textbox', { name: 'Username' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Password *')).toBeInTheDocument();
+    expect(screen.getByLabelText('Confirm password *')).toBeInTheDocument();
+
+    expect(screen.getByRole('button', { name: 'Edit user' })).not.toBeDisabled();
   });
 });

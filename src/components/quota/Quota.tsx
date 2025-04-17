@@ -15,8 +15,8 @@ limitations under the License.
 */
 import React from 'react';
 
+import PageHeader from '@patternfly/react-component-groups/dist/dynamic/PageHeader';
 import { PageSection, Stack, StackItem } from '@patternfly/react-core';
-import { PageHeader, PageHeaderTitle } from '@redhat-cloud-services/frontend-components/PageHeader';
 
 import type { State as SubscriptionState } from '../../redux/reducers/subscriptionsReducer';
 import { AppPage } from '../App/AppPage';
@@ -49,9 +49,7 @@ const Quota = ({ invalidateClusters, fetchAccount, account, marketplace }: Props
     const organizationID = account.data.organization.id;
     return (
       <AppPage title={PAGE_TITLE}>
-        <PageHeader>
-          <PageHeaderTitle title={title} className="page-title" />
-        </PageHeader>
+        <PageHeader title={title} subtitle="" />
         <PageSection className="ocm-p-subscriptions">
           <Stack hasGutter>
             <StackItem className="ocm-l-osd-subscription__section">

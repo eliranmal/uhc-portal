@@ -307,11 +307,12 @@ describe('Cluster Actions Dropdown Items', () => {
   });
 
   describe('Can transfer ownership', () => {
-    it('shows transfer ownership option', () => {
+    it('shows transfer ownership option for ready OCP cluster', () => {
       const newProps = {
         ...Fixtures.selfManagedProps,
         canTransferClusterOwnership: true,
         isClusterOwner: true,
+        isAutoClusterTransferOwnershipEnabled: true,
       };
       render(<DropDownItemsRenderHelper {...newProps} />);
 
@@ -319,7 +320,33 @@ describe('Cluster Actions Dropdown Items', () => {
         screen.getByRole('menuitem', { name: 'Transfer cluster ownership' }),
       ).not.toHaveAttribute('aria-disabled');
     });
+    it('shows transfer ownership option for ready ROSA cluster', () => {
+      const newProps = {
+        ...Fixtures.readyRosa,
+        canTransferClusterOwnership: true,
+        isClusterOwner: true,
+        isAutoClusterTransferOwnershipEnabled: true,
+      };
 
+      render(<DropDownItemsRenderHelper {...newProps} />);
+
+      expect(
+        screen.getByRole('menuitem', { name: 'Transfer cluster ownership' }),
+      ).not.toHaveAttribute('aria-disabled');
+    });
+    it('shows transfer ownership option for disconnect OCP', () => {
+      const newProps = {
+        ...Fixtures.disconnectOCP,
+        canTransferClusterOwnership: true,
+        isClusterOwner: false,
+        isAutoClusterTransferOwnershipEnabled: true,
+      };
+      render(<DropDownItemsRenderHelper {...newProps} />);
+
+      expect(
+        screen.getByRole('menuitem', { name: 'Transfer cluster ownership' }),
+      ).not.toHaveAttribute('aria-disabled');
+    });
     it('shows cancel transfer ownership option', () => {
       const cluster = {
         ...Fixtures.selfManagedProps.cluster,
@@ -330,6 +357,7 @@ describe('Cluster Actions Dropdown Items', () => {
         cluster,
         canTransferClusterOwnership: true,
         isClusterOwner: true,
+        isAutoClusterTransferOwnershipEnabled: true,
       };
       render(<DropDownItemsRenderHelper {...newProps} />);
 

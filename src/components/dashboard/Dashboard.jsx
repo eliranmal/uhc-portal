@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import PageHeader from '@patternfly/react-component-groups/dist/dynamic/PageHeader';
 import {
   Card,
   CardBody,
@@ -15,7 +16,6 @@ import {
   SplitItem,
   Title,
 } from '@patternfly/react-core';
-import { PageHeader } from '@redhat-cloud-services/frontend-components/PageHeader';
 
 import { createOverviewQueryObject } from '../../common/queryHelpers';
 import { AppPage } from '../App/AppPage';

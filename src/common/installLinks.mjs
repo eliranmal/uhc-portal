@@ -275,7 +275,7 @@ const links = {
     'https://developers.redhat.com/content-gateway/rest/browse/pub/cgw/ocm/latest',
 
   RHOAS_CLI_DOCS:
-    'https://access.redhat.com/documentation/en-us/red_hat_openshift_application_services/1/guide/bb30ee92-9e0a-4fd6-a67f-aed8910d7da3',
+    'https://github.com/redhat-developer/app-services-guides/blob/main/docs/kafka/rhoas-cli-getting-started-kafka/README.adoc',
   RHOAS_CLI_RELEASES_LATEST: 'https://github.com/redhat-developer/app-services-cli/releases/latest',
 
   HELM_DOCS: `${DOCS_BASE}/building_applications/working-with-helm-charts#understanding-helm`,

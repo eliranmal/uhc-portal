@@ -26,7 +26,7 @@ import {
   Tr,
 } from '@patternfly/react-table';
 
-import { useNavigate } from '~/common/routing';
+import { Link, useNavigate } from '~/common/routing';
 import { LoadingSkeletonCard } from '~/components/clusters/common/LoadingSkeletonCard/LoadingSkeletonCard';
 import { useFetchIDPsWithHTPUsers } from '~/queries/ClusterDetailsQueries/AccessControlTab/UserQueries/useFetchIDPsWithHTPUsers';
 import { ENHANCED_HTPASSWRD } from '~/queries/featureGates/featureConstants';
@@ -35,6 +35,10 @@ import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 import links from '../../../../../../common/installLinks.mjs';
 import ClipboardCopyLinkButton from '../../../../../common/ClipboardCopyLinkButton';
 import { modalActions } from '../../../../../common/Modal/ModalActions';
+import {
+  isSingleUserHtpasswd,
+  singleUserHtpasswdMessage,
+} from '../../IdentityProvidersPage/components/HtpasswdDetails/htpasswdUtilities';
 import {
   getOauthCallbackURL,
   IDPformValues,
@@ -147,9 +151,15 @@ const IDPSection = (props) => {
         navigate(`/details/s/${subscriptionID}/edit-idp/${idp.name}`);
       },
     };
-    if (!idpActions.update) {
+
+    if (
+      !idpActions.update ||
+      (idp.type === IDPformValues.HTPASSWD && isSingleUserHtpasswd(idp.htpasswd))
+    ) {
       editIDPAction.isAriaDisabled = true;
-      editIDPAction.tooltipProps = { content: notAllowedReason('edit') };
+      editIDPAction.tooltipProps = {
+        content: !idpActions.update ? notAllowedReason('edit') : singleUserHtpasswdMessage,
+      };
     }
     const deleteIDPAction = {
       title: 'Delete',
@@ -218,8 +228,22 @@ const IDPSection = (props) => {
                   const htpUsersCount = idp.htpUsers?.length;
                   const remainingUsers = htpUsersCount > 5 ? htpUsersCount - 5 : undefined;
 
+                  const displayRemainingUsersCount = () => {
+                    if (idpActions.update) {
+                      return (
+                        <li>
+                          <Link to={`/details/s/${subscriptionID}/edit-idp/${idp.name}`}>
+                            View all users ({htpUsersCount})
+                          </Link>
+                        </li>
+                      );
+                    }
+
+                    return remainingUsers ? <li> ({remainingUsers} more) </li> : null;
+                  };
+
                   return (
-                    <Tbody key={idp.key} isExpanded={isIdpExpanded(idp)}>
+                    <Tbody key={idp.id} isExpanded={isIdpExpanded(idp)}>
                       <Tr>
                         <Td
                           expand={
@@ -264,9 +288,9 @@ const IDPSection = (props) => {
                             <ExpandableRowContent>
                               <ul className="pf-v5-u-mb-md" style={{ wordBreak: 'break-word' }}>
                                 {idp.htpUsers.slice(0, 5).map((user) => (
-                                  <li>{user.username}</li>
+                                  <li key={user.id}>{user.username}</li>
                                 ))}
-                                {remainingUsers ? <li> ({remainingUsers} more) </li> : null}
+                                {displayRemainingUsersCount()}
                               </ul>
                             </ExpandableRowContent>
                           </Td>

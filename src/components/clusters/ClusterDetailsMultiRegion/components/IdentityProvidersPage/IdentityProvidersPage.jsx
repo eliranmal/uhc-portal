@@ -7,6 +7,7 @@ import PropTypes from 'prop-types';
 import { useDispatch } from 'react-redux';
 import { useParams } from 'react-router-dom';
 
+import PageHeader from '@patternfly/react-component-groups/dist/dynamic/PageHeader';
 import {
   Button,
   Card,
@@ -19,7 +20,6 @@ import {
   Split,
   SplitItem,
 } from '@patternfly/react-core';
-import { PageHeader, PageHeaderTitle } from '@redhat-cloud-services/frontend-components/PageHeader';
 
 import { Link, Navigate } from '~/common/routing';
 import { AppPage } from '~/components/App/AppPage';
@@ -41,6 +41,7 @@ import Breadcrumbs from '../../../../common/Breadcrumbs';
 import Unavailable from '../../../../common/Unavailable';
 
 import HtpasswdDetails from './components/HtpasswdDetails/HtpasswdDetails';
+import { isSingleUserHtpasswd } from './components/HtpasswdDetails/htpasswdUtilities';
 import {
   IdentityProvidersPageFormInitialValues,
   IdentityProvidersPageValidationSchema,
@@ -148,7 +149,7 @@ const IdentityProvidersPage = (props) => {
   }
 
   const htpasswd = IDPList.find(
-    (idp) => idp.name === params.idpName && idp.type === 'HTPasswdIdentityProvider',
+    (idp) => idp.name === params.idpName && idp.type === IDPformValues.HTPASSWD,
   );
 
   const errorState = () => (
@@ -212,20 +213,22 @@ const IdentityProvidersPage = (props) => {
 
   return (
     <AppPage title={PAGE_TITLE}>
-      <PageHeader>
-        <Breadcrumbs
-          path={[
-            { label: 'Cluster List' },
-            { label: clusterName, path: `/details/s/${cluster.subscription.id}` },
-            {
-              label: 'Access control',
-              path: `/details/s/${cluster.subscription.id}#accessControl`,
-            },
-            { label: title },
-          ]}
-        />
-        <PageHeaderTitle title={title} />
-      </PageHeader>
+      <PageHeader
+        title={title}
+        breadcrumbs={
+          <Breadcrumbs
+            path={[
+              { label: 'Cluster List' },
+              { label: clusterName, path: `/details/s/${cluster.subscription.id}` },
+              {
+                label: 'Access control',
+                path: `/details/s/${cluster.subscription.id}#accessControl`,
+              },
+              { label: title },
+            ]}
+          />
+        }
+      />
       <PageSection>
         {htpasswd && canViewHtpasswd ? (
           <HtpasswdDetails
@@ -234,6 +237,7 @@ const IdentityProvidersPage = (props) => {
             clusterId={cluster.id}
             region={region}
             idpActions={cluster.idpActions}
+            isSingleUserHtpasswd={isSingleUserHtpasswd(htpasswd.htpasswd)}
           />
         ) : (
           <Formik

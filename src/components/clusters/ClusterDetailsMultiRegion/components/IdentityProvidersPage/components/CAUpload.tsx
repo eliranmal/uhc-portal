@@ -139,7 +139,9 @@ const CAUpload = ({
             />
             Browse&hellip;
           </span>
-          <Button onClick={onClearClick}>Clear</Button>
+          <Button onClick={onClearClick} className="pf-v5-u-ml-md">
+            Clear
+          </Button>
         </InputGroupItem>
       </InputGroup>
 

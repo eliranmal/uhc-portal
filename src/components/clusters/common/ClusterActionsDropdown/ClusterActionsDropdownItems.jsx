@@ -366,10 +366,9 @@ function actionResolver(
   ].includes(product);
   const showTransferClusterOwnership =
     cluster.canEdit &&
-    isClusterOwner &&
-    isClusterReady &&
     canTransferClusterOwnership &&
-    (isAllowedProducts || allowAutoTransferClusterOwnership) &&
+    (isAllowedProducts ||
+      (allowAutoTransferClusterOwnership && isClusterOwner && isClusterReady)) &&
     get(cluster, 'subscription.status') !== SubscriptionCommonFieldsStatus.Archived;
   const showUpgradeTrialCluster = isClusterReady && cluster.canEdit && isProductOSDTrial;
 

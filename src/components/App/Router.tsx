@@ -39,15 +39,6 @@ import ClusterListMultiRegion from '../clusters/ClusterListMultiRegion';
 import CreateClusterPage from '../clusters/CreateClusterPage';
 import GovCloudPage from '../clusters/GovCloud/GovCloudPage';
 import InsightsAdvisorRedirector from '../clusters/InsightsAdvisorRedirector';
-import InstallAlibabaCloud from '../clusters/install/InstallAlibabaCloud';
-import InstallArmAWS from '../clusters/install/InstallArmAWS';
-import ConnectedInstallArmAWSIPI from '../clusters/install/InstallArmAWSIPI';
-import ConnectedInstallArmAWSUPI from '../clusters/install/InstallArmAWSUPI';
-import ConnectedInstallArmAzureIPI from '../clusters/install/InstallArmAzureIPI';
-import InstallArmBareMetal from '../clusters/install/InstallArmBareMetal';
-import ConnectedInstallArmBareMetalABI from '../clusters/install/InstallArmBareMetalABI';
-import InstallArmBMIPI from '../clusters/install/InstallArmBareMetalIPI';
-import InstallArmBMUPI from '../clusters/install/InstallArmBareMetalUPI';
 import ConnectedInstallArmPreRelease from '../clusters/install/InstallArmPreRelease';
 import InstallASH from '../clusters/install/InstallASH';
 import ConnectedInstallASHIPI from '../clusters/install/InstallASHIPI';
@@ -95,6 +86,8 @@ import InstallVSphere from '../clusters/install/InstallVSphere';
 import ConnectedInstallVSphereABI from '../clusters/install/InstallVSphereABI';
 import ConnectedInstallVSphereIPI from '../clusters/install/InstallVSphereIPI';
 import ConnectedInstallVSphereUPI from '../clusters/install/InstallVSphereUPI';
+import { InstallRouteMap } from '../clusters/install/InstallWrapper';
+import { routesData } from '../clusters/install/InstallWrapperRoutes';
 import RegisterCluster from '../clusters/RegisterCluster';
 import { CreateOsdWizard } from '../clusters/wizards/osd';
 import CreateROSAWizard from '../clusters/wizards/rosa';
@@ -190,22 +183,12 @@ const Router: React.FC<RouterProps> = ({ planType, clusterId, externalClusterId 
             </TermsGuard>
           }
         />
+        {InstallRouteMap(routesData)}
         <Route path="/token/show" element={<CLILoginPage showToken />} />
         <Route path="/token" element={<CLILoginPage showToken={false} showPath="/token/show" />} />
-        <Route path="/install/alibaba" element={<InstallAlibabaCloud />} />
-        <Route path="/install/arm/installer-provisioned" element={<InstallArmBMIPI />} />
-        <Route path="/install/arm/user-provisioned" element={<InstallArmBMUPI />} />
-        <Route path="/install/arm/agent-based" element={<ConnectedInstallArmBareMetalABI />} />
         <Route path="/install/arm/pre-release" element={<ConnectedInstallArmPreRelease />} />
-        <Route path="/install/arm" element={<InstallArmBareMetal />} />
         <Route path="/install/aws/installer-provisioned" element={<ConnectedInstallAWSIPI />} />
         <Route path="/install/aws/user-provisioned" element={<ConnectedInstallAWSUPI />} />
-        <Route
-          path="/install/aws/arm/installer-provisioned"
-          element={<ConnectedInstallArmAWSIPI />}
-        />
-        <Route path="/install/aws/arm/user-provisioned" element={<ConnectedInstallArmAWSUPI />} />
-        <Route path="/install/aws/arm" element={<InstallArmAWS />} />
         <Route
           path="/install/aws/multi/installer-provisioned"
           element={<ConnectedInstallMultiAWSIPI />}
@@ -225,10 +208,6 @@ const Router: React.FC<RouterProps> = ({ planType, clusterId, externalClusterId 
         />
         <Route path="/install/openstack/user-provisioned" element={<ConnectedInstallOSPUPI />} />
         <Route path="/install/openstack" element={<InstallOSP />} />
-        <Route
-          path="/install/azure/arm/installer-provisioned"
-          element={<ConnectedInstallArmAzureIPI />}
-        />
         <Route
           path="/install/azure/multi/installer-provisioned"
           element={<ConnectedInstallMultiAzureIPI />}

@@ -36,9 +36,17 @@ type Props = {
     [action: string]: boolean;
   };
   region?: string;
+  isSingleUserHtpasswd?: boolean;
 };
 
-const HtpasswdDetails = ({ idpId, clusterId, region, idpName, idpActions }: Props) => {
+const HtpasswdDetails = ({
+  idpId,
+  clusterId,
+  region,
+  idpName,
+  idpActions,
+  isSingleUserHtpasswd,
+}: Props) => {
   const dispatch = useDispatch();
   const { isLoading, users, isError, error, isFetching, refetch } = useFetchHtpasswdUsers(
     clusterId,
@@ -167,7 +175,9 @@ const HtpasswdDetails = ({ idpId, clusterId, region, idpName, idpActions }: Prop
       <Tr key={user.id}>
         <Td className="pf-v6-u-text-break-word">{user.username}</Td>
         <Td isActionCell>
-          {actions && idpActions?.update ? <ActionsColumn items={actions} /> : null}
+          {actions && idpActions?.update && !isSingleUserHtpasswd ? (
+            <ActionsColumn items={actions} />
+          ) : null}
         </Td>
       </Tr>
     );
@@ -225,7 +235,7 @@ const HtpasswdDetails = ({ idpId, clusterId, region, idpName, idpActions }: Prop
                   aria-label="Filter by username"
                 />
               </ToolbarItem>
-              {idpActions?.update ? (
+              {idpActions?.update && !isSingleUserHtpasswd ? (
                 <ToolbarItem>
                   <Button
                     variant={ButtonVariant.secondary}

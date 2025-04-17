@@ -26,14 +26,8 @@ const openshiftHeaderContent: OverviewProductBannerProps = {
   icon: OpenShiftProductIcon,
   altText: 'OpenShift',
   learnMoreLink: docLinks.WHAT_IS_OPENSHIFT,
-  description: (
-    <>
-      Focus on work that matters with the industry&#39;s leading hybrid cloud application platform
-      powered by Kubernetes.
-      <br />
-      Develop, modernize, deploy, run, and manage your applications faster and easier.
-    </>
-  ),
+  description:
+    "Focus on work that matters with the industry's leading hybrid cloud application platform powered by Kubernetes. \nDevelop, modernize, deploy, run, and manage your applications faster and easier.",
   dataTestId: 'OverviewHeader',
 };
 

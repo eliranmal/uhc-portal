@@ -62,10 +62,10 @@ export const ServicePage = ({ serviceName }: ServicePageProps) => {
     <AppPage>
       <ProductBanner
         icon={<ServiceLogo serviceName={serviceName} />}
-        learnMoreLink={data.bannerContent?.learnMoreLink}
-        title={data.bannerContent?.title}
-        text={data.bannerContent?.text}
-        iconCardBodyClassName={data.bannerContent?.iconCardBodyClassName}
+        title={data.bannerContent.title}
+        text={data.bannerContent.text}
+        linkLabel={data.bannerContent.linkLabel}
+        linkHref={data.bannerContent.linkHref}
         breadcrumbs={
           <Breadcrumbs
             path={[
