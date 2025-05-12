@@ -19,7 +19,6 @@ describe('<CreateClusterPage />', () => {
         hasOSDQuota: true,
         hasOSDTrialQuota: true,
         rosaCreationWizardFeature: true,
-        assistedInstallerFeature: true,
         getOrganizationAndQuota: () => {},
         activeTab: 'Local',
         getAuthToken: () => {},

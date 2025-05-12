@@ -3,8 +3,8 @@ import React from 'react';
 import { checkAccessibility, render, screen } from '~/testUtils';
 
 import { subscriptionSettings } from '../../../../common/subscriptionTypes';
-import { SubscriptionCommonFields } from '../../../../types/accounts_mgmt.v1';
-import SubscriptionCompliancy from '../components/SubscriptionCompliancy';
+import { SubscriptionCommonFieldsSupport_level as SubscriptionCommonFieldsSupportLevel } from '../../../../types/accounts_mgmt.v1';
+import SubscriptionCompliancy from '../components/ClusterDetailsTop/components/SubscriptionCompliancy';
 
 import fixtures from './ClusterDetails.fixtures';
 
@@ -27,7 +27,7 @@ describe('<SubscriptionCompliancy />', () => {
 
   it('should warn during evaluation period', async () => {
     const cluster = { ...OCPClusterDetails.cluster, canEdit: true };
-    cluster.subscription[SUPPORT_LEVEL] = SubscriptionCommonFields.support_level.EVAL;
+    cluster.subscription[SUPPORT_LEVEL] = SubscriptionCommonFieldsSupportLevel.Eval;
     cluster.subscription.capabilities = [
       {
         name: 'capability.cluster.subscribed_ocp',
@@ -50,7 +50,7 @@ describe('<SubscriptionCompliancy />', () => {
 
   it('should warn during evaluation period without an ability to edit', async () => {
     const cluster = { ...OCPClusterDetails.cluster, canEdit: true };
-    cluster.subscription[SUPPORT_LEVEL] = SubscriptionCommonFields.support_level.EVAL;
+    cluster.subscription[SUPPORT_LEVEL] = SubscriptionCommonFieldsSupportLevel.Eval;
     cluster.subscription.capabilities = [
       {
         name: 'capability.cluster.subscribed_ocp',
@@ -74,7 +74,7 @@ describe('<SubscriptionCompliancy />', () => {
 
   it('should warn when evaluation is expired', async () => {
     const cluster = { ...OCPClusterDetails.cluster, canEdit: true };
-    cluster.subscription[SUPPORT_LEVEL] = SubscriptionCommonFields.support_level.NONE;
+    cluster.subscription[SUPPORT_LEVEL] = SubscriptionCommonFieldsSupportLevel.None;
     cluster.subscription.capabilities = [];
     const newProps = { ...props, cluster };
     const { container } = render(<SubscriptionCompliancy {...newProps} />);
@@ -90,7 +90,7 @@ describe('<SubscriptionCompliancy />', () => {
   });
   it('should warn when evaluation is expired without an ability to edit', async () => {
     const cluster = { ...OCPClusterDetails.cluster, canEdit: true };
-    cluster.subscription[SUPPORT_LEVEL] = SubscriptionCommonFields.support_level.NONE;
+    cluster.subscription[SUPPORT_LEVEL] = SubscriptionCommonFieldsSupportLevel.None;
     cluster.subscription.capabilities = [];
     cluster.canEdit = false;
     const newProps = { ...props, cluster };
@@ -108,7 +108,7 @@ describe('<SubscriptionCompliancy />', () => {
 
   it('should not render when it has a valid support', () => {
     const cluster = { ...OCPClusterDetails.cluster };
-    cluster.subscription[SUPPORT_LEVEL] = SubscriptionCommonFields.support_level.STANDARD;
+    cluster.subscription[SUPPORT_LEVEL] = SubscriptionCommonFieldsSupportLevel.Standard;
     const newProps = { ...props, cluster };
     const { container } = render(<SubscriptionCompliancy {...newProps} />);
     expect(container).toBeEmptyDOMElement();

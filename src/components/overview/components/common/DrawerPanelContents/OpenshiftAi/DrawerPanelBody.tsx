@@ -12,9 +12,9 @@ import {
 } from '@patternfly/react-core';
 
 import ExternalLink from '~/components/common/ExternalLink';
-import VideoImg from '~/styles/images/OpenshiftAiExplanationVideoImg.png';
+import { YoutubePlayer } from '~/components/common/YoutubePlayer/YoutubePlayer';
 
-const AdvancedClusterSecurityDrawerPanelBody = (
+const OpenShiftAiDrawerPanelBody = (
   <Stack hasGutter className="drawer-panel-content-body">
     <StackItem>
       <TextContent>
@@ -26,18 +26,7 @@ const AdvancedClusterSecurityDrawerPanelBody = (
     </StackItem>
 
     <StackItem>
-      <ExternalLink
-        href="https://www.youtube.com/watch?v=JGesQwL-lkg&t=6s"
-        noIcon
-        data-testid="drawer-panel-content__explanation-video-parent"
-      >
-        <img
-          src={VideoImg}
-          alt="explanation-video"
-          className="drawer-panel-content__explanation-video"
-          data-testid="drawer-panel-content__explanation-video"
-        />
-      </ExternalLink>
+      <YoutubePlayer videoID="JGesQwL-lkg" />
       <TextContent>
         <Text component={TextVariants.small}>Video duration 5:26</Text>
       </TextContent>
@@ -150,4 +139,4 @@ const AdvancedClusterSecurityDrawerPanelBody = (
   </Stack>
 );
 
-export default AdvancedClusterSecurityDrawerPanelBody;
+export { OpenShiftAiDrawerPanelBody };

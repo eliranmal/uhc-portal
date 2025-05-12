@@ -2,7 +2,7 @@ import React from 'react';
 
 import { checkAccessibility, render, screen } from '~/testUtils';
 
-import fixtures from '../../ClusterDetails/__tests__/ClusterDetails.fixtures';
+import fixtures from '../../ClusterDetailsMultiRegion/__tests__/ClusterDetails.fixtures';
 
 import ActionRequiredLink from './ActionRequiredLink';
 

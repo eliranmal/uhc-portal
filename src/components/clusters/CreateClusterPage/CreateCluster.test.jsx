@@ -28,7 +28,6 @@ describe('<CreateClusterPage />', () => {
     rosaCreationWizardFeature: false,
     organization: { ...organization, fulfilled: true },
     token: {},
-    assistedInstallerFeature: false,
   };
 
   it.skip('is accessible', async () => {

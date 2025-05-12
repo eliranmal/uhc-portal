@@ -2,7 +2,7 @@ import React from 'react';
 
 import { defaultClusterFromSubscription } from '~/components/clusters/common/__tests__/defaultClusterFromSubscription.fixtures';
 import { checkAccessibility, render, screen } from '~/testUtils';
-import { ClusterState } from '~/types/clusters_mgmt.v1';
+import { ClusterState } from '~/types/clusters_mgmt.v1/enums';
 import { ClusterFromSubscription } from '~/types/types';
 
 import { ClusterStatus } from './ClusterStatus';
@@ -11,7 +11,7 @@ const cluster: ClusterFromSubscription = {
   ...defaultClusterFromSubscription,
   name: 'Some Cluster',
   id: 'cluster-id',
-  state: ClusterState.READY,
+  state: ClusterState.ready,
 };
 
 const machinePools = [
@@ -27,20 +27,31 @@ const machinePools = [
 
 const machinePoolsAutoScale = [
   {
-    autoscaling: { min_replica: 2, max_replica: 3 },
+    autoscaling: { min_replicas: 2, max_replicas: 3 },
     status: { current_replicas: 2 },
   },
   {
-    autoscaling: { min_replica: 2, max_replica: 3 },
+    autoscaling: { min_replicas: 2, max_replicas: 3 },
     status: { current_replicas: 3 },
   },
   {
-    autoscaling: { min_replica: 2, max_replica: 3 },
+    autoscaling: { min_replicas: 2, max_replicas: 3 },
     status: { current_replicas: 1 },
   },
   {
-    autoscaling: { min_replica: 2, max_replica: 3 },
+    autoscaling: { min_replicas: 2, max_replicas: 3 },
     status: { current_replicas: 4 },
+  },
+];
+
+const machinePoolsAutoScaleReady = [
+  {
+    autoscaling: { min_replicas: 2, max_replicas: 4 },
+    status: { current_replicas: 2 },
+  },
+  {
+    autoscaling: { min_replicas: 2, max_replicas: 4 },
+    status: { current_replicas: 2 },
   },
 ];
 
@@ -135,6 +146,20 @@ describe('<ClusterStatus />', () => {
 
       // Assert
       expect(screen.getByText('Pending 2 / 4')).toBeInTheDocument();
+    });
+
+    it('shows all machine pools are in "ready like" status ', () => {
+      // Arrange
+      render(
+        <ClusterStatus
+          cluster={{ ...cluster, hypershift: { enabled: true } }}
+          limitedSupport={false}
+          machinePools={machinePoolsAutoScaleReady}
+        />,
+      );
+
+      // Assert
+      expect(screen.getByText('Ready 2 / 2')).toBeInTheDocument();
     });
   });
 });

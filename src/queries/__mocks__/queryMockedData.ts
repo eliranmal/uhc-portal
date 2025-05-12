@@ -1,4 +1,4 @@
-import { Subscription, SubscriptionCommonFields } from '~/types/accounts_mgmt.v1';
+import { Subscription, SubscriptionCommonFieldsStatus } from '~/types/accounts_mgmt.v1';
 
 import { SubscriptionResponseType } from '../types';
 
@@ -15,7 +15,7 @@ export const mockSubscriptionData: Subscription = {
     id: 'ROSA',
     type: 'ROSA',
   },
-  status: SubscriptionCommonFields.status.ACTIVE,
+  status: SubscriptionCommonFieldsStatus.Active,
   cluster_id: 'mockedClusterID',
   managed: true,
 };

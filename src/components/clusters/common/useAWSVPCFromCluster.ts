@@ -2,15 +2,13 @@ import React from 'react';
 import { AxiosError, AxiosResponse } from 'axios';
 
 import { isHypershiftCluster } from '~/components/clusters/common/clusterStates';
-import {
-  CloudProviderVPCRequest,
-  getAWSCloudProviderVPCs,
-} from '~/redux/actions/ccsInquiriesActions';
+import { CloudProviderVPCRequest } from '~/redux/actions/ccsInquiriesActions';
 import { securityGroupsSort } from '~/redux/reducers/ccsInquiriesReducer';
-import clusterService from '~/services/clusterService';
-import { CloudVPC, Cluster } from '~/types/clusters_mgmt.v1';
+import clusterService, { getClusterServiceForRegion } from '~/services/clusterService';
+import { CloudVpc } from '~/types/clusters_mgmt.v1';
+import { ClusterFromSubscription } from '~/types/types';
 
-const { getAWSVPCDetails } = clusterService;
+// const { getAWSVPCDetails } = clusterService;
 
 /**
  * Reads the response of VPCs associated to a given subnet.
@@ -20,9 +18,9 @@ const { getAWSVPCDetails } = clusterService;
  */
 const readVpcFromList = (
   vpcResponse: AxiosResponse<{
-    items?: CloudVPC[] | undefined;
+    items?: CloudVpc[] | undefined;
   }>,
-): CloudVPC | undefined => {
+): CloudVpc | undefined => {
   const vpcList = vpcResponse.data?.items || [];
   if (vpcList.length === 1) {
     return vpcList[0];
@@ -30,23 +28,53 @@ const readVpcFromList = (
   return undefined;
 };
 
-const adaptVPCDetails = (vpc: CloudVPC) => {
+const adaptVPCDetails = (vpc: CloudVpc) => {
   const securityGroups = (vpc.aws_security_groups || []).filter((sg) => !sg.red_hat_managed);
   securityGroups.sort(securityGroupsSort);
   return { ...vpc, aws_security_groups: securityGroups };
 };
 
-const fetchVpcByClusterId = async (clusterId: string) => {
+const fetchVpcByClusterId = async (clusterId: string, region?: string) => {
+  if (region) {
+    const clusterService = getClusterServiceForRegion(region);
+    let vpc;
+    const result = await clusterService.getAWSVPCDetails(clusterId, {
+      includeSecurityGroups: true,
+    });
+    if (result.data?.id) {
+      vpc = result.data;
+    }
+    return vpc;
+  }
   let vpc;
-  const result = await getAWSVPCDetails(clusterId, { includeSecurityGroups: true });
+  const result = await clusterService.getAWSVPCDetails(clusterId, { includeSecurityGroups: true });
   if (result.data?.id) {
     vpc = result.data;
   }
   return vpc;
 };
 
-const fetchVpcByStsCredentials = async (vpcRequestMemo: CloudProviderVPCRequest) => {
-  const vpcList = await getAWSCloudProviderVPCs(vpcRequestMemo).payload;
+// TODO: needs multiregion
+const fetchVpcByStsCredentials = async (
+  vpcRequestMemo: CloudProviderVPCRequest,
+  dataSovereigntyRegion?: string,
+) => {
+  if (dataSovereigntyRegion) {
+    const clusterService = getClusterServiceForRegion(dataSovereigntyRegion);
+    const vpcList = await clusterService.listAWSVPCs(
+      vpcRequestMemo.awsCredentials,
+      vpcRequestMemo.region,
+      vpcRequestMemo.subnet,
+      vpcRequestMemo.options,
+    );
+    return readVpcFromList(vpcList);
+  }
+  const vpcList = await clusterService.listAWSVPCs(
+    vpcRequestMemo.awsCredentials,
+    vpcRequestMemo.region,
+    vpcRequestMemo.subnet,
+    vpcRequestMemo.options,
+  );
   return readVpcFromList(vpcList);
 };
 
@@ -58,8 +86,8 @@ const fetchVpcByStsCredentials = async (vpcRequestMemo: CloudProviderVPCRequest)
  * @param cluster the cluster to retrieve the VPC for
  * @returns vpc details.
  */
-export const useAWSVPCFromCluster = (cluster: Cluster) => {
-  const [clusterVpc, setClusterVpc] = React.useState<CloudVPC | undefined>();
+export const useAWSVPCFromCluster = (cluster: ClusterFromSubscription, region?: string) => {
+  const [clusterVpc, setClusterVpc] = React.useState<CloudVpc | undefined>();
   const [isLoading, setIsLoading] = React.useState<boolean>(!!cluster.id);
   const [hasError, setHasError] = React.useState<boolean>(false);
   const [errorReason, setErrorReason] = React.useState<string>();
@@ -68,7 +96,7 @@ export const useAWSVPCFromCluster = (cluster: Cluster) => {
   const subnetIds = cluster.aws?.subnet_ids || [];
   const isBYOVPC = subnetIds.length > 0;
 
-  const manageVpcFetch = async (vpcPromise: Promise<CloudVPC | undefined>) => {
+  const manageVpcFetch = async (vpcPromise: Promise<CloudVpc | undefined>) => {
     setHasError(false);
     setIsLoading(true);
     try {
@@ -89,11 +117,11 @@ export const useAWSVPCFromCluster = (cluster: Cluster) => {
 
   // Fetches the VPC by the cluster's id
   React.useEffect(() => {
-    const loadVpcByClusterId = async () => manageVpcFetch(fetchVpcByClusterId(clusterId));
+    const loadVpcByClusterId = async () => manageVpcFetch(fetchVpcByClusterId(clusterId, region));
     if (clusterId && !isHypershift && isBYOVPC) {
       loadVpcByClusterId();
     }
-  }, [clusterId, isHypershift, isBYOVPC]);
+  }, [clusterId, isHypershift, isBYOVPC, region]);
 
   // Fetches the VPC by the cluster's STS credentials
   // The dependencies are the primitive values - if we use an object the event will trigger even when no data has changed.
@@ -109,12 +137,12 @@ export const useAWSVPCFromCluster = (cluster: Cluster) => {
         subnet: subnetId,
         options: { includeSecurityGroups: isHypershift },
       };
-      return manageVpcFetch(fetchVpcByStsCredentials(request));
+      return manageVpcFetch(fetchVpcByStsCredentials(request, region));
     };
     if (isHypershift && roleArn && subnetId && regionId) {
       loadVpcByStsCredentials();
     }
-  }, [isHypershift, subnetId, roleArn, regionId]);
+  }, [isHypershift, subnetId, roleArn, regionId, region]);
 
   return { clusterVpc, isLoading, hasError, errorReason };
 };

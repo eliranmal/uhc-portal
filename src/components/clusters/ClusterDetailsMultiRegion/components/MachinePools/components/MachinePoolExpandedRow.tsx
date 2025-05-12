@@ -4,11 +4,12 @@ import isEmpty from 'lodash/isEmpty';
 import { Grid, GridItem, Label, Title } from '@patternfly/react-core';
 
 import { truncateTextWithEllipsis } from '~/common/helpers';
-import { useAWSVPCFromCluster } from '~/components/clusters/commonMultiRegion/useAWSVPCFromCluster';
-import { Cluster, NodePool, SecurityGroup } from '~/types/clusters_mgmt.v1';
-import { MachinePool } from '~/types/clusters_mgmt.v1/models/MachinePool';
+import { useAWSVPCFromCluster } from '~/components/clusters/common/useAWSVPCFromCluster';
+import { MachinePool, NodePool, SecurityGroup } from '~/types/clusters_mgmt.v1';
+import { ClusterFromSubscription } from '~/types/types';
 
-import { isMPoolAz } from '../../../clusterDetailsHelper';
+import { isHypershiftCluster, isMPoolAz } from '../../../clusterDetailsHelper';
+import MachinePoolAutoRepairDetail from '../MachinePoolAutoRepairDetail';
 import MachinePoolAutoScalingDetail from '../MachinePoolAutoscalingDetail';
 import { getSubnetIds, hasSubnets } from '../machinePoolsHelper';
 
@@ -75,7 +76,7 @@ const MachinePoolExpandedRow = ({
   machinePool,
   region,
 }: {
-  cluster: Cluster;
+  cluster: ClusterFromSubscription;
   isMultiZoneCluster: boolean;
   machinePool: MachinePool;
   region?: string;
@@ -87,6 +88,8 @@ const MachinePoolExpandedRow = ({
     (machinePool as NodePool)?.aws_node_pool?.additional_security_group_ids ||
     [];
   const isMultiZoneMachinePool = isMPoolAz(cluster, machinePool.availability_zones?.length);
+  const isHypershift = isHypershiftCluster(cluster);
+  const isAutoRepairEnabled = (machinePool as NodePool)?.auto_repair;
 
   return (
     <Grid hasGutter>
@@ -120,6 +123,11 @@ const MachinePoolExpandedRow = ({
             isMultiZoneCluster={isMultiZoneCluster}
             autoscaling={machinePool.autoscaling}
           />
+        </GridItem>
+      )}
+      {isHypershift && (
+        <GridItem md={6}>
+          <MachinePoolAutoRepairDetail isAutoRepairEnabled={isAutoRepairEnabled} />
         </GridItem>
       )}
       {spotMarketOptions && (

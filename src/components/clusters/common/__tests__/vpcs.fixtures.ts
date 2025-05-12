@@ -1,4 +1,4 @@
-import { CloudVPC } from '~/types/clusters_mgmt.v1';
+import { CloudVpc } from '~/types/clusters_mgmt.v1';
 
 export const vpcList = [
   {
@@ -103,4 +103,4 @@ export const vpcList = [
     id: 'vpc-099304b69dd838794',
     cidr_block: '10.0.0.0/19',
   },
-] as CloudVPC[];
+] as CloudVpc[];

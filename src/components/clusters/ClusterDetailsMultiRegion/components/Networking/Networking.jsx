@@ -1,13 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { EmptyState, EmptyStateBody, Grid, GridItem } from '@patternfly/react-core';
-import { Spinner } from '@redhat-cloud-services/frontend-components/Spinner';
+import { EmptyState, EmptyStateBody, Grid, GridItem, Spinner } from '@patternfly/react-core';
 
 import { useGetClusterRouters } from '~/queries/ClusterDetailsQueries/NetworkingTab/useGetClusterRouters';
 
 import ApplicationIngressCard from './components/ApplicationIngressCard';
-import ClusterIngressCard from './components/ClusterIngressCard';
+import { ClusterIngressCard } from './components/ClusterIngressCard/ClusterIngressCard';
 import NetworkConfigurationCard from './components/NetworkConfigurationCard';
 import VPCDetailsCard from './components/VPCDetailsCard';
 import VPCSubnetsCard from './components/VPCSubnetsCard';
@@ -28,7 +27,9 @@ const Networking = ({ cluster, refreshCluster, clusterID, isManaged, region }) =
     return (
       <EmptyState>
         <EmptyStateBody>
-          <Spinner centered />
+          <div className="pf-v5-u-text-align-center">
+            <Spinner size="lg" aria-label="Loading..." />
+          </div>
         </EmptyStateBody>
       </EmptyState>
     );

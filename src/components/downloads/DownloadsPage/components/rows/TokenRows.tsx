@@ -1,9 +1,16 @@
 import React from 'react';
 
-import { Alert, Button, Split, SplitItem, Text, TextContent } from '@patternfly/react-core';
+import {
+  Alert,
+  Button,
+  Spinner,
+  Split,
+  SplitItem,
+  Text,
+  TextContent,
+} from '@patternfly/react-core';
 import { ArrowRightIcon } from '@patternfly/react-icons/dist/esm/icons/arrow-right-icon';
 import { Tbody, Td, Tr } from '@patternfly/react-table';
-import { Spinner } from '@redhat-cloud-services/frontend-components/Spinner';
 
 import { defaultToOfflineTokens } from '~/common/restrictTokensHelper';
 import { Link } from '~/common/routing';
@@ -143,7 +150,9 @@ const TokenRows = ({
         <Tbody>
           <Tr>
             <Td>
-              <Spinner centered />
+              <div className="pf-v5-u-text-align-center">
+                <Spinner size="lg" aria-label="Loading..." />
+              </div>
             </Td>
           </Tr>
         </Tbody>

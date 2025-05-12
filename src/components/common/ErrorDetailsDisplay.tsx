@@ -6,7 +6,7 @@ import { ErrorState } from '~/types/types';
 
 type Props = {
   response: Pick<ErrorState, 'errorDetails' | 'errorMessage' | 'operationID' | 'errorCode'>;
-  itemWrapper?: FunctionComponent | keyof HTMLElementTagNameMap;
+  itemWrapper?: FunctionComponent | keyof React.JSX.IntrinsicElements;
   showErrorCode?: boolean;
   renderLinks?: boolean;
   hideOperationID?: boolean;

@@ -4,10 +4,11 @@ import { useFormikContext } from 'formik';
 import { Grid, GridItem, Spinner } from '@patternfly/react-core';
 
 import { isHypershiftCluster } from '~/components/clusters/common/clusterStates';
-import { getNodeOptions } from '~/components/clusters/commonMultiRegion/machinePools/utils';
+import { getNodeOptions } from '~/components/clusters/common/machinePools/utils';
 import { MachineTypesResponse } from '~/queries/types';
 import { useGlobalState } from '~/redux/hooks';
-import { Cluster, MachinePool } from '~/types/clusters_mgmt.v1';
+import { MachinePool } from '~/types/clusters_mgmt.v1';
+import { ClusterFromSubscription } from '~/types/types';
 
 import MachinePoolsAutoScalingWarning from '../../../MachinePoolAutoscalingWarning';
 import { getClusterMinNodes } from '../../../machinePoolsHelper';
@@ -21,8 +22,9 @@ import { EditMachinePoolValues } from '../hooks/useMachinePoolFormik';
 type EditNodeCountSectionProps = {
   machinePool: MachinePool | undefined;
   machinePools: MachinePool[];
-  cluster: Cluster;
+  cluster: ClusterFromSubscription;
   machineTypes: MachineTypesResponse;
+  allow249NodesOSDCCSROSA: boolean;
 };
 
 const EditNodeCountSection = ({
@@ -30,6 +32,7 @@ const EditNodeCountSection = ({
   machinePools,
   cluster,
   machineTypes,
+  allow249NodesOSDCCSROSA,
 }: EditNodeCountSectionProps) => {
   const { values } = useFormikContext<EditMachinePoolValues>();
 
@@ -54,6 +57,7 @@ const EditNodeCountSection = ({
         quota: organization.quotaList,
         minNodes: minNodesRequired,
         editMachinePoolId: machinePool?.id,
+        allow249NodesOSDCCSROSA,
       }),
     [
       cluster,
@@ -63,6 +67,7 @@ const EditNodeCountSection = ({
       machineTypes,
       organization.quotaList,
       minNodesRequired,
+      allow249NodesOSDCCSROSA,
     ],
   );
 
@@ -71,7 +76,7 @@ const EditNodeCountSection = ({
       <AutoscalingField cluster={cluster} />
       {organization.pending ? (
         <div>
-          <Spinner size="md" />
+          <Spinner size="md" aria-label="Loading..." />
           &nbsp;Loading quota...
         </div>
       ) : (
@@ -83,6 +88,7 @@ const EditNodeCountSection = ({
                   minNodes={minNodesRequired}
                   cluster={cluster}
                   mpAvailZones={machinePool?.availability_zones?.length}
+                  options={options}
                 />
               </GridItem>
               <GridItem span={5}>

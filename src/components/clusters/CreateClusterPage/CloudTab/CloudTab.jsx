@@ -30,7 +30,7 @@ const CloudTab = ({ hasOSDQuota, trialEnabled }) => (
           <ManagedServicesTable hasOSDQuota={hasOSDQuota} isTrialEnabled={trialEnabled} />
           {!isRestrictedEnv() && (
             <Button variant={ButtonVariant.link} id="subscriptions" component={QuotaLink}>
-              View your available OpenShift Dedicated quota <ArrowRightIcon />
+              View your annual subscriptions quota <ArrowRightIcon />
             </Button>
           )}
         </StackItem>

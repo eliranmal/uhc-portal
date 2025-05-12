@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 import apiRequest from '~/services/apiRequest';
-import { ScheduleType, UpgradeType } from '~/types/clusters_mgmt.v1';
+import { ScheduleType, UpgradeType } from '~/types/clusters_mgmt.v1/enums';
 
 import clusterService from './clusterService';
 
@@ -20,7 +20,7 @@ describe('clusterService', () => {
 
   it('call to get versions includes product=hcp when isHCP param is set', async () => {
     const isHCP = true;
-    await clusterService.getInstallableVersions(true, false, isHCP);
+    await clusterService.getInstallableVersions({ isRosa: true, isHCP });
 
     expect(apiRequestMock.get).toHaveBeenCalledTimes(1);
     expect(getApiGetParams().product).toEqual('hcp');
@@ -28,7 +28,7 @@ describe('clusterService', () => {
 
   it('call to get versions includes rosa_enabled if isRosa is true', async () => {
     const isRosa = true;
-    await clusterService.getInstallableVersions(isRosa, false, false);
+    await clusterService.getInstallableVersions({ isRosa });
 
     expect(apiRequestMock.get).toHaveBeenCalledTimes(1);
     expect(getApiGetParams().search).toContain("rosa_enabled='t'");
@@ -36,26 +36,45 @@ describe('clusterService', () => {
 
   it('call to get versions does not includes rosa_enabled if isRosa is false', async () => {
     const isRosa = false;
-    await clusterService.getInstallableVersions(isRosa, false, false);
+    await clusterService.getInstallableVersions({ isRosa });
 
     expect(apiRequestMock.get).toHaveBeenCalledTimes(1);
     expect(getApiGetParams().search).not.toContain("rosa_enabled='t'");
   });
 
   it('call to get versions includes gcp_marketplace_enabled if isGCP is true', async () => {
-    const isGCP = true;
-    await clusterService.getInstallableVersions(false, isGCP, false);
+    const isMarketplaceGcp = true;
+    await clusterService.getInstallableVersions({ isMarketplaceGcp });
 
     expect(apiRequestMock.get).toHaveBeenCalledTimes(1);
     expect(getApiGetParams().search).toContain("gcp_marketplace_enabled='t'");
   });
 
   it('call to get versions does not includes gcp_marketplace_enabled if isGCP is false', async () => {
-    const isGCP = false;
-    await clusterService.getInstallableVersions(false, isGCP, false);
+    const isMarketplaceGcp = false;
+    await clusterService.getInstallableVersions({ isMarketplaceGcp });
 
     expect(apiRequestMock.get).toHaveBeenCalledTimes(1);
     expect(getApiGetParams().search).not.toContain("gcp_marketplace_enabled='t'");
+  });
+
+  it.each([
+    ['includes', true],
+    ['does not include', false],
+  ])('call to get versions %s wif_enabled param if isWIF is "%s"', async (_title, isWIF) => {
+    await clusterService.getInstallableVersions({ isWIF });
+
+    expect(apiRequestMock.get).toHaveBeenCalledTimes(1);
+    expect(getApiGetParams().search.includes("wif_enabled='t'")).toBe(isWIF);
+  });
+
+  it('call to get GCP WIF config contains a WIF Id path param', async () => {
+    const wifId = '12345';
+    await clusterService.getGCPWifConfig(wifId);
+
+    expect(apiRequestMock.get).toHaveBeenCalledTimes(1);
+    const mockPostCallParams = apiRequestMock.get.mock.calls[0];
+    expect(mockPostCallParams[0]).toEqual(`/api/clusters_mgmt/v1/gcp/wif_configs/${wifId}`);
   });
 
   it('call to post a node pool upgrade policy', async () => {
@@ -65,8 +84,8 @@ describe('clusterService', () => {
     const schedule = {
       next_run: 'now + 6 minutes',
       node_pool_id: nodePoolId,
-      schedule_type: ScheduleType.MANUAL,
-      upgrade_type: UpgradeType.NODE_POOL,
+      schedule_type: ScheduleType.manual,
+      upgrade_type: UpgradeType.NodePool,
       version: '4.14.1',
     };
 

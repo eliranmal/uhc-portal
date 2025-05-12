@@ -5,7 +5,8 @@ import { Alert } from '@patternfly/react-core';
 import links from '~/common/installLinks.mjs';
 import { Link } from '~/common/routing';
 import ExternalLink from '~/components/common/ExternalLink';
-import { Cluster, MachinePool } from '~/types/clusters_mgmt.v1';
+import { MachinePool } from '~/types/clusters_mgmt.v1';
+import { ClusterFromSubscription } from '~/types/types';
 
 import { masterResizeAlertThreshold } from './utils';
 
@@ -13,7 +14,7 @@ type ResizingAlertProps = {
   autoscalingEnabled: boolean;
   selectedMachinePoolID: string;
   replicasValue: number;
-  cluster: Cluster;
+  cluster: ClusterFromSubscription;
   machinePools: MachinePool[];
   autoScaleMaxNodesValue: number;
 };

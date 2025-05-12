@@ -4,17 +4,19 @@ import { Field, FieldArray } from 'formik';
 import { ExpandableSection, GridItem, Text, TextVariants, Title } from '@patternfly/react-core';
 
 import links from '~/common/installLinks.mjs';
-import { billingModels } from '~/common/subscriptionTypes';
 import { required } from '~/common/validators';
 import {
   getMinNodesRequired,
   getNodeIncrement,
   getNodeIncrementHypershift,
-} from '~/components/clusters/ClusterDetails/components/MachinePools/machinePoolsHelper';
-import { getWorkerNodeVolumeSizeMaxGiB } from '~/components/clusters/common/machinePools/constants';
+} from '~/components/clusters/ClusterDetailsMultiRegion/components/MachinePools/machinePoolsHelper';
+import {
+  getWorkerNodeVolumeSizeMaxGiB,
+  getWorkerNodeVolumeSizeMinGiB,
+} from '~/components/clusters/common/machinePools/utils';
 import NodeCountInput from '~/components/clusters/common/NodeCountInput';
 import { computeNodeHintText } from '~/components/clusters/common/ScaleSection/AutoScaleSection/AutoScaleHelper';
-import MachineTypeSelection from '~/components/clusters/common/ScaleSection/MachineTypeSelection';
+import MachineTypeSelection from '~/components/clusters/common/ScaleSection-deprecated/MachineTypeSelection';
 import { AutoScale } from '~/components/clusters/wizards/common/ClusterSettings/MachinePool/AutoScale/AutoScale';
 import { canSelectImds } from '~/components/clusters/wizards/common/constants';
 import { useFormState } from '~/components/clusters/wizards/hooks';
@@ -22,6 +24,8 @@ import { FieldId } from '~/components/clusters/wizards/rosa/constants';
 import ExternalLink from '~/components/common/ExternalLink';
 import FormKeyValueList from '~/components/common/FormikFormComponents/FormKeyValueList';
 import useCanClusterAutoscale from '~/hooks/useCanClusterAutoscale';
+import { MAX_NODES_TOTAL_249 } from '~/queries/featureGates/featureConstants';
+import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 
 import WorkerNodeVolumeSizeSection from './WorkerNodeVolumeSizeSection/WorkerNodeVolumeSizeSection';
 import ImdsSection from './ImdsSection';
@@ -38,7 +42,7 @@ function ScaleSection() {
       [FieldId.NodeLabels]: nodeLabels,
       [FieldId.ClusterVersion]: clusterVersion,
       [FieldId.MachinePoolsSubnets]: machinePoolsSubnets,
-      [FieldId.BillingModel]: billingModelFieldValue,
+      [FieldId.BillingModel]: billingModel,
       [FieldId.IMDS]: imds,
     },
     setFieldValue,
@@ -54,7 +58,8 @@ function ScaleSection() {
   const isAutoscalingEnabled = !!autoscalingEnabled;
   const hasNodeLabels = nodeLabels?.[0]?.key ?? false;
   const [isNodeLabelsExpanded, setIsNodeLabelsExpanded] = useState(!!hasNodeLabels);
-  const canAutoScale = useCanClusterAutoscale(product, billingModelFieldValue) ?? false;
+  const canAutoScale = useCanClusterAutoscale(product, billingModel) ?? false;
+  const allow249NodesOSDCCSROSA = useFeatureGate(MAX_NODES_TOTAL_249);
   const clusterVersionRawId = clusterVersion?.raw_id;
 
   const minNodesRequired = useMemo(
@@ -67,15 +72,12 @@ function ScaleSection() {
     [poolsLength, isHypershiftSelected, isByoc, isMultiAzSelected],
   );
 
-  const maxWorkerVolumeSizeGiB = useMemo(
-    () => getWorkerNodeVolumeSizeMaxGiB(clusterVersionRawId),
-    [clusterVersionRawId],
-  );
+  const { minWorkerVolumeSizeGiB, maxWorkerVolumeSizeGiB } = useMemo(() => {
+    const minWorkerVolumeSizeGiB = getWorkerNodeVolumeSizeMinGiB(isHypershiftSelected);
+    const maxWorkerVolumeSizeGiB = getWorkerNodeVolumeSizeMaxGiB(clusterVersionRawId);
+    return { minWorkerVolumeSizeGiB, maxWorkerVolumeSizeGiB };
+  }, [isHypershiftSelected, clusterVersionRawId]);
 
-  const billingModel = useMemo(
-    () => billingModelFieldValue ?? billingModels.STANDARD,
-    [billingModelFieldValue],
-  );
   const nodeIncrement = useMemo(
     () =>
       isHypershiftSelected
@@ -132,16 +134,18 @@ function ScaleSection() {
   );
 
   const WorkerNodeVolumeSizeSectionComponent = useCallback(
-    () =>
-      !isHypershiftSelected ? (
-        <>
-          <GridItem md={6}>
-            <WorkerNodeVolumeSizeSection maxWorkerVolumeSizeGiB={maxWorkerVolumeSizeGiB} />
-          </GridItem>
-          <GridItem md={6} />
-        </>
-      ) : null,
-    [isHypershiftSelected, maxWorkerVolumeSizeGiB],
+    () => (
+      <>
+        <GridItem md={6}>
+          <WorkerNodeVolumeSizeSection
+            minWorkerVolumeSizeGiB={minWorkerVolumeSizeGiB}
+            maxWorkerVolumeSizeGiB={maxWorkerVolumeSizeGiB}
+          />
+        </GridItem>
+        <GridItem md={6} />
+      </>
+    ),
+    [minWorkerVolumeSizeGiB, maxWorkerVolumeSizeGiB],
   );
 
   return (
@@ -224,6 +228,8 @@ function ScaleSection() {
               billingModel={billingModel}
               isHypershiftWizard={isHypershiftSelected}
               poolNumber={poolsLength}
+              clusterVersion={clusterVersionRawId}
+              allow249NodesOSDCCSROSA={allow249NodesOSDCCSROSA}
               input={{
                 ...getFieldProps(FieldId.NodesCompute),
                 onChange: (value) => setFieldValue(FieldId.NodesCompute, value),

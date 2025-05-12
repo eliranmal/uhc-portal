@@ -1,7 +1,7 @@
 import React from 'react';
 
+import { MissingPage } from '@patternfly/react-component-groups';
 import { EmptyState, EmptyStateBody } from '@patternfly/react-core';
-import { InvalidObject } from '@redhat-cloud-services/frontend-components/InvalidObject';
 
 import { AppPage } from './AppPage';
 
@@ -11,7 +11,7 @@ const NotFoundError = () => (
   <AppPage>
     <EmptyState id="not-found" data-testid="not-found">
       <EmptyStateBody>
-        <InvalidObject />
+        <MissingPage />
       </EmptyStateBody>
     </EmptyState>
   </AppPage>

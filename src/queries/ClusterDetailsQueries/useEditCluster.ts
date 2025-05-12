@@ -5,40 +5,31 @@ import { Cluster } from '~/types/clusters_mgmt.v1';
 
 import { formatErrorData } from '../helpers';
 
-export const useEditCluster = (clusterID: string, region?: string) => {
-  const { data, isPending, isError, error, mutate, reset } = useMutation({
+export type EditClusterInput = {
+  clusterID: string;
+  cluster: Cluster;
+};
+
+export const useEditCluster = (region?: string) => {
+  const { data, isPending, isError, error, isSuccess, mutate, reset } = useMutation({
     mutationKey: ['editCluster'],
-    mutationFn: async (formData: Cluster) => {
-      if (region) {
-        const clusterService = getClusterServiceForRegion(region);
-        const response = clusterService.editCluster(clusterID, formData);
-        return response;
+    mutationFn: async ({ clusterID, cluster }: EditClusterInput) => {
+      if (!clusterID) {
+        throw new Error('Cluster ID is required');
       }
 
-      const response = clusterService.editCluster(clusterID, formData);
-      return response;
+      const service = region ? getClusterServiceForRegion(region) : clusterService;
+      return service.editCluster(clusterID, cluster);
     },
   });
-
-  if (isError) {
-    const formattedError = formatErrorData(isPending, isError, error);
-
-    return {
-      data,
-      isPending,
-      isError,
-      error: formattedError,
-      mutate,
-      reset,
-    };
-  }
 
   return {
     data,
     isPending,
     isError,
-    error,
+    error: isError ? formatErrorData(isPending, isError, error).error : null,
     mutate,
+    isSuccess,
     reset,
   };
 };

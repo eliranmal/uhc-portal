@@ -1,8 +1,9 @@
 /* eslint-disable react/no-unescaped-entities */
+
 // Form fields for upgrade settings, used in Upgrade Settings tab and in cluster creation
 import React from 'react';
+import { Field } from 'formik';
 import PropTypes from 'prop-types';
-import { Field } from 'redux-form';
 
 import {
   Divider,
@@ -14,26 +15,33 @@ import {
   Title,
 } from '@patternfly/react-core';
 
-import links from '../../../../common/installLinks.mjs';
-import { normalizedProducts } from '../../../../common/subscriptionTypes';
-import ExternalLink from '../../../common/ExternalLink';
-import RadioButtons from '../../../common/ReduxFormComponents/RadioButtons';
-
-import PodDistruptionBudgetGraceSelect from './PodDistruptionBudgetGraceSelect';
-import UpgradeScheduleSelection from './UpgradeScheduleSelection';
+import links from '~/common/installLinks.mjs';
+import PodDistruptionBudgetGraceSelect from '~/components/clusters/common/Upgrades/PodDistruptionBudgetGraceSelect';
+import UpgradeScheduleSelection from '~/components/clusters/common/Upgrades/UpgradeScheduleSelection';
+import { useFormState } from '~/components/clusters/wizards/hooks';
+import { FieldId } from '~/components/clusters/wizards/rosa/constants';
+import ExternalLink from '~/components/common/ExternalLink';
+import RadioButtons from '~/components/common/ReduxFormComponents_deprecated/RadioButtons';
 
 import './UpgradeSettingsFields.scss';
 
 function UpgradeSettingsFields({
+  isHypershift,
   isDisabled,
-  isAutomatic,
   showDivider,
-  change,
+  isRosa,
   initialScheduleValue,
-  product,
-  isHypershift = false,
 }) {
-  const isRosa = product === normalizedProducts.ROSA;
+  const {
+    setFieldValue, // Set value of form field directly
+    setFieldTouched, // Set whether field has been touched directly
+    getFieldProps, // Access: name, value, onBlur, onChange for a <Field>, useful for mapping to a field
+    // getFieldMeta, // Access: error, touched for a <Field>, useful for mapping to a field
+    values: { [FieldId.UpgradePolicy]: upgradePolicy },
+  } = useFormState();
+
+  const isAutomatic = upgradePolicy === 'automatic';
+
   const recurringUpdateMessage = (
     <>
       The cluster will be automatically updated based on your preferred day and start time when new
@@ -63,7 +71,14 @@ function UpgradeSettingsFields({
         <GridItem md={6}>
           <Field
             component={UpgradeScheduleSelection}
-            name="automatic_upgrade_schedule"
+            name={FieldId.AutomaticUpgradeSchedule}
+            input={{
+              ...getFieldProps(FieldId.AutomaticUpgradeSchedule),
+              onChange: (value) => {
+                setFieldTouched(FieldId.AutomaticUpgradeSchedule);
+                setFieldValue(FieldId.AutomaticUpgradeSchedule, value);
+              },
+            }}
             isDisabled={isDisabled}
             isHypershift={isHypershift}
           />
@@ -103,12 +118,17 @@ function UpgradeSettingsFields({
       <GridItem className="ocm-c-upgrade-policy-radios">
         <Field
           component={RadioButtons}
-          name="upgrade_policy"
+          name={FieldId.UpgradePolicy}
           isDisabled={isDisabled}
-          onChange={(_, value) => {
-            if (change && value === 'manual') {
-              change('automatic_upgrade_schedule', initialScheduleValue);
-            }
+          input={{
+            ...getFieldProps(FieldId.UpgradePolicy),
+            onChange: (value) => {
+              setFieldTouched(FieldId.UpgradePolicy);
+              setFieldValue(FieldId.UpgradePolicy, value);
+              if (value === 'manual') {
+                setFieldValue(FieldId.AutomaticUpgradeSchedule, initialScheduleValue);
+              }
+            },
           }}
           options={options}
           defaultValue="manual"
@@ -134,9 +154,16 @@ function UpgradeSettingsFields({
             </Text>
           </TextContent>
           <Field
-            name="node_drain_grace_period"
+            name={FieldId.NodeDrainGracePeriod}
             component={PodDistruptionBudgetGraceSelect}
             isDisabled={isDisabled}
+            input={{
+              ...getFieldProps(FieldId.NodeDrainGracePeriod),
+              onChange: (value) => {
+                setFieldTouched(FieldId.NodeDrainGracePeriod);
+                setFieldValue(FieldId.NodeDrainGracePeriod, value);
+              },
+            }}
           />
         </GridItem>
       ) : null}
@@ -145,12 +172,10 @@ function UpgradeSettingsFields({
 }
 
 UpgradeSettingsFields.propTypes = {
-  isAutomatic: PropTypes.bool,
-  isDisabled: PropTypes.bool,
   isHypershift: PropTypes.bool,
+  isDisabled: PropTypes.bool,
   showDivider: PropTypes.bool,
-  change: PropTypes.func,
-  product: PropTypes.string,
+  isRosa: PropTypes.bool,
   initialScheduleValue: PropTypes.string,
 };
 

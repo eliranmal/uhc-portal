@@ -1,9 +1,11 @@
-import { billingModels, normalizedProducts } from '~/common/subscriptionTypes';
+import { normalizedProducts } from '~/common/subscriptionTypes';
+import { hasOrgLevelAutoscaleCapability } from '~/components/clusters/ClusterDetailsMultiRegion/components/MachinePools/machinePoolsSelectors';
 import { useGlobalState } from '~/redux/hooks';
-import { Capability } from '~/types/accounts_mgmt.v1';
+import {
+  Capability,
+  SubscriptionCommonFieldsCluster_billing_model as SubscriptionCommonFieldsClusterBillingModel,
+} from '~/types/accounts_mgmt.v1';
 import { Product } from '~/types/clusters_mgmt.v1';
-
-import { hasOrgLevelAutoscaleCapability } from '../components/clusters/ClusterDetails/components/MachinePools/machinePoolsSelectors';
 
 const useCanClusterAutoscale = (
   product: Product['id'],
@@ -23,9 +25,9 @@ const useCanClusterAutoscale = (
   return (
     product === normalizedProducts.ROSA ||
     (product === normalizedProducts.OSD &&
-      (billingModel === billingModels.MARKETPLACE ||
-        billingModel === billingModels.MARKETPLACE_AWS ||
-        billingModel === billingModels.MARKETPLACE_GCP ||
+      (billingModel === SubscriptionCommonFieldsClusterBillingModel.marketplace ||
+        billingModel === SubscriptionCommonFieldsClusterBillingModel.marketplace_aws ||
+        billingModel === SubscriptionCommonFieldsClusterBillingModel.marketplace_gcp ||
         hasAutoScaleCapability))
   );
 };

@@ -1,12 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
+import { useDispatch } from 'react-redux';
 
 import {
   Button,
   Card,
   CardBody,
-  CardFooter,
-  CardTitle,
   EmptyState,
   Icon,
   Popover,
@@ -15,7 +14,6 @@ import {
 } from '@patternfly/react-core';
 import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
 import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
-import { ExternalLinkAltIcon } from '@patternfly/react-icons/dist/esm/icons/external-link-alt-icon';
 import { HelpIcon } from '@patternfly/react-icons/dist/esm/icons/help-icon';
 import { InProgressIcon } from '@patternfly/react-icons/dist/esm/icons/in-progress-icon';
 import { UnknownIcon } from '@patternfly/react-icons/dist/esm/icons/unknown-icon';
@@ -29,292 +27,329 @@ import {
   Thead,
   Tr,
 } from '@patternfly/react-table';
-import Skeleton from '@redhat-cloud-services/frontend-components/Skeleton';
+import { addNotification } from '@redhat-cloud-services/frontend-components-notifications/redux/actions/notifications';
+
+import { LoadingSkeletonCard } from '~/components/clusters/common/LoadingSkeletonCard/LoadingSkeletonCard';
+import ExternalLink from '~/components/common/ExternalLink';
+import { useAddGrant } from '~/queries/ClusterDetailsQueries/AccessControlTab/NetworkSelfServiceQueries/useAddGrant';
+import { useDeleteGrant } from '~/queries/ClusterDetailsQueries/AccessControlTab/NetworkSelfServiceQueries/useDeleteGrant';
+import {
+  refetchGrants,
+  useFetchGrants,
+} from '~/queries/ClusterDetailsQueries/AccessControlTab/NetworkSelfServiceQueries/useFetchGrants';
+import { useFetchRoles } from '~/queries/ClusterDetailsQueries/AccessControlTab/NetworkSelfServiceQueries/useFetchRoles';
 
 import ButtonWithTooltip from '../../../../../common/ButtonWithTooltip';
 import ClipboardCopyLinkButton from '../../../../../common/ClipboardCopyLinkButton';
 import ErrorBox from '../../../../../common/ErrorBox';
+import { modalActions } from '../../../../../common/Modal/ModalActions';
 
-class NetworkSelfServiceSection extends React.Component {
-  state = { deletedRowIndex: undefined };
+import AddGrantModal from './AddGrantModal/AddGrantModal';
+import { grantsDataAggregator } from './NetworkSelfServiceHelpers';
 
-  componentDidMount() {
-    const { getRoles, getGrants } = this.props;
-    getRoles();
-    getGrants();
-  }
+const NetworkSelfServiceSection = ({
+  clusterID,
+  canEdit,
+  clusterHibernating,
+  isReadOnly,
+  region,
+}) => {
+  const dispatch = useDispatch();
 
-  componentDidUpdate(prevProps) {
-    const { deleteGrantResponse, addGrantResponse, getGrants, grants, addNotification } =
-      this.props;
-    const { deletedRowIndex } = this.state;
+  const [deletedRowIndex, setDeletedRowIndex] = React.useState(undefined);
+  const [refetchInterval, setRefetchInterval] = React.useState(false);
 
-    // fetch grants again after deleting or adding a grant
-    if (
-      ((deleteGrantResponse.fulfilled && prevProps.deleteGrantResponse.pending) ||
-        (addGrantResponse.fulfilled && prevProps.addGrantResponse.pending)) &&
-      !grants.pending
-    ) {
-      getGrants();
-    }
-    if (grants.fulfilled && prevProps.grants.pending && grants.data.length !== 0) {
-      const prevGrants = prevProps.grants.data;
-      const prevGrantsStates = prevGrants.reduce((states, grant) => {
-        // eslint-disable-next-line no-param-reassign
-        states[grant.id] = grant.state;
-        return states;
-      }, {});
-      grants.data.forEach((grant) => {
-        if (prevGrantsStates[grant.id] && grant.state !== prevGrantsStates[grant.id]) {
-          if (grant.state === 'failed') {
-            addNotification({
-              variant: 'danger',
-              title: `Role creation failed for ${grant.user_arn}`,
-              description: grant.state_description,
-              dismissDelay: 8000,
-              dismissable: false,
-            });
-          } else if (grant.state === 'ready') {
-            addNotification({
-              variant: 'success',
-              title: `${grant.roleName} role successfully created for ${grant.user_arn}`,
-              dismissDelay: 8000,
-              dismissable: false,
-            });
-          }
+  const {
+    data: grantsData,
+    isLoading: isGrantsLoading,
+    isError: isGrantsError,
+    error: grantsError,
+    isFetching: isGrantsFetching,
+  } = useFetchGrants(clusterID, refetchInterval, region);
+  const { data: rolesData } = useFetchRoles(region);
+  const {
+    data: addGrantsData,
+    isPending: isAddGrantsPending,
+    isError: isAddGrantsError,
+    error: addGrantsError,
+    mutateAsync: addGrantsMutate,
+    reset: resetAddGrantsMutate,
+  } = useAddGrant(clusterID, region);
+  const {
+    isError: isDeleteGrantError,
+    error: deleteGrantError,
+    mutate: deleteGrantMutate,
+    reset: resetDeleteGrantsMutate,
+  } = useDeleteGrant(clusterID, region);
+
+  const grants = useMemo(
+    () => ({
+      ...grantsData,
+      data: grantsDataAggregator(grantsData, rolesData),
+    }),
+    [grantsData, rolesData],
+  );
+
+  React.useEffect(() => {
+    grants?.data?.forEach((grant) => {
+      if (grant.state === 'deleting' || grant.state === 'pending') {
+        setRefetchInterval(true);
+      }
+    });
+
+    return () => {
+      setRefetchInterval(false);
+    };
+  }, [setRefetchInterval, grants]);
+
+  React.useEffect(() => {
+    grants?.data?.forEach((grant) => {
+      if (addGrantsData && grant.user_arn === addGrantsData?.data?.user_arn) {
+        switch (grant.state) {
+          case 'failed':
+            dispatch(
+              addNotification({
+                variant: 'danger',
+                title: `Role creation failed for ${grant.user_arn}`,
+                description: grant.state_description,
+                dismissDelay: 8000,
+                dismissable: false,
+              }),
+            );
+            break;
+          case 'ready':
+            dispatch(
+              addNotification({
+                variant: 'success',
+                title: `${grant.roleName} role successfully created for ${grant.user_arn}`,
+                dismissDelay: 8000,
+                dismissable: false,
+              }),
+            );
+            break;
+          case 'deleting':
+          case 'pending':
+          default:
+            refetchGrants();
+            break;
         }
-      });
+      }
+    });
+    // Adding grants as dependency results in infinite API call loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [addGrantsData, grantsData, refetchGrants, dispatch]);
+
+  React.useEffect(() => {
+    if (deletedRowIndex !== undefined && !isGrantsLoading) {
+      setDeletedRowIndex(undefined);
     }
-    if (deletedRowIndex !== undefined && grants.fulfilled && prevProps.grants.pending) {
-      // eslint-disable-next-line react/no-did-update-set-state
-      this.setState({ deletedRowIndex: undefined });
+  }, [clusterID, deletedRowIndex, grantsData, dispatch, grants, isGrantsFetching, isGrantsLoading]);
+
+  const grantStatus = (status, description) => {
+    let icon;
+    let statusStr;
+    switch (status) {
+      case 'ready':
+        icon = <CheckCircleIcon className="status-icon success" />;
+        statusStr = 'Ready';
+        break;
+      case 'failed':
+        icon = <ExclamationCircleIcon className="status-icon danger" />;
+        statusStr = 'Failed';
+        break;
+      case 'pending':
+        icon = <InProgressIcon className="status-icon" />;
+        statusStr = 'Pending';
+        break;
+      case 'deleting':
+        icon = <InProgressIcon className="status-icon" />;
+        statusStr = 'Deleting';
+        break;
+      case 'removed':
+        icon = <UnknownIcon className="status-icon" />;
+        statusStr = 'Removed';
+        break;
+      default:
+        icon = <UnknownIcon className="status-icon" />;
+        statusStr = 'Unknown';
     }
+    if (status === 'failed') {
+      return (
+        <span>
+          <Popover
+            position={PopoverPosition.top}
+            bodyContent={description}
+            aria-label="grant-failed"
+          >
+            <Button className="self-service-failed" variant="link" isInline icon={icon}>
+              {statusStr}
+            </Button>
+          </Popover>
+        </span>
+      );
+    }
+    return (
+      <>
+        {icon} <span>{statusStr}</span>{' '}
+      </>
+    );
+  };
+
+  if (isGrantsError) {
+    return (
+      <EmptyState>
+        <ErrorBox message="Error getting cluster users" response={grantsError.error} />
+      </EmptyState>
+    );
   }
 
-  render() {
-    const {
-      grants,
-      deleteGrant,
-      deleteGrantResponse,
-      openAddGrantModal,
-      canEdit,
-      clusterHibernating,
-      isReadOnly,
-    } = this.props;
-    const { deletedRowIndex } = this.state;
+  const loginAWSLink = (
+    <ExternalLink href="https://console.aws.amazon.com/console/home">
+      Log in to your aws account.
+    </ExternalLink>
+  );
 
-    const grantStatus = (status, description) => {
-      let icon;
-      let statusStr;
-      switch (status) {
-        case 'ready':
-          icon = <CheckCircleIcon className="status-icon success" />;
-          statusStr = 'Ready';
-          break;
-        case 'failed':
-          icon = <ExclamationCircleIcon className="status-icon danger" />;
-          statusStr = 'Failed';
-          break;
-        case 'pending':
-          icon = <InProgressIcon className="status-icon" />;
-          statusStr = 'Pending';
-          break;
-        case 'deleting':
-          icon = <InProgressIcon className="status-icon" />;
-          statusStr = 'Deleting';
-          break;
-        case 'removed':
-          icon = <UnknownIcon className="status-icon" />;
-          statusStr = 'Removed';
-          break;
-        default:
-          icon = <UnknownIcon className="status-icon" />;
-          statusStr = 'Unknown';
-      }
-      if (status === 'failed') {
-        return (
-          <span>
-            <Popover
-              position={PopoverPosition.top}
-              bodyContent={description}
-              aria-label="grant-failed"
-            >
-              <Button className="self-service-failed" variant="link" isInline icon={icon}>
-                {statusStr}
-              </Button>
-            </Popover>
-          </span>
-        );
-      }
-      return (
-        <>
-          {icon} <span>{statusStr}</span>{' '}
-        </>
-      );
-    };
+  const hasGrants = !!grants?.data?.length;
 
-    if (grants.error) {
-      return (
-        <EmptyState>
-          <ErrorBox message="Error getting cluster users" response={grants} />
-        </EmptyState>
-      );
-    }
+  const readOnlyReason = isReadOnly && 'This operation is not available during maintenance';
+  const hibernatingReason =
+    clusterHibernating && 'This operation is not available while cluster is hibernating';
+  const canNotEditReason =
+    !canEdit &&
+    'You do not have permission to grant a role. Only cluster owners, cluster editors, and Organization Administrators can grant roles.';
+  const disableReason = readOnlyReason || hibernatingReason || canNotEditReason;
 
-    const loginAWSLink = (
-      <a
-        rel="noopener noreferrer"
-        href="https://console.aws.amazon.com/console/home"
-        target="_blank"
-      >
-        Log in to your aws account.
-      </a>
-    );
+  const addGrantBtn = (
+    <ButtonWithTooltip
+      onClick={() => {
+        setTimeout(() => dispatch(modalActions.openModal('grant-modal')), 0);
+      }}
+      variant="secondary"
+      className="access-control-add"
+      disableReason={disableReason}
+    >
+      Grant role
+    </ButtonWithTooltip>
+  );
 
-    const hasGrants = !!grants.data.length;
+  const columnNames = {
+    arn: 'ARN',
+    role: 'Role',
+    status: 'Status',
+    consoleUrl: 'AWS OSD console URL',
+  };
 
-    const readOnlyReason = isReadOnly && 'This operation is not available during maintenance';
-    const hibernatingReason =
-      clusterHibernating && 'This operation is not available while cluster is hibernating';
-    const canNotEditReason =
-      !canEdit &&
-      'You do not have permission to grant a role. Only cluster owners, cluster editors, and Organization Administrators can grant roles.';
-    const disableReason = readOnlyReason || hibernatingReason || canNotEditReason;
-
-    const addGrantBtn = (
-      <ButtonWithTooltip
-        onClick={() => {
-          setTimeout(() => openAddGrantModal(), 0);
-        }}
-        variant="secondary"
-        className="access-control-add"
-        disableReason={disableReason}
-      >
-        Grant role
-      </ButtonWithTooltip>
-    );
-
-    const columnNames = {
-      arn: 'ARN',
-      role: 'Role',
-      status: 'Status',
-      consoleUrl: 'AWS OSD console URL',
-    };
-
-    const actions = (grant, index) => [
-      {
-        title: 'Delete',
-        onClick: () => {
-          this.setState({ deletedRowIndex: index });
-          deleteGrant(grant.id);
-        },
+  const actions = (grant, index) => [
+    {
+      title: 'Delete',
+      onClick: () => {
+        setDeletedRowIndex(index);
+        deleteGrantMutate(grant.id, {
+          onSuccess: () => {
+            resetDeleteGrantsMutate();
+            refetchGrants();
+          },
+        });
       },
-    ];
+    },
+  ];
 
-    const grantRow = (grant, index) => {
-      const rowActions = actions(grant, index);
-      return (
-        <Tr key={grant.id}>
-          <Td dataLabel={columnNames.arn}>{grant.user_arn}</Td>
-          <Td dataLabel={columnNames.role}>{grant.roleName}</Td>
-          <Td dataLabel={columnNames.status}>
-            {grantStatus(
-              deletedRowIndex === index ? 'deleting' : grant.state,
-              grant.state_description,
-            )}
-          </Td>
-          <Td dataLabel={columnNames.consoleUrl}>
-            <ClipboardCopyLinkButton
-              className="access-control-tables-copy"
-              text={grant.console_url}
-              isDisabled={!grant.console_url}
-            >
-              Copy URL to clipboard
-            </ClipboardCopyLinkButton>
-          </Td>
-          <Td isActionCell>
-            <ActionsColumn
-              items={rowActions}
-              isDisabled={grant.state === 'deleting' || !!disableReason}
-            />
-          </Td>
-        </Tr>
-      );
-    };
-
-    return grants.pending && !hasGrants ? (
-      <Card>
-        <CardTitle>
-          <Skeleton size="md" />
-        </CardTitle>
-        <CardBody>
-          <Skeleton size="lg" />
-        </CardBody>
-        <CardFooter>
-          <Skeleton size="md" />
-        </CardFooter>
-      </Card>
-    ) : (
-      <Card id="networkSelfService">
-        <CardBody>
-          {deleteGrantResponse.error && (
-            <ErrorBox message="Error deleting grant" response={deleteGrantResponse} />
+  const grantRow = (grant, index) => {
+    const rowActions = actions(grant, index);
+    return (
+      <Tr key={grant.id}>
+        <Td dataLabel={columnNames.arn}>{grant.user_arn}</Td>
+        <Td dataLabel={columnNames.role}>{grant.roleName}</Td>
+        <Td dataLabel={columnNames.status}>
+          {grantStatus(
+            deletedRowIndex === index ? 'deleting' : grant.state,
+            grant.state_description,
           )}
-          <Title size="lg" className="card-title" headingLevel="h3">
-            AWS infrastructure access
-          </Title>
-          <p>
-            Grant permission to view or manage the AWS infrastructure of the cluster to IAM users
-            defined in your AWS account. {loginAWSLink}
-            <ExternalLinkAltIcon color="#0066cc" size="sm" />
-          </p>
-          {hasGrants && (
-            <Table aria-label="Grants" variant={TableVariant.compact}>
-              <Thead>
-                <Tr>
-                  <Th>
-                    <>
-                      {columnNames.arn}
-                      <Popover
-                        position={PopoverPosition.top}
-                        aria-label="ARNs"
-                        bodyContent={
-                          <p>Amazon Resource Names (ARNs) uniquely identify AWS resources.</p>
-                        }
-                      >
-                        <Button variant="plain" isInline>
-                          <Icon size="md">
-                            <HelpIcon />
-                          </Icon>
-                        </Button>
-                      </Popover>
-                    </>
-                  </Th>
-                  <Th>{columnNames.role}</Th>
-                  <Th>{columnNames.status}</Th>
-                  <Th>{columnNames.consoleUrl}</Th>
-                  <Th screenReaderText="Grant action" />
-                </Tr>
-              </Thead>
-              <Tbody>{grants.data.map(grantRow)}</Tbody>
-            </Table>
-          )}
-          {addGrantBtn}
-        </CardBody>
-      </Card>
+        </Td>
+        <Td dataLabel={columnNames.consoleUrl}>
+          <ClipboardCopyLinkButton
+            className="access-control-tables-copy"
+            text={grant.console_url}
+            isDisabled={!grant.console_url}
+          >
+            Copy URL to clipboard
+          </ClipboardCopyLinkButton>
+        </Td>
+        <Td isActionCell>
+          <ActionsColumn
+            items={rowActions}
+            isDisabled={grant.state === 'deleting' || !!disableReason}
+          />
+        </Td>
+      </Tr>
     );
-  }
-}
+  };
+
+  return isGrantsLoading && !hasGrants ? (
+    <LoadingSkeletonCard />
+  ) : (
+    <Card id="networkSelfService">
+      <CardBody>
+        {isDeleteGrantError && (
+          <ErrorBox message="Error deleting grant" response={deleteGrantError.error} />
+        )}
+        <Title size="lg" className="card-title" headingLevel="h3">
+          AWS infrastructure access
+        </Title>
+        <p>
+          Grant permission to view or manage the AWS infrastructure of the cluster to IAM users
+          defined in your AWS account. {loginAWSLink}
+        </p>
+        {hasGrants && (
+          <Table aria-label="Grants" variant={TableVariant.compact}>
+            <Thead>
+              <Tr>
+                <Th>
+                  <>
+                    {columnNames.arn}
+                    <Popover
+                      position={PopoverPosition.top}
+                      aria-label="ARNs"
+                      bodyContent={
+                        <p>Amazon Resource Names (ARNs) uniquely identify AWS resources.</p>
+                      }
+                    >
+                      <Button variant="plain" isInline>
+                        <Icon size="md">
+                          <HelpIcon />
+                        </Icon>
+                      </Button>
+                    </Popover>
+                  </>
+                </Th>
+                <Th>{columnNames.role}</Th>
+                <Th>{columnNames.status}</Th>
+                <Th>{columnNames.consoleUrl}</Th>
+                <Th screenReaderText="Grant action" />
+              </Tr>
+            </Thead>
+            <Tbody>{grants.data.map(grantRow)}</Tbody>
+          </Table>
+        )}
+        {addGrantBtn}
+      </CardBody>
+      <AddGrantModal
+        clusterID={clusterID}
+        addGrantsMutate={addGrantsMutate}
+        roles={rolesData}
+        addGrantsData={addGrantsData}
+        isAddGrantsPending={isAddGrantsPending}
+        isAddGrantsError={isAddGrantsError}
+        addGrantsError={addGrantsError}
+        resetAddGrantsMutate={resetAddGrantsMutate}
+      />
+    </Card>
+  );
+};
 
 NetworkSelfServiceSection.propTypes = {
-  getRoles: PropTypes.func.isRequired,
-  getGrants: PropTypes.func.isRequired,
-  grants: PropTypes.object.isRequired,
-  addGrantResponse: PropTypes.object,
-  deleteGrant: PropTypes.func.isRequired,
-  deleteGrantResponse: PropTypes.object,
-  openAddGrantModal: PropTypes.func.isRequired,
-  addNotification: PropTypes.func.isRequired,
+  region: PropTypes.string,
+  clusterID: PropTypes.string,
   canEdit: PropTypes.bool.isRequired,
   clusterHibernating: PropTypes.bool.isRequired,
   isReadOnly: PropTypes.bool.isRequired,

@@ -11,7 +11,10 @@ export const formatCluster = (cluster: ClusterFromSubscription) => ({
       role_arn: cluster.aws?.sts?.role_arn,
     },
   },
+
+  ccs: { enabled: cluster.ccs?.enabled },
   cloud_provider: { id: cluster.cloud_provider?.id },
+  console: { url: cluster.console?.url },
   creation_timestamp: cluster.creation_timestamp,
   external_id: cluster.external_id,
   gcp_network: {
@@ -43,12 +46,14 @@ export const formatCluster = (cluster: ClusterFromSubscription) => ({
     state: cluster.status?.state,
   },
   subscription: {
+    capabilities: cluster.subscription?.capabilities,
     eval_expiration_date: cluster.subscription?.eval_expiration_date,
     id: cluster.subscription?.id,
     display_name: cluster.subscription?.display_name,
     metrics: !!cluster.subscription?.metrics,
     plan: {
       id: cluster.subscription?.plan?.id,
+      type: cluster.subscription?.plan?.type,
     },
     status: cluster.subscription?.status,
     support_level: cluster.subscription?.support_level,

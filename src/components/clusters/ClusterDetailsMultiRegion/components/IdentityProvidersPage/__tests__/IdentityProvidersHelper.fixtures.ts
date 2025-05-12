@@ -1,4 +1,4 @@
-import { IdentityProvider, OpenIDClaims } from '~/types/clusters_mgmt.v1';
+import { IdentityProvider, OpenIdClaims } from '~/types/clusters_mgmt.v1';
 
 export const githubFormDataTeams = {
   idpId: 'id',
@@ -35,7 +35,7 @@ export const githubFormDataTeamsExpected = {
     client_secret: 'client_secret',
     hostname: 'hostname',
     organizations: undefined,
-    teams: ['a', 'b'],
+    teams: [{ teams: 'a' }, { teams: 'b' }],
   },
   id: 'id',
   mapping_method: 'claim',
@@ -49,7 +49,7 @@ export const githubTrimFormDataTeamsExpected = {
     client_secret: 'client_secret',
     hostname: 'hostname',
     organizations: undefined,
-    teams: ['a', 'b'],
+    teams: [{ teams: 'a' }, { teams: 'b' }],
   },
   id: 'id',
   mapping_method: 'claim',
@@ -75,7 +75,7 @@ export const githubFormDataOrganizationsExpected = {
     client_id: 'client_id',
     client_secret: 'client_secret',
     hostname: 'hostname',
-    organizations: ['a', 'b'],
+    organizations: [{ organizations: 'a' }, { organizations: 'b' }],
     teams: undefined,
   },
   id: 'id',
@@ -127,9 +127,12 @@ export const openIdFormDataExpected = {
   open_id: {
     ca: 'ca',
     claims: {
-      email: ['openid_emailA', 'openid_emailB'],
-      name: ['openid_nameA', 'openid_nameB'],
-      preferred_username: ['openid_preferred_usernameA', 'openid_preferred_usernameB'],
+      email: [{ openid_email: 'openid_emailA' }, { openid_email: 'openid_emailB' }],
+      name: [{ openid_name: 'openid_nameA' }, { openid_name: 'openid_nameB' }],
+      preferred_username: [
+        { openid_preferred_username: 'openid_preferred_usernameA' },
+        { openid_preferred_username: 'openid_preferred_usernameB' },
+      ],
     },
     client_id: 'client_id',
     client_secret: 'client_secret',
@@ -162,9 +165,12 @@ export const openIdTrimFormDataExpected = {
   open_id: {
     ca: undefined,
     claims: {
-      email: ['openid_emailA', 'openid_emailB'],
-      name: ['openid_nameA', 'openid_nameB'],
-      preferred_username: ['openid_preferred_usernameA', 'openid_preferred_usernameB'],
+      email: [{ openid_email: 'openid_emailA' }, { openid_email: 'openid_emailB' }],
+      name: [{ openid_name: 'openid_nameA' }, { openid_name: 'openid_nameB' }],
+      preferred_username: [
+        { openid_preferred_username: 'openid_preferred_usernameA' },
+        { openid_preferred_username: 'openid_preferred_usernameB' },
+      ],
     },
     client_id: 'client_id',
     client_secret: 'client_secret',
@@ -202,10 +208,10 @@ export const ldapFormDataExpected = {
   id: 'id',
   ldap: {
     attributes: {
-      email: ['ldap_emailA', 'ldap_emailB'],
-      id: ['ldap_idA', 'ldap_idB'],
-      name: ['ldap_nameA', 'ldap_nameB'],
-      preferred_username: [],
+      email: [{ ldap_email: 'ldap_emailA' }, { ldap_email: 'ldap_emailB' }],
+      id: [{ ldap_id: 'ldap_idA' }, { ldap_id: 'ldap_idB' }],
+      name: [{ ldap_name: 'ldap_nameA' }, { ldap_name: 'ldap_nameB' }],
+      preferred_username: undefined,
     },
     bind_dn: 'bind_dn',
     bind_password: 'bind_password',
@@ -349,7 +355,7 @@ export const clientSecretFormDataExpected = {
     client_id: 'client_id',
     hostname: 'hostname',
     organizations: undefined,
-    teams: [],
+    teams: undefined,
   },
   id: 'id',
   mapping_method: 'claim',
@@ -384,10 +390,10 @@ export const bindPassFormDataExpected = {
   id: 'id',
   ldap: {
     attributes: {
-      email: ['ldap_emailA', 'ldap_emailB'],
-      id: ['ldap_idA', 'ldap_idB'],
-      name: ['ldap_nameA', 'ldap_nameB'],
-      preferred_username: [],
+      email: [{ ldap_email: 'ldap_emailA' }, { ldap_email: 'ldap_emailB' }],
+      id: [{ ldap_id: 'ldap_idA' }, { ldap_id: 'ldap_idB' }],
+      name: [{ ldap_name: 'ldap_nameA' }, { ldap_name: 'ldap_nameB' }],
+      preferred_username: undefined,
     },
     bind_dn: 'bind_dn',
     ca: '',
@@ -398,7 +404,7 @@ export const bindPassFormDataExpected = {
   type: 'LDAPIdentityProvider',
 };
 
-export const claims: OpenIDClaims = {
+export const claims: OpenIdClaims = {
   name: ['openIDName 1', 'openIDName 2'],
   email: ['openIDEmail 1', 'openIDEmail 2'],
   preferred_username: ['openIDUserName 1', 'openIDUserName 2'],
@@ -460,14 +466,11 @@ export const gitHubOnlyOrgsData = {
   organizations: ['organization a', 'organization b'],
 };
 
-export const gitHubTeamsAndOrgsDataExpected = [
-  { id: 0, teams: 'team a' },
-  { id: 1, teams: 'team b' },
-];
+export const gitHubTeamsAndOrgsDataExpected = [{ teams: 'team a' }, { teams: 'team b' }];
 
 export const gitHubOnlyOrgsDataExpected = [
-  { id: 0, organizations: 'organization a' },
-  { id: 1, organizations: 'organization b' },
+  { organizations: 'organization a' },
+  { organizations: 'organization b' },
 ];
 
 export const providersFixtures: IdentityProvider[] = [
@@ -558,25 +561,10 @@ export const providersExpectedFormData = [
     name: 'OpenID',
     openid_ca:
       '-----BEGIN CERTIFICATE-----\ntesttesttesttesttesttesttesttesttesttesttesttest\ntesttesttesttesttesttesttesttesttesttesttesttest\ntesttesttesttesttesttesttesttesttesttesttesttest\n-----END CERTIFICATE-----',
-    openid_email: [
-      {
-        id: 0,
-        openid_email: 'email1',
-      },
-    ],
+    openid_email: ['email1'],
     openid_extra_scopes: '',
-    openid_name: [
-      {
-        id: 0,
-        openid_name: 'name 1',
-      },
-    ],
-    openid_preferred_username: [
-      {
-        id: 0,
-        openid_preferred_username: 'test122',
-      },
-    ],
+    openid_name: ['name 1'],
+    openid_preferred_username: ['test122'],
     selectedIDP: 'OpenIDIdentityProvider',
     type: 'OpenIDIdentityProvider',
   },
@@ -584,6 +572,8 @@ export const providersExpectedFormData = [
     client_id: 'rewar',
     client_secret: 'CLIENT_SECRET',
     gitlab_url: 'https://gitlab.com/',
+    gitlab_ca:
+      '-----BEGIN CERTIFICATE-----\ntesttesttesttesttesttesttesttesttesttesttesttest\ntesttesttesttesttesttesttesttesttesttesttesttest\ntesttesttesttesttesttesttesttesttesttesttesttest\n-----END CERTIFICATE-----',
     idpId: '2aa991al599m3o48udp3qarolp5hi1q7',
     mappingMethod: 'claim',
     name: 'GitLab',
@@ -609,19 +599,9 @@ export const providersExpectedFormData = [
     idpId: '2aaatta5nt517krk31ftcgu1697iqf9n',
     mappingMethod: 'claim',
     name: 'GitHub',
-    organizations: [
-      {
-        id: 0,
-        organizations: 'org1',
-      },
-    ],
+    organizations: ['org1'],
     selectedIDP: 'GithubIdentityProvider',
-    teams: [
-      {
-        id: 0,
-        organizations: 'org1',
-      },
-    ],
+    teams: [''],
     type: 'GithubIdentityProvider',
   },
   {
@@ -631,26 +611,11 @@ export const providersExpectedFormData = [
     idpId: '2aa828nuogqdntjaglps8u9r2pqv9bs6',
     ldap_ca:
       '-----BEGIN CERTIFICATE-----\ntesttesttesttesttesttesttesttesttesttesttesttest\ntesttesttesttesttesttesttesttesttesttesttesttest\ntesttesttesttesttesttesttesttesttesttesttesttest\n-----END CERTIFICATE-----',
-    ldap_email: [],
-    ldap_id: [
-      {
-        id: 0,
-        ldap_id: 'dn',
-      },
-    ],
+    ldap_email: [''],
+    ldap_id: ['dn'],
     ldap_insecure: false,
-    ldap_name: [
-      {
-        id: 0,
-        ldap_name: 'cn',
-      },
-    ],
-    ldap_preferred_username: [
-      {
-        id: 0,
-        ldap_preferred_username: 'uid',
-      },
-    ],
+    ldap_name: ['cn'],
+    ldap_preferred_username: ['uid'],
     ldap_url: 'ldap://test.com',
     mappingMethod: 'claim',
     name: 'LDAP',

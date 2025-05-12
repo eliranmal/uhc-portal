@@ -1,25 +1,35 @@
 import get from 'lodash/get';
 
 import { ANY, match, matchCaseInsensitively } from '~/common/matchUtils';
-import { ConsumedQuota, QuotaCost, QuotaCostList, RelatedResource } from '~/types/accounts_mgmt.v1';
-import { BillingModel } from '~/types/clusters_mgmt.v1';
+import {
+  ConsumedQuotaBilling_model as ConsumedQuotaBillingModel,
+  QuotaCost,
+  QuotaCostList,
+  RelatedResource,
+  RelatedResourceBilling_model as RelatedResourceBillingModel,
+  SubscriptionCommonFieldsCluster_billing_model as SubscriptionCommonFieldsClusterBillingModel,
+} from '~/types/accounts_mgmt.v1';
+import { BillingModel } from '~/types/clusters_mgmt.v1/enums';
 import { ClusterFromSubscription } from '~/types/types';
 
-import { billingModels, normalizedProducts } from '../../../common/subscriptionTypes';
+import {
+  normalizedProducts,
+  STANDARD_TRIAL_BILLING_MODEL_TYPE,
+} from '../../../common/subscriptionTypes';
 
 import { clusterBillingModelToRelatedResource } from './billingModelMapper';
-import { BillingQuota, defaultQuotaQuery, QuotaParams, QuotaQuery, QuotaTypes } from './quotaModel';
+import { BillingQuota, defaultQuotaQuery, QuotaParams, QuotaQuery } from './quotaModel';
 
 /**
  * Performs an explicit mapping from a given billingModel to the billingModel which should be used to check quotas for
  */
 /* eslint-disable camelcase */
 const getBillingQuotaModel = (
-  model: ConsumedQuota.billing_model | any,
-): RelatedResource.billing_model => {
+  model: ConsumedQuotaBillingModel | any,
+): RelatedResourceBillingModel => {
   switch (model) {
-    case BillingModel.MARKETPLACE_AWS:
-      return RelatedResource.billing_model.MARKETPLACE;
+    case BillingModel.marketplace_aws:
+      return RelatedResourceBillingModel.marketplace;
     default:
       return model;
   }
@@ -72,9 +82,9 @@ const queryFromQuotaParams = (quotaParams: QuotaParams): QuotaQuery => ({
   resource_type: quotaParams.resourceType || ANY,
   product: quotaParams.product || normalizedProducts.ANY,
   billing_model:
-    quotaParams.billingModel?.toString() === 'standard-trial'
-      ? RelatedResource.billing_model.STANDARD
-      : quotaParams.billingModel || RelatedResource.billing_model.ANY,
+    quotaParams.billingModel?.toString() === STANDARD_TRIAL_BILLING_MODEL_TYPE // TODO: to remove standar trial billing model by OCMUI-2689
+      ? RelatedResourceBillingModel.standard
+      : quotaParams.billingModel || RelatedResourceBillingModel.any,
   cloud_provider: quotaParams.cloudProviderID || ANY,
   byoc: { true: 'byoc', false: 'rhinfra', undefined: ANY }[`${quotaParams.isBYOC}`], // TODO: this is inconsistent string vs boolean
   availability_zone_type: { true: 'multi', false: 'single', undefined: ANY }[
@@ -91,14 +101,17 @@ const availableQuota = (quotaList: QuotaCostList | undefined, quotaParams: Quota
   if (!quotaList) {
     return 0;
   }
-  // remove quota cost checks for marketplace-gcp
-  // this billing-model can currently only be set with OSD_GOOGLE_MARKETPLACE_FEATURE feature enabled
-  // ultimately we should filter for quota_id: "cluster|byoc|osd|gcp|marketplace"
-  if (quotaParams.billingModel === RelatedResource.billing_model.MARKETPLACE_GCP) {
-    return Infinity;
-  }
 
-  const query = queryFromQuotaParams(quotaParams);
+  const queryParams: QuotaParams = {
+    ...quotaParams,
+    billingModel:
+      quotaParams.billingModel &&
+      quotaParams.billingModel.startsWith(RelatedResourceBillingModel.marketplace)
+        ? RelatedResourceBillingModel.marketplace
+        : quotaParams.billingModel,
+  };
+
+  const query = queryFromQuotaParams(queryParams);
   return (quotaList?.items || []).reduce(
     (acc, curr) => acc + availableFromQuotaCostItem(curr, query),
     0,
@@ -118,7 +131,11 @@ const addOnBillingQuota = (quotaList: QuotaCostList, quotaParams: QuotaParams): 
   quotaList.items?.forEach((quotaCostItem) => {
     quotaCostItem.related_resources?.forEach((resource) => {
       if (relatedResourceMatches(resource, query)) {
-        if ([ANY, billingModels.STANDARD].includes(resource.billing_model)) {
+        if (
+          [ANY, SubscriptionCommonFieldsClusterBillingModel.standard].includes(
+            resource.billing_model,
+          )
+        ) {
           if (!models.standard) {
             models.standard = {
               cost: resource.cost,
@@ -126,7 +143,10 @@ const addOnBillingQuota = (quotaList: QuotaCostList, quotaParams: QuotaParams): 
               consumed: quotaCostItem.consumed,
             };
           }
-        } else if (resource.billing_model === billingModels.MARKETPLACE && !models.marketplace) {
+        } else if (
+          resource.billing_model === RelatedResourceBillingModel.marketplace &&
+          !models.marketplace
+        ) {
           models.marketplace = {
             cost: resource.cost,
             cloudAccounts: {
@@ -162,43 +182,15 @@ const hasPotentialQuota = (quotaList: QuotaCostList, quotaParams: QuotaParams): 
 /**
  * Returns partial query object for availableQuota() matching an existing cluster.
  */
-// TODO: it should handle marketplace-* -> marketplace in future
 const queryFromCluster = <E extends ClusterFromSubscription>(cluster: E): QuotaParams => ({
   product: cluster.subscription?.plan?.type,
   billingModel:
     clusterBillingModelToRelatedResource(cluster.subscription?.cluster_billing_model) ??
-    RelatedResource.billing_model.STANDARD,
+    RelatedResourceBillingModel.standard,
   cloudProviderID: cluster.cloud_provider?.id ?? ANY,
   isBYOC: cluster.ccs?.enabled === true,
   isMultiAz: get(cluster, 'multi_az', false), // TODO: multi_az?
 });
-
-/**
- * Returns number of clusters of specific type that can be created/added, from 0 to `Infinity`.
- * Returns 0 if necessary data not fulfilled yet.
- */
-const availableClustersFromQuota = (
-  quotaList: QuotaCostList | undefined,
-  quotaParams: QuotaParams,
-) => availableQuota(quotaList, { ...quotaParams, resourceType: QuotaTypes.CLUSTER });
-
-const hasManagedQuotaSelector = (quotaList: QuotaCostList, product: string): boolean =>
-  availableClustersFromQuota(quotaList, { product }) >= 1;
-
-const hasHostedQuotaSelector = (quotaList?: QuotaCostList): boolean =>
-  availableClustersFromQuota(quotaList, {
-    product: normalizedProducts.ROSA,
-    billingModel: RelatedResource.billing_model.MARKETPLACE,
-  }) >= 1;
-
-/**
- * Returns number of nodes of specific type that can be created/added, from 0 to `Infinity`.
- * Returns 0 if necessary data not fulfilled yet.
- * @param quotaList - `state.userProfile.organization.quotaList`
- * @param quotaParams - {product, cloudProviderID, resourceName, isBYOC,isMultiAz, billingModel}
- */
-const availableNodesFromQuota = (quotaList: QuotaCostList | undefined, quotaParams: QuotaParams) =>
-  availableQuota(quotaList, { ...quotaParams, resourceType: QuotaTypes.NODE });
 
 const getAwsBillingAccountsFromQuota = (items?: QuotaCost[]) =>
   items
@@ -206,15 +198,11 @@ const getAwsBillingAccountsFromQuota = (items?: QuotaCost[]) =>
     ?.cloud_accounts?.filter((account) => account.cloud_provider_id === 'aws') || [];
 
 export {
+  addOnBillingQuota,
   availableFromQuotaCostItem,
   availableQuota,
-  hasPotentialQuota,
-  queryFromCluster,
-  hasManagedQuotaSelector,
-  hasHostedQuotaSelector,
-  availableClustersFromQuota,
-  availableNodesFromQuota,
-  addOnBillingQuota,
   getAwsBillingAccountsFromQuota,
   getBillingQuotaModel,
+  hasPotentialQuota,
+  queryFromCluster,
 };

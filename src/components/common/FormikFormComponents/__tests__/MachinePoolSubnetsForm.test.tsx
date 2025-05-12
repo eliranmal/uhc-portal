@@ -14,7 +14,21 @@ describe('<MachinePoolSubnetsForm />', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
-  const defaultProps = { selectedVPC: {} };
+  const defaultProps = {
+    selectedVPC: {
+      name: 'test-123abc-vpc',
+      aws_subnets: [
+        {
+          availability_zone: 'us-east-2a',
+          cidr_block: '10.0.0.0/19',
+          name: 'subnet-03df6fb9d7677c84c',
+          public: false,
+          red_hat_managed: false,
+          subnet_id: 'subnet-03df6fb9d7677c84c',
+        },
+      ],
+    },
+  };
 
   describe('it is accessible', () => {
     it('no content', async () => {
@@ -71,9 +85,7 @@ describe('<MachinePoolSubnetsForm />', () => {
         },
         {
           machinePoolsSubnets: [
-            {
-              privateSubnetId: 'Subnet is required',
-            },
+            undefined,
             {
               privateSubnetId: 'Subnet is required',
             },
@@ -95,15 +107,20 @@ describe('<MachinePoolSubnetsForm />', () => {
         </Formik>,
       );
 
+      expect(screen.getByText('subnet-03df6fb9d7677c84c')).toBeInTheDocument();
+
       // Act
       await user.click(screen.getByTestId('remove-machine-pool-2'));
+      await user.click(screen.getAllByLabelText('Remove machine pool')[0]);
 
       // Assert
-      expect(setNestedObjectValuesSpy).toHaveBeenCalledTimes(3);
+      expect(setNestedObjectValuesSpy).toHaveBeenCalledTimes(4);
       expect(setNestedObjectValuesSpy).toHaveBeenCalledWith(expectedErrors[0], true);
       expect(setNestedObjectValuesSpy).toHaveBeenCalledWith(expectedErrors[1], true);
 
-      expect(getScrollErrorIdsSpy).toHaveBeenCalledTimes(3);
+      expect(screen.queryByText('subnet-03df6fb9d7677c84c')).toBe(null);
+
+      expect(getScrollErrorIdsSpy).toHaveBeenCalledTimes(4);
       expect(getScrollErrorIdsSpy).toHaveBeenCalledWith(expectedErrors[0]);
       expect(getScrollErrorIdsSpy).toHaveBeenCalledWith(expectedErrors[1]);
     });

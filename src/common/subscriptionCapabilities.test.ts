@@ -3,7 +3,7 @@ import times from 'lodash/times';
 
 import { ClusterFromSubscription } from '~/types/types';
 
-import { SubscriptionCommonFields } from '../types/accounts_mgmt.v1';
+import { SubscriptionCommonFieldsStatus } from '../types/accounts_mgmt.v1';
 
 import { getRandomID } from './helpers';
 import {
@@ -23,7 +23,7 @@ const newOCPCluster = () => {
     subscription: {
       id: subID,
       kind: 'Subscription',
-      status: SubscriptionCommonFields.status.ACTIVE,
+      status: SubscriptionCommonFieldsStatus.Active,
       cluster_id: clusterID,
       capabilities: [],
     },
@@ -34,7 +34,7 @@ const newOCPCluster = () => {
 
 const newDisconnectedCluster = () => {
   const cluster = newOCPCluster();
-  cluster.subscription.status = SubscriptionCommonFields.status.DISCONNECTED;
+  cluster.subscription.status = SubscriptionCommonFieldsStatus.Disconnected;
   return cluster;
 };
 

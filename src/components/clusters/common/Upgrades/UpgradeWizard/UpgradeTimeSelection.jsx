@@ -5,15 +5,15 @@ import {
   DatePicker,
   Form,
   FormGroup,
+  MenuToggle,
   Radio,
+  Select,
+  SelectList,
+  SelectOption,
   Split,
   SplitItem,
   Title,
 } from '@patternfly/react-core';
-import {
-  Select as SelectDeprecated,
-  SelectOption as SelectOptionDeprecated,
-} from '@patternfly/react-core/deprecated';
 import { DateFormat } from '@redhat-cloud-services/frontend-components/DateFormat';
 
 import './UpgradeWizard.scss';
@@ -83,7 +83,7 @@ class UpgradeTimeSelection extends React.Component {
       setTimeout(() => {
         requestAnimationFrame(() => {
           const selected = document.querySelector(
-            '#upgrade-time-select-dropdown .pf-v5-c-select__menu-item.pf-m-selected',
+            '#upgrade-time-select-dropdown .pf-v5-c-menu__item.pf-m-selected',
           );
           if (selected) {
             selected.scrollIntoView({ block: 'center' });
@@ -100,13 +100,13 @@ class UpgradeTimeSelection extends React.Component {
         date.setHours(hour);
         date.setMinutes(0);
         ret.push(
-          <SelectOptionDeprecated
+          <SelectOption
             value={value}
             key={value}
             isDisabled={UpgradeTimeSelection.getDefaultTimestamp() > date}
           >
             {value}
-          </SelectOptionDeprecated>,
+          </SelectOption>,
         );
       }
       return ret;
@@ -134,6 +134,21 @@ class UpgradeTimeSelection extends React.Component {
       }
       return '';
     };
+
+    const onToggle = (timeSelectionOpen) => this.setState({ timeSelectionOpen });
+
+    const toggle = (toggleRef) => (
+      <MenuToggle
+        ref={toggleRef}
+        onClick={() => onToggle(!timeSelectionOpen)}
+        isExpanded={timeSelectionOpen}
+        aria-label="Upgrade time menu"
+        className="upgrade-time-select"
+      >
+        {getSelectedTime()}
+      </MenuToggle>
+    );
+
     return (
       <>
         <Title className="wizard-step-title" size="lg" headingLevel="h3">
@@ -178,18 +193,18 @@ class UpgradeTimeSelection extends React.Component {
                     />
                   </SplitItem>
                   <SplitItem>
-                    <SelectDeprecated
-                      className="upgrade-schedule-time-input"
-                      selections={getSelectedTime()}
-                      onSelect={this.setTime}
-                      onToggle={() =>
-                        this.setState((state) => ({ timeSelectionOpen: !state.timeSelectionOpen }))
-                      }
+                    <Select
                       isOpen={timeSelectionOpen}
-                      id="upgrade-time-select-dropdown"
+                      selected={getSelectedTime()}
+                      onOpenChange={(timeSelectionOpen) => onToggle(timeSelectionOpen)}
+                      toggle={toggle}
+                      onSelect={this.setTime}
+                      isScrollable
                     >
-                      {makeSelectOptions()}
-                    </SelectDeprecated>
+                      <SelectList id="upgrade-time-select-dropdown">
+                        {makeSelectOptions()}
+                      </SelectList>
+                    </Select>
                   </SplitItem>
                   <SplitItem />
                 </Split>

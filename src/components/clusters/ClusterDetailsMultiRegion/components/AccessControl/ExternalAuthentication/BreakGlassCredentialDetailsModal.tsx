@@ -1,5 +1,4 @@
 import React from 'react';
-import { AxiosError } from 'axios';
 
 import {
   Button,
@@ -10,7 +9,7 @@ import {
 } from '@patternfly/react-core';
 
 import ErrorBox from '~/components/common/ErrorBox';
-import { clusterService } from '~/services';
+import { useFetchBreakGlassCredentialDetails } from '~/queries/ClusterDetailsQueries/AccessControlTab/ExternalAuthenticationQueries/useFetchBreakGlassCredentialDetails';
 import { BreakGlassCredential } from '~/types/clusters_mgmt.v1';
 
 const DownloadButton = ({ textOutput, disabled }: { textOutput: string; disabled: boolean }) => {
@@ -36,32 +35,18 @@ type BreakGlassCredentialDetailsModalProps = {
   onClose: () => void;
   credential?: BreakGlassCredential;
   isOpen?: boolean;
+  region?: string;
 };
 
 export function BreakGlassCredentialDetailsModal(props: BreakGlassCredentialDetailsModalProps) {
-  const { clusterID, onClose, credential, isOpen = true } = props;
-  const [credentialData, setCredentialData] = React.useState<BreakGlassCredential>();
-  const [error, setError] = React.useState<AxiosError>();
-  const [isPending, setIsPending] = React.useState(false);
+  const { clusterID, onClose, credential, region, isOpen = true } = props;
 
-  React.useEffect(() => {
-    setError(undefined);
-    setIsPending(true);
-    (async () => {
-      const request = clusterService.getBreakGlassCredentialDetails;
-      try {
-        const creds: BreakGlassCredential = await request(
-          clusterID || '',
-          credential?.id || '',
-        ).then((response) => response.data);
-        setCredentialData(creds);
-      } catch (error) {
-        setError(error as AxiosError);
-      } finally {
-        setIsPending(false);
-      }
-    })();
-  }, [clusterID, credential?.id]);
+  const {
+    data: credentialData,
+    isLoading,
+    isError,
+    error,
+  } = useFetchBreakGlassCredentialDetails(region, clusterID, credential?.id);
 
   const statusMessage = () => {
     if (credentialData?.status === 'revoked') {
@@ -74,7 +59,6 @@ export function BreakGlassCredentialDetailsModal(props: BreakGlassCredentialDeta
   };
 
   const handleClose = () => {
-    setError(undefined);
     onClose();
   };
 
@@ -89,7 +73,7 @@ export function BreakGlassCredentialDetailsModal(props: BreakGlassCredentialDeta
       actions={[
         <DownloadButton
           textOutput={credentialData?.kubeconfig || ''}
-          disabled={isPending || !credentialData?.kubeconfig}
+          disabled={isLoading || !credentialData?.kubeconfig}
         />,
         <Button key="cancel" variant="secondary" onClick={handleClose}>
           Cancel
@@ -97,20 +81,20 @@ export function BreakGlassCredentialDetailsModal(props: BreakGlassCredentialDeta
       ]}
     >
       {statusMessage()}
-      {error && (
+      {isError && (
         <StackItem>
           <ErrorBox
             message="A problem occurred while retrieving credential"
             response={{
-              errorMessage: (error.response?.data as any)?.reason,
-              operationID: (error.response?.data as any)?.operation_id,
+              errorMessage: error.error.reason,
+              operationID: error.error.operationID,
             }}
           />
         </StackItem>
       )}
 
       <ClipboardCopy isReadOnly variant={ClipboardCopyVariant.expansion}>
-        {isPending ? 'Loading...' : credentialData?.kubeconfig || 'No kubeconfig'}
+        {isLoading ? 'Loading...' : credentialData?.kubeconfig || 'No kubeconfig'}
       </ClipboardCopy>
     </Modal>
   );

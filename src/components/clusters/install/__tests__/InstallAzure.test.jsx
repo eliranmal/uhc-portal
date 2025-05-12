@@ -18,12 +18,12 @@ describe('InstallAzure', () => {
 
     expect(screen.getByRole('link', { name: /Learn more about automated/ })).toHaveAttribute(
       'href',
-      `https://docs.openshift.com/container-platform/${version}/installing/installing_azure/installing-azure-default.html`,
+      `https://docs.redhat.com/en/documentation/openshift_container_platform/${version}/html/installing_on_azure/installer-provisioned-infrastructure#installation-launching-installer_installing-azure-default`,
     );
 
     expect(screen.getByRole('link', { name: /Learn more about full control/ })).toHaveAttribute(
       'href',
-      `https://docs.openshift.com/container-platform/${version}/installing/installing_azure/installing-azure-user-infra.html`,
+      `https://docs.redhat.com/en/documentation/openshift_container_platform/${version}/html/installing_on_azure/user-provisioned-infrastructure#installing-azure-user-infra`,
     );
   });
 });

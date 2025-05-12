@@ -10,6 +10,7 @@ const deleteProtectionConstants = {
   CLEAR_UPDATE_DELETE_PROTECTION_RESPONSE,
 };
 
+// KKD - hoping we can remove these
 const updateDeleteProtection = (clusterID: string, isProtected: boolean) =>
   action(UPDATE_DELETE_PROTECTION, clusterService.updateDeleteProtection(clusterID, isProtected));
 

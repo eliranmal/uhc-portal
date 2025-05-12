@@ -15,6 +15,8 @@ export type TabsRowTabProperties = {
   isDisabled?: boolean;
   tooltip?: React.ReactElement<any>;
   hasIssues?: boolean;
+  numberOfIssues?: number;
+  isLoading?: boolean;
 };
 
 export type TabsRowInfoType = {
@@ -28,4 +30,5 @@ export type TabsRowInfoType = {
   support: TabsRowTabProperties;
   upgradeSettings: TabsRowTabProperties;
   addAssisted: TabsRowTabProperties;
+  accessRequest: TabsRowTabProperties;
 };

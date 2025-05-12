@@ -4,15 +4,12 @@ import {
 } from '~/common/localStorageConstants';
 import { ViewOptions } from '~/types/types';
 
-import { ClusterLogAction } from '../../components/clusters/ClusterDetails/components/ClusterLogs/clusterLogActions';
-import { GET_CLUSTER_LOGS } from '../../components/clusters/ClusterDetails/components/ClusterLogs/clusterLogConstants';
 import { AccessRequestAction } from '../actions/accessRequestActions';
 import type { ClusterAction } from '../actions/clustersActions';
 import type { DashboardsAction } from '../actions/dashboardsActions';
 import type { SubscriptionsAction } from '../actions/subscriptionsActions';
 import type { ViewOptionsAction } from '../actions/viewOptionsActions';
 import {
-  clustersConstants,
   dashboardsConstants,
   subscriptionsConstants,
   viewConstants,
@@ -58,7 +55,7 @@ const INITIAL_ACCESS_REQUESTS_VIEW_STATE: ViewState = {
 const INITIAL_ARCHIVED_VIEW_STATE: ViewState = {
   ...INITIAL_VIEW_STATE,
   sorting: {
-    sortField: 'name',
+    sortField: 'display_name',
     isAscending: true,
     sortIndex: 0,
   },
@@ -126,7 +123,7 @@ const viewOptionsReducer = (
     | DashboardsAction
     | ClusterAction
     | SubscriptionsAction
-    | ClusterLogAction
+
     // TODO create typescript action
     | {
         type: 'VIEW_MY_CLUSTERS_ONLY_CHANGED';
@@ -234,13 +231,8 @@ const viewOptionsReducer = (
       return { ...state, ...updateState };
 
     case viewPaginationConstants.SET_TOTAL_ITEMS:
-      updatePageCounts(viewConstants.CLUSTERS_VIEW, action.payload.totalCount);
+      updatePageCounts(action.payload.viewType, action.payload.totalCount);
 
-      return { ...state, ...updateState };
-
-    case FULFILLED_ACTION(clustersConstants.GET_CLUSTERS):
-      updatePageCounts(viewConstants.CLUSTERS_VIEW, action.payload.data.total);
-      updatePageCounts(viewConstants.ARCHIVED_CLUSTERS_VIEW, action.payload.data.total);
       return { ...state, ...updateState };
 
     case FULFILLED_ACTION(dashboardsConstants.GET_UNHEALTHY_CLUSTERS):
@@ -257,14 +249,6 @@ const viewOptionsReducer = (
 
     case REJECTED_ACTION(GET_ACCESS_REQUESTS):
       updatePageCounts(viewConstants.ACCESS_REQUESTS_VIEW, 0);
-      return { ...state, ...updateState };
-
-    case FULFILLED_ACTION(GET_CLUSTER_LOGS):
-      updatePageCounts(viewConstants.CLUSTER_LOGS_VIEW, action.payload.logs.data.total);
-      return { ...state, ...updateState };
-
-    case REJECTED_ACTION(GET_CLUSTER_LOGS):
-      updatePageCounts(viewConstants.CLUSTER_LOGS_VIEW, 0);
       return { ...state, ...updateState };
 
     case viewPaginationConstants.VIEW_SET_LIST_FILTER:
@@ -305,6 +289,14 @@ const viewOptionsReducer = (
                 timestampTo: (state[action.payload.viewType].filter as any).timestampTo,
               }
             : INITIAL_OSL_VIEW_STATE.filter,
+      };
+      return { ...state, ...updateState };
+
+    case viewPaginationConstants.VIEW_RESET_FILTERS_AND_FLAGS:
+      updateState[action.payload.viewType] = {
+        ...state[action.payload.viewType],
+        flags: INITIAL_OSL_VIEW_STATE.flags,
+        filter: INITIAL_OSL_VIEW_STATE.filter,
       };
       return { ...state, ...updateState };
 

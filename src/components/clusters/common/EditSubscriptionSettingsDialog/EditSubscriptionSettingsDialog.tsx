@@ -4,13 +4,10 @@ import { useDispatch } from 'react-redux';
 import { Form, Text, TextContent, TextVariants } from '@patternfly/react-core';
 
 import getClusterName from '~/common/getClusterName';
-import {
-  clearEditSubscriptionSettingsResponse,
-  editSubscriptionSettings,
-} from '~/redux/actions/subscriptionSettingsActions';
+import ErrorBox from '~/components/common/ErrorBox';
+import { useEditSubscription } from '~/queries/common/useEditSubscription';
 import { useGlobalState } from '~/redux/hooks';
 import { SubscriptionPatchRequest } from '~/types/accounts_mgmt.v1';
-import { ErrorState } from '~/types/types';
 
 import {
   hasCapability,
@@ -21,7 +18,6 @@ import { closeModal } from '../../../common/Modal/ModalActions';
 import modals from '../../../common/Modal/modals';
 
 import EditSubscriptionSettingsFields from './EditSubscriptionSettingsFields';
-import EditSubscriptionSettingsRequestState from './EditSubscriptionSettingsRequestState';
 
 type EditSubscriptionSettingsDialogProps = {
   onClose: () => void;
@@ -41,7 +37,20 @@ const EditSubscriptionSettingsDialog = ({ onClose }: EditSubscriptionSettingsDia
     (state) => (state?.modal?.data as any)?.shouldDisplayClusterName,
   );
   const clusterDisplayName = useGlobalState((state) => getClusterName(state?.modal?.data as any));
-  const requestState = useGlobalState((state) => state.subscriptionSettings.requestState);
+
+  const { isSuccess, error, isError, isPending, mutate, reset } = useEditSubscription();
+
+  const handleCloseModal = React.useCallback(() => {
+    reset();
+    dispatch(closeModal());
+  }, [dispatch, reset]);
+
+  React.useEffect(() => {
+    if (isSuccess) {
+      handleCloseModal();
+      onClose();
+    }
+  }, [handleCloseModal, isSuccess, onClose]);
 
   const submit = (subscriptionID: string, updates: { [index: string]: any }) => {
     const requestData = { ...updates } as SubscriptionPatchRequest;
@@ -53,16 +62,12 @@ const EditSubscriptionSettingsDialog = ({ onClose }: EditSubscriptionSettingsDia
       requestData.cpu_total = parseInt(`${updates.cpu_total}`, 10);
       requestData.socket_total = 1;
     }
-    dispatch(editSubscriptionSettings(subscriptionID, requestData));
+
+    mutate({ subscriptionID, data: requestData });
   };
 
   const handleSubmit = () => {
     submit(subscription.id, settings);
-  };
-
-  const handleCloseModal = () => {
-    dispatch(clearEditSubscriptionSettingsResponse());
-    dispatch(closeModal());
   };
 
   return (
@@ -76,16 +81,12 @@ const EditSubscriptionSettingsDialog = ({ onClose }: EditSubscriptionSettingsDia
       secondaryText="Cancel"
       onPrimaryClick={handleSubmit}
       onSecondaryClick={handleCloseModal}
-      isPrimaryDisabled={requestState.pending || !settings.isValid}
-      isPending={requestState.pending}
+      isPrimaryDisabled={isPending || !settings.isValid}
+      isPending={isPending}
     >
-      <EditSubscriptionSettingsRequestState
-        requestState={requestState as ErrorState}
-        onFulfilled={() => {
-          handleCloseModal();
-          onClose();
-        }}
-      />
+      {isError ? (
+        <ErrorBox message="Error updating subscription settings" response={error || {}} />
+      ) : null}
       <Form
         onSubmit={(e) => {
           handleSubmit();

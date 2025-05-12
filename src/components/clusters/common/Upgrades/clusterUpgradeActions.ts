@@ -4,7 +4,7 @@ import { action } from 'typesafe-actions';
 
 import { UpgradePolicy, UpgradePolicyState } from '~/types/clusters_mgmt.v1';
 
-import clusterService from '../../../../services/clusterService';
+import clusterService, { getClusterServiceForRegion } from '../../../../services/clusterService';
 
 const POST_UPGRADE_SCHEDULE = 'POST_UPGRADE_SCHEDULE';
 const CLEAR_POST_UPGRADE_SCHEDULE = 'CLEAR_UPGRADE_SCHEDULE';
@@ -54,8 +54,12 @@ const getSchedules = (clusterID: string, isHypershift: boolean) =>
   );
 
 const postSchedule =
-  (clusterID: string, schedule: UpgradePolicy, isHypershift: boolean) => (dispatch: Dispatch) => {
-    const requestPost = isHypershift ? postControlPlaneUpgradeSchedule : postUpgradeSchedule;
+  (clusterID: string, schedule: UpgradePolicy, isHypershift: boolean, regionalId?: string) =>
+  (dispatch: Dispatch) => {
+    const clusterServiceFunc = regionalId ? getClusterServiceForRegion(regionalId) : clusterService;
+    const requestPost = isHypershift
+      ? clusterServiceFunc.postControlPlaneUpgradeSchedule
+      : clusterServiceFunc.postUpgradeSchedule;
 
     dispatch({
       type: POST_UPGRADE_SCHEDULE,

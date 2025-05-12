@@ -5,6 +5,8 @@ import remarkGfm from 'remark-gfm';
 
 import ExternalLink from '~/components/common/ExternalLink';
 
+import './MarkdownParser.scss';
+
 type MarkdownParserProps = {
   rehypePlugins?: import('unified').PluggableList | undefined;
   children?: string;
@@ -12,7 +14,7 @@ type MarkdownParserProps = {
 
 const MarkdownParser = ({ children, rehypePlugins }: MarkdownParserProps) => {
   const LinkComponent = useCallback(
-    (props) => (
+    (props: any) => (
       <ExternalLink {...props} href={props.href ?? ''}>
         {props.children}
       </ExternalLink>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { WrappedFieldInputProps, WrappedFieldMetaProps } from 'redux-form';
+import { FieldInputProps, FieldMetaProps } from 'formik';
 
 import {
   Alert,
@@ -7,6 +7,7 @@ import {
   FormGroup,
   FormSelect,
   FormSelectOption,
+  FormSelectProps,
   Text,
   TextContent,
 } from '@patternfly/react-core';
@@ -17,8 +18,8 @@ import { PromiseReducerState } from '~/redux/types';
 import ErrorBox from './ErrorBox';
 
 type Props = {
-  input: Pick<WrappedFieldInputProps, 'value' | 'onChange'> & { name?: string };
-  meta: Pick<WrappedFieldMetaProps, 'error' | 'touched' | 'invalid'>;
+  input: FieldInputProps<string>;
+  meta: Pick<FieldMetaProps<FormSelectProps>, 'error' | 'touched'>;
   isRequired?: boolean;
   label: string;
   labelIcon?: React.ReactElement;

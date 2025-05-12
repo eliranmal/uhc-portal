@@ -12,7 +12,7 @@ import modals from '~/components/common/Modal/modals';
 import shouldShowModal from '~/components/common/Modal/ModalSelectors';
 import { useEditClusterIngressMutation } from '~/queries/ClusterDetailsQueries/NetworkingTab/useEditClusterIngress';
 import { useGlobalState } from '~/redux/hooks';
-import { LoadBalancerFlavor } from '~/types/clusters_mgmt.v1';
+import { LoadBalancerFlavor } from '~/types/clusters_mgmt.v1/enums';
 import { ErrorState } from '~/types/types';
 
 import {
@@ -85,7 +85,7 @@ const EditApplicationIngressDialog: React.FC<EditApplicationIngressDialogProps> 
     <Formik
       initialValues={{
         private_default_router: clusterRouters.default?.isPrivate,
-        is_nlb_load_balancer: clusterRouters.default?.loadBalancer === LoadBalancerFlavor.NLB,
+        is_nlb_load_balancer: clusterRouters.default?.loadBalancer === LoadBalancerFlavor.nlb,
         default_router_address: clusterRouters.default?.address,
         ...ingressProps,
       }}
@@ -104,7 +104,7 @@ const EditApplicationIngressDialog: React.FC<EditApplicationIngressDialogProps> 
         );
       }}
     >
-      {({ dirty, errors, handleSubmit }) => (
+      {({ dirty, errors, handleSubmit, values }) => (
         <Modal
           variant={ModalVariant.medium}
           primaryText="Save"
@@ -125,6 +125,7 @@ const EditApplicationIngressDialog: React.FC<EditApplicationIngressDialogProps> 
               canShowLoadBalancer={canShowLoadBalancer}
               areFieldsDisabled={isHypershiftCluster}
               isHypershiftCluster={isHypershiftCluster}
+              values={values}
             />
           </Form>
         </Modal>

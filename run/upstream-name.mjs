@@ -4,7 +4,7 @@ import { realpathSync } from 'fs';
 import { simpleGit } from 'simple-git';
 import { fileURLToPath } from 'url';
 
-const upstreamRepoPattern = /.*gitlab\.cee\.redhat\.com[:/]service\/uhc-portal.*/;
+const upstreamRepoPattern = /.*github\.com[:/]RedHatInsights\/uhc-portal.*/;
 
 export async function getUpstreamRemoteName(git) {
   const verbose = true;

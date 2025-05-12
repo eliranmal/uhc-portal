@@ -1,47 +1,58 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
+import { useDispatch } from 'react-redux';
 
 import { ModalVariant } from '@patternfly/react-core';
 
-import { getErrorState } from '../../../../../../common/errors';
-import clusterService from '../../../../../../services/clusterService';
+import { modalActions } from '~/components/common/Modal/ModalActions';
+import shouldShowModal from '~/components/common/Modal/ModalSelectors';
+import { useEditSchedule } from '~/queries/ClusterDetailsQueries/ClusterSettingsTab/useEditSchedule';
+import { refetchSchedules } from '~/queries/ClusterDetailsQueries/ClusterSettingsTab/useGetSchedules';
+import { usePostClusterGateAgreementAcknowledgeModal } from '~/queries/ClusterDetailsQueries/ClusterSettingsTab/usePostClusterGateAgreement';
+import { formatErrorData } from '~/queries/helpers';
+import { refreshClusterDetails } from '~/queries/refreshEntireCache';
+import { useGlobalState } from '~/redux/hooks';
+
 import ErrorBox from '../../../../../common/ErrorBox';
 import Modal from '../../../../../common/Modal/Modal';
+import { setAutomaticUpgradePolicy } from '../../clusterUpgradeActions';
 import UpgradeAcknowledgeStep from '../UpgradeAcknowledgeStep';
 
-const { patchControlPlaneUpgradeSchedule, patchUpgradeSchedule } = clusterService;
-
 const UpgradeAcknowledgeModal = (props) => {
+  const { clusterId, schedules, region } = props;
+  const dispatch = useDispatch();
   const [pending, setPending] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [errors, setErrors] = useState([]);
   const [unmetAcknowledgements, setUnmetAcknowledgements] = useState([]);
   const [fromVersion, setFromVersion] = useState('');
   const [toVersion, setToVersion] = useState('');
+  const [isHypershift, setIsHypershift] = useState(false);
+  const [isSTSEnabled, setIsSTSEnabled] = useState(false);
+  const isOpen = useGlobalState((state) => shouldShowModal(state, 'ack-upgrade'));
+  const modalData = useGlobalState((state) => state.modal.data);
 
-  const {
-    modalData,
-    closeModal,
-    clusterId,
-    setGate,
-    isOpen,
-    automaticUpgradePolicyId,
-    setUpgradePolicy,
-    isHypershift,
-    isSTSEnabled,
-  } = props;
+  const { mutateAsync: editScheduleMutate } = useEditSchedule(clusterId, isHypershift, region);
+  const { mutateAsync: postClusterGateAgreementMutate } =
+    usePostClusterGateAgreementAcknowledgeModal(clusterId, region);
+
+  const automaticUpgradePolicyId = schedules?.items?.find(
+    (policy) => policy.schedule_type === 'automatic',
+  ).id;
 
   useEffect(() => {
     if (isOpen) {
       setFromVersion(modalData.fromVersion);
       setToVersion(modalData.toVersion);
       setUnmetAcknowledgements(modalData.unmetAcknowledgements);
+      setIsHypershift(modalData.isHypershift);
+      setIsSTSEnabled(modalData.isSTSEnabled);
       setErrors([]);
     }
   }, [isOpen, modalData]);
 
   const onCancel = () => {
-    closeModal();
+    dispatch(modalActions.closeModal());
   };
 
   const postClusterAcknowledge = async () => {
@@ -51,52 +62,46 @@ const UpgradeAcknowledgeModal = (props) => {
     const foundErrors = [];
     if (automaticUpgradePolicyId && !isSTSEnabled) {
       try {
-        const requestPatch = isHypershift ? patchControlPlaneUpgradeSchedule : patchUpgradeSchedule;
-        const patchUpgradeScheduleResponse = await requestPatch(
-          clusterId,
-          automaticUpgradePolicyId,
-          { enable_minor_version_upgrades: true },
-        );
-        setUpgradePolicy(patchUpgradeScheduleResponse.data);
+        const response = await editScheduleMutate({
+          policyID: automaticUpgradePolicyId,
+          schedule: { enable_minor_version_upgrades: true },
+        });
+
+        dispatch(setAutomaticUpgradePolicy(response.data));
       } catch (error) {
-        foundErrors.push(error);
+        foundErrors.push(formatErrorData(false, true, error));
       }
     }
 
     if (foundErrors.length === 0) {
       const ids = unmetAcknowledgements.map((ack) => ack.id);
 
-      const promises = ids.map((upgradeUpdateId) =>
-        clusterService
-          .postClusterGateAgreement(clusterId, upgradeUpdateId)
-          .then(() => {
-            setGate(upgradeUpdateId);
-          })
-          .catch((e) => Promise.reject(e)),
-      );
-
-      const response = await Promise.allSettled(promises);
+      const response = await postClusterGateAgreementMutate(ids);
 
       response.forEach((promise) => {
         if (promise.status === 'rejected') {
-          foundErrors.push(promise.reason);
+          foundErrors.push(formatErrorData(false, true, promise.reason));
           if (confirmed) {
             setConfirmed(false);
           }
+        }
+        if (promise.status === 'fulfilled') {
+          refetchSchedules();
+          refreshClusterDetails();
         }
       });
     }
 
     setPending(false);
+
     if (foundErrors.length === 0) {
-      closeModal();
+      dispatch(modalActions.closeModal());
     } else {
       setErrors(foundErrors);
     }
   };
 
   if (!isOpen) return null;
-
   return (
     <Modal
       title="Administrator acknowledgement"
@@ -123,7 +128,7 @@ const UpgradeAcknowledgeModal = (props) => {
             /* eslint-disable-next-line react/no-array-index-key */
             key={`err-${index}`}
             message="Failed to save administrator acknowledgement."
-            response={getErrorState({ payload: error })}
+            response={error?.error}
           />
         ))
       )}
@@ -132,19 +137,9 @@ const UpgradeAcknowledgeModal = (props) => {
 };
 
 UpgradeAcknowledgeModal.propTypes = {
-  closeModal: PropTypes.func,
   clusterId: PropTypes.string,
-  automaticUpgradePolicyId: PropTypes.string,
-  isOpen: PropTypes.bool,
-  modalData: PropTypes.shape({
-    fromVersion: PropTypes.string,
-    toVersion: PropTypes.string,
-    unmetAcknowledgements: PropTypes.arrayOf(PropTypes.object),
-  }),
-  setGate: PropTypes.func,
-  setUpgradePolicy: PropTypes.func,
-  isHypershift: PropTypes.bool,
-  isSTSEnabled: PropTypes.bool,
+  schedules: PropTypes.object,
+  region: PropTypes.string,
 };
 
 UpgradeAcknowledgeModal.defaultProps = {};

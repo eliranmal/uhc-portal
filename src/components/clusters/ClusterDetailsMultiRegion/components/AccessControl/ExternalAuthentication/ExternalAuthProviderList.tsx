@@ -1,5 +1,4 @@
 import React from 'react';
-import { AxiosError } from 'axios';
 
 import {
   ActionsColumn,
@@ -14,8 +13,7 @@ import {
 } from '@patternfly/react-table';
 
 import ErrorBox from '~/components/common/ErrorBox';
-import { useGlobalState } from '~/redux/hooks';
-import { clusterService } from '~/services';
+import { useFetchExternalAuths } from '~/queries/ClusterDetailsQueries/AccessControlTab/ExternalAuthenticationQueries/useFetchExternalAuths';
 import type { ExternalAuth } from '~/types/clusters_mgmt.v1';
 
 import ButtonWithTooltip from '../../../../../common/ButtonWithTooltip';
@@ -23,28 +21,20 @@ import ButtonWithTooltip from '../../../../../common/ButtonWithTooltip';
 import { DeleteExternalAuthProviderModal } from './DeleteExternalAuthProviderModal';
 import { ExternalAuthProviderModal } from './ExternalAuthProviderModal';
 
-export function ExternalAuthProviderList() {
-  const [items, setItems] = React.useState<ExternalAuth[]>([]);
-  const [error, setError] = React.useState<AxiosError>();
+export const ExternalAuthProviderList = ({
+  clusterID,
+  canUpdateClusterResource,
+  region,
+}: {
+  clusterID: string;
+  canUpdateClusterResource: boolean;
+  region?: string;
+}) => {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
   const [editProvider, setEditProvider] = React.useState<ExternalAuth | undefined>(undefined);
-  const clusterID = useGlobalState((state) => state.clusters.details.cluster.id);
-  const canUpdateClusterResource = useGlobalState(
-    (state) => state.clusters.details.cluster.canUpdateClusterResource,
-  );
 
-  React.useEffect(() => {
-    (async () => {
-      const request = clusterService.getExternalAuths;
-      try {
-        const providers = await request(clusterID || '').then((response) => response.data);
-        setItems(providers?.items ?? []);
-      } catch (error) {
-        setError(error as AxiosError);
-      }
-    })();
-  }, [clusterID, isModalOpen, isDeleteModalOpen]);
+  const { data: items, isError, error } = useFetchExternalAuths(region, clusterID);
 
   const handleEdit = (provider: ExternalAuth | undefined) => {
     setIsModalOpen(true);
@@ -70,17 +60,17 @@ export function ExternalAuthProviderList() {
     !canUpdateClusterResource &&
     'You do not have permission to create a new provider for this cluster.';
 
-  return error ? (
+  return isError ? (
     <ErrorBox
       message="A problem occurred while getting provider"
       response={{
-        errorMessage: error?.message,
-        operationID: error?.response?.status?.toString(),
+        errorMessage: error.error.errorMessage,
+        operationID: error.error.operationID,
       }}
     />
   ) : (
     <>
-      {!items.length ? (
+      {!items?.length ? (
         <ButtonWithTooltip
           className="access-control-add"
           variant="secondary"
@@ -98,11 +88,12 @@ export function ExternalAuthProviderList() {
             setIsModalOpen(false);
             setEditProvider(undefined);
           }}
+          region={region}
           externalAuthProvider={editProvider}
           isEdit={!!editProvider}
         />
       ) : null}
-      {items.length ? (
+      {items?.length ? (
         <Table aria-label="External authentication providers table" variant="compact">
           <Caption>External authentication provider</Caption>
           <Thead>
@@ -138,8 +129,9 @@ export function ExternalAuthProviderList() {
           setIsDeleteModalOpen(false);
           setEditProvider(undefined);
         }}
+        region={region}
         isOpen={isDeleteModalOpen}
       />
     </>
   );
-}
+};

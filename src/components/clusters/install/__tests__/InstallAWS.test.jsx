@@ -17,12 +17,12 @@ describe('InstallAWS', () => {
 
     expect(screen.getByRole('link', { name: /Learn more about automated/ })).toHaveAttribute(
       'href',
-      `https://docs.openshift.com/container-platform/${version}/installing/installing_aws/ipi/installing-aws-default.html`,
+      `https://docs.redhat.com/en/documentation/openshift_container_platform/${version}/html/installing_on_aws/installer-provisioned-infrastructure#prerequisites`,
     );
 
     expect(screen.getByRole('link', { name: /Learn more about full control/ })).toHaveAttribute(
       'href',
-      `https://docs.openshift.com/container-platform/${version}/installing/installing_aws/upi/installing-aws-user-infra.html`,
+      `https://docs.redhat.com/en/documentation/openshift_container_platform/${version}/html/installing_on_aws/user-provisioned-infrastructure#installing-aws-user-infra`,
     );
   });
 });

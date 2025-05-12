@@ -1,9 +1,9 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 
 import { Text, TextContent, TextVariants } from '@patternfly/react-core';
 
 import links from '~/common/installLinks.mjs';
+import { Link } from '~/common/routing';
 import ExternalLink from '~/components/common/ExternalLink';
 
 const WorkloadIdentityFederationPrerequisites = () => (

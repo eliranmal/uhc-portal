@@ -11,7 +11,7 @@ import validators, {
   MAX_CUSTOM_OPERATOR_ROLES_PREFIX_LENGTH,
 } from '../../../../../common/validators';
 import ExternalLink from '../../../../common/ExternalLink';
-import ReduxVerticalFormGroup from '../../../../common/ReduxFormComponents/ReduxVerticalFormGroup';
+import ReduxVerticalFormGroup from '../../../../common/ReduxFormComponents_deprecated/ReduxVerticalFormGroup';
 
 function CustomOperatorRoleNames() {
   const { getFieldProps, getFieldMeta } = useFormState();

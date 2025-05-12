@@ -1,10 +1,11 @@
-import { Cluster, MachinePool } from '~/types/clusters_mgmt.v1';
+import { MachinePool } from '~/types/clusters_mgmt.v1';
+import { ClusterFromSubscription } from '~/types/types';
 
 import fixtures from '../../../../../__tests__/ClusterDetails.fixtures';
 
 import { masterResizeAlertThreshold, masterResizeThresholds } from './utils';
 
-const cluster: Cluster = fixtures.clusterDetails.cluster as any;
+const cluster: ClusterFromSubscription = fixtures.clusterDetails.cluster as any;
 
 describe('masterResizeAlertThreshold', () => {
   it('When scaling a cluster to more then 25 nodes with autoscaling disabled on default machinepool, return medium threshold ', () => {

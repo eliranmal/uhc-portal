@@ -1,7 +1,6 @@
 import React from 'react';
 
-import { Alert, Skeleton } from '@patternfly/react-core';
-import { Spinner } from '@redhat-cloud-services/frontend-components/Spinner';
+import { Alert, Skeleton, Spinner } from '@patternfly/react-core';
 
 import InstructionCommand from '../common/InstructionCommand';
 
@@ -32,10 +31,10 @@ const TokenBox = ({
     return (
       <div className="pf-v5-u-mt-md">
         <div className="pf-v5-u-mb-xs">
-          <Spinner className="progressing-icon" />
+          <Spinner size="lg" aria-label="Loading..." />
           <span>Loading token, this might take a minute</span>
         </div>
-        <Skeleton fontSize="md" />
+        <Skeleton fontSize="md" screenreaderText="Loading..." />
       </div>
     );
   }

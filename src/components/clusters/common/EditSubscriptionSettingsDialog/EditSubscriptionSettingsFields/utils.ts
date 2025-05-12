@@ -1,7 +1,10 @@
 import { get, pick } from 'lodash';
 
-import { billingModels } from '~/common/subscriptionTypes';
-import { Subscription, SubscriptionCommonFields } from '~/types/accounts_mgmt.v1';
+import {
+  Subscription,
+  SubscriptionCommonFieldsCluster_billing_model as SubscriptionCommonFieldsClusterBillingModel,
+  SubscriptionCommonFieldsSystem_units as SubscriptionCommonFieldsSystemUnits,
+} from '~/types/accounts_mgmt.v1';
 
 import { EditSubcriptionOption } from './model/EditSubcriptionOption';
 import { EditSubsriptionSettingsFieldsValues } from './model/EditSubsriptionSettingsFieldsValues';
@@ -12,12 +15,12 @@ import {
 } from './constants';
 
 const getStringValue = (subscription: Subscription) =>
-  subscription.system_units === SubscriptionCommonFields.system_units.SOCKETS
+  subscription.system_units === SubscriptionCommonFieldsSystemUnits.Sockets
     ? subscription.socket_total
     : subscription.cpu_total;
 
 const getFieldLabel = (subscription: Subscription) =>
-  subscription.system_units === SubscriptionCommonFields.system_units.SOCKETS
+  subscription.system_units === SubscriptionCommonFieldsSystemUnits.Sockets
     ? 'Sockets'
     : 'Cores or vCPUs';
 
@@ -54,9 +57,10 @@ const getBillingModelAlertText = (
 ) => {
   if (!isBillingModelVisible) {
     switch (true) {
-      case cluterBillingModel === billingModels.STANDARD:
+      case cluterBillingModel === SubscriptionCommonFieldsClusterBillingModel.standard:
         return `Cluster subscription type is ${STANDARD_BILLING_MODEL_LABEL}`;
-      case cluterBillingModel === billingModels.MARKETPLACE || canSubscribeMarketplaceOCP:
+      case cluterBillingModel === SubscriptionCommonFieldsClusterBillingModel.marketplace ||
+        canSubscribeMarketplaceOCP:
         return `Cluster subscription type is ${MARKETPLACE_BILLING_MODEL_LABEL}`;
       case isDisconnected:
         return `Disconnected clusters subscription type is ${STANDARD_BILLING_MODEL_LABEL}`;

@@ -3,7 +3,7 @@ that allows you to copy text to the clipboard, and show a Tooltip saying "Copied
 just like PatternFly's "ClipboardCopy", but without the text input.
 */
 import React from 'react';
-import { CopyToClipboard } from 'react-copy-to-clipboard';
+import CopyToClipboard from 'react-copy-to-clipboard';
 
 import { Button, Tooltip } from '@patternfly/react-core';
 

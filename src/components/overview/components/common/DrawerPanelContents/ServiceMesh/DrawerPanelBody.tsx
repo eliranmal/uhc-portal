@@ -12,6 +12,7 @@ import {
 } from '@patternfly/react-core';
 
 import ExternalLink from '~/components/common/ExternalLink';
+import { YoutubePlayer } from '~/components/common/YoutubePlayer/YoutubePlayer';
 
 const ServiceMeshDrawerPanelBody = (
   <Stack hasGutter className="drawer-panel-content-body">
@@ -22,26 +23,29 @@ const ServiceMeshDrawerPanelBody = (
         </Text>
         <Text component={TextVariants.p}>
           Red Hat OpenShift Service Mesh is based on the open source{' '}
-          <Text
-            component={TextVariants.a}
-            href="https://www.redhat.com/en/topics/microservices/what-is-istio"
-          >
-            Istio
-          </Text>{' '}
+          <ExternalLink href="https://www.redhat.com/en/topics/microservices/what-is-istio" noIcon>
+            Istio{' '}
+          </ExternalLink>
           project and is pre-validated and fully supported to work on Red Hat OpenShift. It can be
           installed with the{' '}
-          <Text component={TextVariants.a} href="https://github.com/kiali/kiali-operator">
-            Kiali
-          </Text>{' '}
+          <ExternalLink href="https://github.com/kiali/kiali-operator" noIcon>
+            Kiali{' '}
+          </ExternalLink>
           dashboard for managing service mesh, while integrating with{' '}
-          <Text
-            component={TextVariants.a}
+          <ExternalLink
             href="https://www.redhat.com/en/technologies/cloud-computing/openshift/observability"
+            noIcon
           >
-            Red Hat OpenShift Observability
-          </Text>{' '}
+            Red Hat OpenShift Observability{' '}
+          </ExternalLink>
           for managing logging, metrics, and distributed tracing.
         </Text>
+      </TextContent>
+    </StackItem>
+    <StackItem>
+      <YoutubePlayer videoID="6nyVOg2BZek" />
+      <TextContent>
+        <Text component={TextVariants.small}>Video duration 3:08</Text>
       </TextContent>
     </StackItem>
     <StackItem>
@@ -94,7 +98,9 @@ const ServiceMeshDrawerPanelBody = (
             'Service-to-service authentication',
             'Failure recovery',
           ].map((item) => (
-            <TextListItem data-testid="use-cases-list-item">{item}</TextListItem>
+            <TextListItem data-testid="use-cases-list-item" key={item}>
+              {item}
+            </TextListItem>
           ))}
         </TextList>
       </TextContent>
@@ -110,4 +116,4 @@ const ServiceMeshDrawerPanelBody = (
   </Stack>
 );
 
-export default ServiceMeshDrawerPanelBody;
+export { ServiceMeshDrawerPanelBody };

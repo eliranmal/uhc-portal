@@ -12,12 +12,13 @@ import {
 } from '@patternfly/react-core';
 
 import { BillingQuota } from '~/components/clusters/common/quotaModel';
+import { SubscriptionCommonFieldsCluster_billing_model as SubscriptionCommonFieldsClusterBillingModel } from '~/types/accounts_mgmt.v1';
 
 import { setAddonsDrawer } from '../AddOnsActions';
 import AddOnsConstants from '../AddOnsConstants';
 
 import AddOnsSubscriptionCard from './AddOnsSubscriptionCard';
-import { SetSubscriptionModel, SubscriptionModels } from './AddOnsTypes';
+import { NO_QUOTA, SetSubscriptionModel, SubscriptionModels } from './AddOnsTypes';
 
 const AddOnsSubscription = ({
   activeCardId,
@@ -64,7 +65,9 @@ const AddOnsSubscription = ({
   const standardNoBilling = billingQuota.standard === undefined;
   const marketplaceNoBilling = billingQuota.marketplace === undefined;
 
-  const getDefaultBillingModel = () => {
+  const getDefaultBillingModel = ():
+    | SubscriptionCommonFieldsClusterBillingModel
+    | typeof NO_QUOTA => {
     if (installedAddOn) {
       return installedAddOn.billing.billing_model;
     }
@@ -72,26 +75,26 @@ const AddOnsSubscription = ({
       // standard subscription model not offered for this addon
       if (!hasQuotaMarketplace) {
         // marketplace subscription offered but no quota
-        return 'no-quota';
+        return NO_QUOTA;
       }
-      return 'marketplace';
+      return SubscriptionCommonFieldsClusterBillingModel.marketplace;
     }
     if (marketplaceNoBilling) {
       // marketplace subscription model not offered for this addon
       if (!hasQuotaStandard) {
         // standard subscription offered but no quota
-        return 'no-quota';
+        return NO_QUOTA;
       }
-      return 'standard';
+      return SubscriptionCommonFieldsClusterBillingModel.standard;
     }
     // both standard and marketplace subscription models are offered, check quota
     if (!hasQuotaStandard) {
       if (!hasQuotaMarketplace) {
-        return 'no-quota';
+        return NO_QUOTA;
       }
-      return 'marketplace';
+      return SubscriptionCommonFieldsClusterBillingModel.marketplace;
     }
-    return 'standard';
+    return SubscriptionCommonFieldsClusterBillingModel.standard;
   };
 
   React.useEffect(() => {
@@ -134,7 +137,7 @@ const AddOnsSubscription = ({
           isReady={isReady}
           cloudAccounts={cloudAccounts}
           installedAddOn={installedAddOn}
-          billingModel="marketplace-rhm"
+          billingModel={SubscriptionCommonFieldsClusterBillingModel.marketplace_rhm}
           name="Red Hat Marketplace"
           cloudProvider="rhm"
         />
@@ -147,7 +150,7 @@ const AddOnsSubscription = ({
         isReady={isReady}
         cloudAccounts={cloudAccounts}
         installedAddOn={installedAddOn}
-        billingModel="marketplace-aws"
+        billingModel={SubscriptionCommonFieldsClusterBillingModel.marketplace_aws}
         name="AWS Marketplace"
         cloudProvider="aws"
       />
@@ -160,7 +163,7 @@ const AddOnsSubscription = ({
           isReady={isReady}
           cloudAccounts={cloudAccounts}
           installedAddOn={installedAddOn}
-          billingModel="marketplace-azure"
+          billingModel={SubscriptionCommonFieldsClusterBillingModel.marketplace_azure}
           name="Azure Marketplace"
           cloudProvider="azure"
         />
@@ -170,10 +173,12 @@ const AddOnsSubscription = ({
 
   const radioStandard = (disabled = false) => (
     <Radio
-      isChecked={activeSubscription?.billingModel === 'standard'}
+      isChecked={
+        activeSubscription?.billingModel === SubscriptionCommonFieldsClusterBillingModel.standard
+      }
       name="billing-model"
-      id="standard"
-      value="standard"
+      id={SubscriptionCommonFieldsClusterBillingModel.standard}
+      value={SubscriptionCommonFieldsClusterBillingModel.standard}
       label={
         <div>
           <span className={disabled ? 'pf-v5-u-mr-xs' : ''}>Standard</span>
@@ -185,7 +190,7 @@ const AddOnsSubscription = ({
           ...subscriptionModels,
           [activeCardId]: {
             addOn: activeCardId,
-            billingModel: 'standard',
+            billingModel: SubscriptionCommonFieldsClusterBillingModel.standard,
             cloudAccount: '',
           },
         });
@@ -194,10 +199,12 @@ const AddOnsSubscription = ({
   );
   const radioMarketplace = (disabled = false) => (
     <Radio
-      isChecked={activeSubscription?.billingModel.startsWith('marketplace')}
+      isChecked={activeSubscription?.billingModel.startsWith(
+        SubscriptionCommonFieldsClusterBillingModel.marketplace,
+      )}
       name="billing-model"
-      id="marketplace"
-      value="marketplace"
+      id={SubscriptionCommonFieldsClusterBillingModel.marketplace}
+      value={SubscriptionCommonFieldsClusterBillingModel.marketplace}
       label={
         <div>
           <span className={disabled ? 'pf-v5-u-mr-xs' : ''}>Marketplace</span>
@@ -209,7 +216,7 @@ const AddOnsSubscription = ({
           ...subscriptionModels,
           [activeCardId]: {
             addOn: activeCardId,
-            billingModel: 'marketplace',
+            billingModel: SubscriptionCommonFieldsClusterBillingModel.marketplace,
             cloudAccount: installedAddOn?.billing?.billing_marketplace_account || '',
           },
         });
@@ -235,8 +242,11 @@ const AddOnsSubscription = ({
           </FormGroup>
         </Form>
       )}
-      {activeSubscription?.billingModel === 'standard' && standardOptions}
-      {activeSubscription?.billingModel.startsWith('marketplace') && marketplaceOptions}
+      {activeSubscription?.billingModel === SubscriptionCommonFieldsClusterBillingModel.standard &&
+        standardOptions}
+      {activeSubscription?.billingModel.startsWith(
+        SubscriptionCommonFieldsClusterBillingModel.marketplace,
+      ) && marketplaceOptions}
     </>
   );
 };

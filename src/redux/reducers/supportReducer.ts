@@ -1,6 +1,6 @@
 import { produce } from 'immer';
 
-import { SupportCase } from '~/components/clusters/ClusterDetails/components/Support/components/model/SupportCase';
+import { SupportCase } from '~/components/clusters/ClusterDetailsMultiRegion/components/Support/components/model/SupportCase';
 import {
   ADD_NOTIFICATION_CONTACT,
   DELETE_NOTIFICATION_CONTACT,

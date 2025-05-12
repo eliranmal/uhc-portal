@@ -1,132 +1,123 @@
 import React from 'react';
+import { Field } from 'formik';
 import PropTypes from 'prop-types';
-import { Field } from 'redux-form';
 
 import { Divider, GridItem, Title } from '@patternfly/react-core';
 
+import { useFormState } from '~/components/clusters/wizards/hooks';
+import { FormikFieldArray } from '~/components/common/FormikFormComponents/FormikFieldArray/FormikFieldArray';
+
 import { required } from '../../../../../../../common/validators';
-import ReduxFieldArray from '../../../../../../common/ReduxFormComponents/ReduxFieldArray';
-import ReduxVerticalFormGroup from '../../../../../../common/ReduxFormComponents/ReduxVerticalFormGroup';
+import ReduxVerticalFormGroup from '../../../../../../common/ReduxFormComponents_deprecated/ReduxVerticalFormGroup';
+import { FieldId } from '../../constants';
 
-class LDAPFormRequired extends React.Component {
-  state = {
-    hasBindDN: false,
-  };
+const LDAPFormRequired = ({ isPending }) => {
+  const { getFieldProps, setFieldValue, getFieldMeta, values } = useFormState();
 
-  componentDidMount() {
-    const { isEditForm, idpEdited } = this.props;
-    if (isEditForm && idpEdited.ldap.bind_dn && idpEdited.ldap.bind_dn !== '') {
-      this.setState({ hasBindDN: true });
-    }
-  }
+  const hasBindDN = values[FieldId.BIND_DN];
 
-  toggleBindPasswordDisabled = (e, value) => {
-    if (value) {
-      this.setState({ hasBindDN: true });
-    } else {
-      this.setState({ hasBindDN: false });
-    }
-  };
-
-  render() {
-    const { isPending } = this.props;
-    const { hasBindDN } = this.state;
-    return (
-      <>
-        <GridItem span={8}>
-          <Field
-            component={ReduxVerticalFormGroup}
-            name="ldap_url"
-            label="LDAP URL"
-            type="text"
-            disabled={isPending}
-            validate={required}
-            isRequired
-            helpText="An RFC 2255 URL which specifies the LDAP search parameters to use."
-          />
-        </GridItem>
-        <GridItem span={8}>
-          <Field
-            component={ReduxVerticalFormGroup}
-            name="bind_dn"
-            label="Bind DN"
-            type="text"
-            disabled={isPending}
-            onChange={this.toggleBindPasswordDisabled}
-            helpText="DN to bind with during the search phase."
-          />
-        </GridItem>
-
-        <GridItem span={8}>
-          <Field
-            component={ReduxVerticalFormGroup}
-            name="bind_password"
-            label="Bind password"
-            type="password"
-            helpText={
-              !hasBindDN
-                ? 'Cannot be used if Bind DN is not set'
-                : 'Password to bind with during the search phase.'
-            }
-            disabled={!hasBindDN || isPending}
-            validate={hasBindDN ? required : undefined}
-            isRequired={hasBindDN}
-          />
-        </GridItem>
-        <GridItem span={8}>
-          <Divider />
-          <Title headingLevel="h3" size="xl" className="idp-helptext-heading">
-            Attributes
-          </Title>
-          <p>Attributes map LDAP attributes to identities.</p>
-        </GridItem>
-        <ReduxFieldArray
-          fieldName="ldap_id"
-          label="ID"
+  return (
+    <>
+      <GridItem span={8}>
+        <Field
+          component={ReduxVerticalFormGroup}
+          name={FieldId.LDAP_URL}
+          label="LDAP URL"
           type="text"
-          placeholderText="e.g. id"
           disabled={isPending}
+          validate={required}
           isRequired
-          validateField={required}
-          helpText="The list of attributes whose values should be used as the user ID."
+          helpText="An RFC 2255 URL which specifies the LDAP search parameters to use."
+          meta={getFieldMeta(FieldId.LDAP_URL)}
+          input={{
+            ...getFieldProps(FieldId.LDAP_URL),
+            onChange: (_, value) => setFieldValue(FieldId.LDAP_URL, value),
+          }}
         />
-        <ReduxFieldArray
-          fieldName="ldap_preferred_username"
-          label="Preferred username"
+      </GridItem>
+      <GridItem span={8}>
+        <Field
+          component={ReduxVerticalFormGroup}
+          name={FieldId.BIND_DN}
+          meta={getFieldMeta(FieldId.BIND_DN)}
+          input={{
+            ...getFieldProps(FieldId.BIND_DN),
+            onChange: (_, value) => setFieldValue(FieldId.BIND_DN, value),
+          }}
+          label="Bind DN"
           type="text"
-          placeholderText="e.g. preferred_username"
           disabled={isPending}
-          helpText="The list of attributes whose values should be used as the preferred username."
+          helpText="DN to bind with during the search phase."
         />
-        <ReduxFieldArray
-          fieldName="ldap_name"
-          label="Name"
-          type="text"
-          placeholderText="e.g. name"
-          disabled={isPending}
-          helpText="The list of attributes whose values should be used as the display name."
+      </GridItem>
+
+      <GridItem span={8}>
+        <Field
+          component={ReduxVerticalFormGroup}
+          name={FieldId.BIND_PASSWORD}
+          meta={getFieldMeta(FieldId.BIND_PASSWORD)}
+          input={{
+            ...getFieldProps(FieldId.BIND_PASSWORD),
+            onChange: (_, value) => setFieldValue(FieldId.BIND_PASSWORD, value),
+          }}
+          label="Bind password"
+          type="password"
+          helpText={
+            !hasBindDN
+              ? 'Cannot be used if Bind DN is not set'
+              : 'Password to bind with during the search phase.'
+          }
+          disabled={!hasBindDN || isPending}
+          validate={hasBindDN ? required : undefined}
+          isRequired={hasBindDN}
         />
-        <ReduxFieldArray
-          fieldName="ldap_email"
-          label="Email"
-          type="text"
-          placeholderText="e.g. email"
-          disabled={isPending}
-          helpText="The list of attributes whose values should be used as the email address."
-        />
-      </>
-    );
-  }
-}
+      </GridItem>
+      <GridItem span={8}>
+        <Divider />
+        <Title headingLevel="h3" size="xl" className="idp-helptext-heading">
+          Attributes
+        </Title>
+        <p>Attributes map LDAP attributes to identities.</p>
+      </GridItem>
+      <FormikFieldArray
+        fieldID={FieldId.LDAP_ID}
+        label="ID"
+        placeHolderText="e.g. id"
+        disabled={isPending}
+        isRequired
+        validateField={required}
+        helpText="The list of attributes whose values should be used as the user ID."
+      />
+      <FormikFieldArray
+        fieldID={FieldId.LDAP_PREFFERED_USERNAME}
+        label="Preferred username"
+        type="text"
+        placeholderText="e.g. preferred username"
+        disabled={isPending}
+        helpText="The list of attributes whose values should be used as the preferred username."
+      />
+      <FormikFieldArray
+        fieldID={FieldId.LDAP_NAME}
+        label="Name"
+        type="text"
+        placeholderText="e.g. name"
+        disabled={isPending}
+        helpText="The list of attributes whose values should be used as the display name."
+      />
+      <FormikFieldArray
+        fieldID={FieldId.LDAP_EMAIL}
+        label="Email"
+        type="text"
+        placeholderText="e.g. email"
+        disabled={isPending}
+        helpText="The list of attributes whose values should be used as the email address."
+      />
+    </>
+  );
+};
 
 LDAPFormRequired.propTypes = {
   isPending: PropTypes.bool,
-  isEditForm: PropTypes.bool,
-  idpEdited: PropTypes.object,
-};
-
-LDAPFormRequired.defaultProps = {
-  isPending: false,
 };
 
 export default LDAPFormRequired;

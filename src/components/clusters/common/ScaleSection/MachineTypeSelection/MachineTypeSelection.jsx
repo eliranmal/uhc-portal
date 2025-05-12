@@ -1,6 +1,5 @@
 // MachineTypeSelection renders a series of radio buttons for all available node types,
 // allowing the user to select just one.
-// It is meant to be used in a redux-form <Field> and expects an onChange callback.
 
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -17,19 +16,18 @@ import {
 import ExclamationTriangleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 
 import { noMachineTypes } from '~/common/helpers';
-import { billingModels, normalizedProducts } from '~/common/subscriptionTypes';
+import { normalizedProducts } from '~/common/subscriptionTypes';
 import { humanizeValueWithUnit } from '~/common/units';
 import { constants } from '~/components/clusters/common/CreateOSDFormConstants';
-import {
-  availableClustersFromQuota,
-  availableNodesFromQuota,
-} from '~/components/clusters/common/quotaSelectors';
+import { availableQuota } from '~/components/clusters/common/quotaSelectors';
 import { CloudProviderType } from '~/components/clusters/wizards/common/constants';
 import ErrorBox from '~/components/common/ErrorBox';
 import ExternalLink from '~/components/common/ExternalLink';
 import { FormGroupHelperText } from '~/components/common/FormGroupHelperText';
 import PopoverHint from '~/components/common/PopoverHint';
 import { DEFAULT_FLAVOUR_ID } from '~/redux/actions/flavourActions';
+
+import { QuotaTypes } from '../../quotaModel';
 
 import { TreeViewSelect, TreeViewSelectMenuItem } from './TreeViewSelect/TreeViewSelect';
 import sortMachineTypes, { machineCategories } from './sortMachineTypes';
@@ -107,7 +105,7 @@ const MachineTypeSelection = ({
   machine_type_force_choice: machineTypeForceChoice,
   getDefaultFlavour,
   flavours,
-  machineTypes,
+  machineTypesResponse,
   machineTypesByRegion,
   isMultiAz,
   isBYOC,
@@ -131,12 +129,12 @@ const MachineTypeSelection = ({
   const previousSelectionFromUnfilteredSet =
     machineTypesByRegion.fulfilled &&
     !machineTypesByRegion?.typesByID[machineType.input.value]?.id &&
-    machineTypes?.typesByID[machineType.input.value]?.id;
+    machineTypesResponse?.typesByID[machineType.input.value]?.id;
 
   /** Checks whether required data arrived. */
   const isDataReady =
     organization.fulfilled &&
-    machineTypes.fulfilled &&
+    machineTypesResponse &&
     // Tolerate flavours error gracefully.
     (flavours.fulfilled || flavours.error);
 
@@ -158,7 +156,7 @@ const MachineTypeSelection = ({
   const activeMachineTypes =
     isRegionSpecificDataReady && useRegionFilteredData && isMachineTypeFilteredByRegion
       ? machineTypesByRegion
-      : machineTypes;
+      : machineTypesResponse;
 
   /**
    * Checks whether type can be offered, based on quota and ccs_only.
@@ -193,8 +191,14 @@ const MachineTypeSelection = ({
         billingModel,
       };
 
-      const clustersAvailable = availableClustersFromQuota(quota, quotaParams);
-      const nodesAvailable = availableNodesFromQuota(quota, quotaParams);
+      const clustersAvailable = availableQuota(quota, {
+        ...quotaParams,
+        resourceType: QuotaTypes.CLUSTER,
+      });
+      const nodesAvailable = availableQuota(quota, {
+        ...quotaParams,
+        resourceType: QuotaTypes.NODE,
+      });
 
       if (isMachinePool) {
         // TODO: backend does allow creating machine pool with 0 nodes!
@@ -273,7 +277,7 @@ const MachineTypeSelection = ({
   }, [
     input.value,
     isDataReady,
-    activeMachineTypes.typesByID,
+    activeMachineTypes?.typesByID,
     useRegionFilteredData,
     isRegionSpecificDataReady,
     isTypeAvailable,
@@ -435,12 +439,12 @@ const MachineTypeSelection = ({
     );
   }
 
-  return activeMachineTypes.error ? (
+  return activeMachineTypes?.error ? (
     <ErrorBox message="Error loading node types" response={activeMachineTypes} />
   ) : (
     <>
       <div className="spinner-fit-container">
-        <Spinner size="md" />
+        <Spinner size="md" aria-label="Loading..." />
       </div>
       <div className="spinner-loading-text">Loading node types...</div>
     </>
@@ -462,11 +466,11 @@ const inputMetaPropTypes = PropTypes.shape({
 });
 
 MachineTypeSelection.propTypes = {
+  machineTypesResponse: PropTypes.object,
   machine_type: inputMetaPropTypes,
   machine_type_force_choice: inputMetaPropTypes,
   getDefaultFlavour: PropTypes.func.isRequired,
   flavours: PropTypes.object.isRequired,
-  machineTypes: PropTypes.object.isRequired,
   machineTypesByRegion: PropTypes.object.isRequired,
   isMultiAz: PropTypes.bool.isRequired,
   isBYOC: PropTypes.bool.isRequired,
@@ -474,7 +478,7 @@ MachineTypeSelection.propTypes = {
   inModal: PropTypes.bool,
   cloudProviderID: PropTypes.string,
   product: PropTypes.oneOf(Object.keys(normalizedProducts)).isRequired,
-  billingModel: PropTypes.oneOf(Object.values(billingModels)).isRequired,
+  billingModel: PropTypes.string.isRequired,
   quota: PropTypes.object.isRequired,
   organization: PropTypes.object.isRequired,
   menuAppendTo: PropTypes.object,

@@ -4,7 +4,7 @@ import { Field } from 'formik';
 import { FormGroup } from '@patternfly/react-core';
 
 import { canSelectImds, FieldId, IMDSType } from '~/components/clusters/wizards/common/constants';
-import RadioButtons from '~/components/common/ReduxFormComponents/RadioButtons';
+import RadioButtons from '~/components/common/ReduxFormComponents_deprecated/RadioButtons';
 
 import { useFormState } from '../../../../hooks';
 
@@ -19,7 +19,7 @@ export const ImdsSectionField = () => {
     setFieldValue,
   } = useFormState();
 
-  const isDisabled = !canSelectImds(clusterVersion.raw_id);
+  const isDisabled = clusterVersion && !canSelectImds(clusterVersion.raw_id);
 
   const onChange = (value: IMDSType) => {
     setFieldValue(FieldId.IMDS, value);

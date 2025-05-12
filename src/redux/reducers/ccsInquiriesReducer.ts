@@ -21,7 +21,7 @@ import {
 import type { PromiseActionType, PromiseReducerState } from '~/redux/types';
 import {
   CloudRegion,
-  CloudVPC,
+  CloudVpc,
   EncryptionKey,
   KeyRing,
   SecurityGroup,
@@ -40,7 +40,7 @@ export type VPCResponse = {
   region?: string;
   subnet?: string; // if set on request, only VPC connected to that subnet were listed.
   data: {
-    items: CloudVPC[];
+    items: CloudVpc[];
   };
 };
 
@@ -142,7 +142,7 @@ export const securityGroupsSort = (a: SecurityGroup, b: SecurityGroup) => {
  * Enriches VPC response
  * Security groups: returns only the non-RH managed, and sorts them by display order
  */
-export const processAWSVPCs = (vpcs: CloudVPC[]) => {
+export const processAWSVPCs = (vpcs: CloudVpc[]) => {
   const preProcessedVpcs = vpcs.map((vpc) => {
     if (vpc.aws_security_groups) {
       const sortedSecurityGroups = vpc.aws_security_groups.filter((sg) => !sg.red_hat_managed);

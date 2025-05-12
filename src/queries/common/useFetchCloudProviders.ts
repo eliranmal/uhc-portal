@@ -8,7 +8,6 @@ import type { CloudProvider, CloudRegion } from '../../types/clusters_mgmt.v1';
 export const useFetchCloudProviders = () => {
   const { data, isLoading, isFetching, isError } = useQuery({
     queryKey: ['clusterService', 'cloudProviders'],
-    staleTime: 30000,
     queryFn: () => clusterService.getCloudProviders(),
   });
 

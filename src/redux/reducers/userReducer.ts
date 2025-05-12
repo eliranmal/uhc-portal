@@ -1,6 +1,6 @@
 import { produce } from 'immer';
 
-import { Organization, QuotaCost, TermsReviewResponse } from '~/types/accounts_mgmt.v1';
+import { Organization, QuotaCostList, TermsReviewResponse } from '~/types/accounts_mgmt.v1';
 import { UserInfo } from '~/types/types';
 
 import { getErrorState } from '../../common/errors';
@@ -16,9 +16,7 @@ import { PromiseActionType, PromiseReducerState } from '../types';
 
 export type OrganizationState = {
   details: Organization;
-  quotaList: {
-    items?: QuotaCost[];
-  };
+  quotaList: QuotaCostList | undefined;
   timestamp: number;
 };
 
@@ -34,7 +32,7 @@ const initialState: UserProfileState = {
     ...baseRequestState,
     quotaList: {
       items: [],
-    },
+    } as any as QuotaCostList,
     timestamp: 0,
   },
   selfTermsReviewResult: {
@@ -70,7 +68,7 @@ const userProfile = (
           ...baseRequestState,
           fulfilled: true,
           details: action.payload.organization,
-          quotaList: action.payload.quota,
+          quotaList: action.payload.quota as QuotaCostList | undefined,
           timestamp: new Date().getTime(),
         };
         break;

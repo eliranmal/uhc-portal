@@ -38,7 +38,7 @@ describe('OSD Wizard validation tests(OCP-54134,OCP-73204)', { tags: ['smoke'] }
         CreateOSDWizardPage.acknowlegePrerequisitesCheckbox().check();
 
         if (clusterProperties.CloudProvider.includes('GCP')) {
-          if (clusterProperties.AuthenticationType.includes('ServiceAccount')) {
+          if (clusterProperties.AuthenticationType.includes('Service Account')) {
             CreateOSDWizardPage.wizardNextButton().click();
             CreateOSDWizardPage.isTextContainsInPage(
               ClustersValidation.ClusterSettings.CloudProvider.GCP.EmptyGCPServiceJSONFieldError,
@@ -95,18 +95,16 @@ describe('OSD Wizard validation tests(OCP-54134,OCP-73204)', { tags: ['smoke'] }
           );
           CreateOSDWizardPage.awsAccountIDInput()
             .clear()
-            .type(
-              ClustersValidation.ClusterSettings.CloudProvider.AWS.InValidAWSAccountIdValues[0],
-            );
+            .type(ClustersValidation.ClusterSettings.CloudProvider.AWS.InValidAWSAccountIdValues[0])
+            .blur();
           CreateOSDWizardPage.isTextContainsInPage(
             ClustersValidation.ClusterSettings.CloudProvider.AWS.InValidAWSAccountIdError,
           );
           CreateOSDWizardPage.wizardNextButton().click();
           CreateOSDWizardPage.awsAccountIDInput()
             .clear()
-            .type(
-              ClustersValidation.ClusterSettings.CloudProvider.AWS.InValidAWSAccountIdValues[1],
-            );
+            .type(ClustersValidation.ClusterSettings.CloudProvider.AWS.InValidAWSAccountIdValues[1])
+            .blur();
           CreateOSDWizardPage.wizardNextButton().click();
           CreateOSDWizardPage.isTextContainsInPage(
             ClustersValidation.ClusterSettings.CloudProvider.AWS.InValidAWSAccountIdError,
@@ -143,6 +141,7 @@ describe('OSD Wizard validation tests(OCP-54134,OCP-73204)', { tags: ['smoke'] }
       CreateOSDWizardPage.isTextContainsInPage(
         ClustersValidation.ClusterSettings.Details.Common.InvalidClusterNamesErrors[2],
       );
+      cy.get(CreateOSDWizardPage.clusterNameInput).clear().type('wizardvalid').blur();
       CreateOSDWizardPage.createCustomDomainPrefixCheckbox().scrollIntoView().check();
       CreateOSDWizardPage.domainPrefixInput()
         .scrollIntoView()
@@ -197,11 +196,15 @@ describe('OSD Wizard validation tests(OCP-54134,OCP-73204)', { tags: ['smoke'] }
           CreateOSDWizardPage.useDefaultKMSKeyRadio().check();
         }
       }
-      cy.get(CreateOSDWizardPage.clusterNameInput).clear().type('wizardvalid');
       CreateOSDWizardPage.wizardNextButton().click();
     });
     it(`OSD wizard - ${clusterProperties.CloudProvider} -${clusterProperties.SubscriptionType}-${clusterProperties.InfrastructureType} : Cluster Settings - Machinepool(nodes) field validations`, () => {
       CreateOSDWizardPage.isMachinePoolScreen();
+      CreateOSDWizardPage.computeNodeCountSelect()
+        .get('option')
+        .first()
+        .should('have.text', isCCSCluster === true ? '2' : '4');
+      CreateOSDWizardPage.computeNodeCountSelect().get('option').last().should('have.text', '249');
       CreateOSDWizardPage.enableAutoScaling();
       CreateOSDWizardPage.setMinimumNodeCount('0');
       let machinePoolProperties =
@@ -209,16 +212,14 @@ describe('OSD Wizard validation tests(OCP-54134,OCP-73204)', { tags: ['smoke'] }
           ? ClustersValidation.ClusterSettings.Machinepool.NodeCount.CCS
           : ClustersValidation.ClusterSettings.Machinepool.NodeCount.NonCCS;
       CreateOSDWizardPage.isTextContainsInPage(machinePoolProperties.SingleZone.LowerLimitError);
-      CreateOSDWizardPage.setMinimumNodeCount('200');
+      CreateOSDWizardPage.setMinimumNodeCount('500');
       CreateOSDWizardPage.isTextContainsInPage(machinePoolProperties.SingleZone.UpperLimitError);
       CreateOSDWizardPage.isTextContainsInPage(
         machinePoolProperties.SingleZone.MinAndMaxLimitDependencyError,
       );
       CreateOSDWizardPage.setMinimumNodeCount(isCCSCluster === true ? '2' : '4');
-      CreateOSDWizardPage.setMaximumNodeCount('200');
-      CreateOSDWizardPage.isTextContainsInPage(
-        machinePoolProperties.SingleZone.MinAndMaxLimitDependencyError,
-      );
+      CreateOSDWizardPage.setMaximumNodeCount('500');
+      CreateOSDWizardPage.isTextContainsInPage(machinePoolProperties.SingleZone.UpperLimitError);
       CreateOSDWizardPage.setMaximumNodeCount('0');
       CreateOSDWizardPage.isTextContainsInPage(machinePoolProperties.SingleZone.LowerLimitError);
       CreateOSDWizardPage.setMaximumNodeCount(isCCSCluster === true ? '2' : '4');
@@ -235,19 +236,23 @@ describe('OSD Wizard validation tests(OCP-54134,OCP-73204)', { tags: ['smoke'] }
       CreateOSDWizardPage.wizardBackButton().click();
       CreateOSDWizardPage.selectAvailabilityZone('Multi-zone');
       CreateOSDWizardPage.wizardNextButton().click();
-
+      CreateOSDWizardPage.selectAutoScaling('disabled');
+      CreateOSDWizardPage.computeNodeCountSelect()
+        .get('option')
+        .first()
+        .should('have.text', isCCSCluster === true ? '1' : '3');
+      CreateOSDWizardPage.computeNodeCountSelect().get('option').last().should('have.text', '83');
+      CreateOSDWizardPage.enableAutoScaling();
       CreateOSDWizardPage.setMinimumNodeCount('0');
       CreateOSDWizardPage.isTextContainsInPage(machinePoolProperties.MultiZone.LowerLimitError);
-      CreateOSDWizardPage.setMinimumNodeCount('200');
+      CreateOSDWizardPage.setMinimumNodeCount('500');
       CreateOSDWizardPage.isTextContainsInPage(machinePoolProperties.MultiZone.UpperLimitError);
       CreateOSDWizardPage.isTextContainsInPage(
         machinePoolProperties.MultiZone.MinAndMaxLimitDependencyError,
       );
       CreateOSDWizardPage.setMinimumNodeCount(isCCSCluster === true ? '2' : '3');
-      CreateOSDWizardPage.setMaximumNodeCount('200');
-      CreateOSDWizardPage.isTextContainsInPage(
-        machinePoolProperties.MultiZone.MinAndMaxLimitDependencyError,
-      );
+      CreateOSDWizardPage.setMaximumNodeCount('500');
+      CreateOSDWizardPage.isTextContainsInPage(machinePoolProperties.MultiZone.UpperLimitError);
       CreateOSDWizardPage.setMaximumNodeCount('0');
       CreateOSDWizardPage.isTextContainsInPage(machinePoolProperties.MultiZone.LowerLimitError);
       CreateOSDWizardPage.setMaximumNodeCount(isCCSCluster === true ? '2' : '3');
@@ -262,6 +267,316 @@ describe('OSD Wizard validation tests(OCP-54134,OCP-73204)', { tags: ['smoke'] }
       );
       CreateOSDWizardPage.minimumNodeCountMinusButton().click();
     });
+    if (isCCSCluster) {
+      it(`OSD wizard - ${clusterProperties.CloudProvider} -${clusterProperties.SubscriptionType}-${clusterProperties.InfrastructureType} : Cluster Settings - Machinepool- Cluster autoscaling validations`, () => {
+        CreateOSDWizardPage.editClusterAutoscalingSettingsButton().click();
+        CreateOSDWizardPage.clusterAutoscalingLogVerbosityInput()
+          .type('{selectAll}')
+          .type('0')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .LogVerbosityLimitError,
+        );
+        CreateOSDWizardPage.clusterAutoscalingLogVerbosityInput()
+          .type('{selectAll}')
+          .type('7')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .LogVerbosityLimitError,
+        );
+        CreateOSDWizardPage.clusterAutoscalingLogVerbosityInput()
+          .type('{selectAll}')
+          .type('3')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .LogVerbosityLimitError,
+          false,
+        );
+        CreateOSDWizardPage.clusterAutoscalingMaxNodeProvisionTimeInput().clear().blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .RequiredFieldError,
+        );
+        CreateOSDWizardPage.clusterAutoscalingMaxNodeProvisionTimeInput().clear().type('8H').blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .InvalidTimeValueError,
+        );
+        CreateOSDWizardPage.clusterAutoscalingMaxNodeProvisionTimeInput()
+          .clear()
+          .type('90k')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .InvalidTimeValueError,
+        );
+        CreateOSDWizardPage.clusterAutoscalingMaxNodeProvisionTimeInput().clear().type('8s').blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .InvalidTimeValueError,
+          false,
+        );
+        CreateOSDWizardPage.clusterAutoscalingBalancingIgnoredLabelsInput()
+          .clear()
+          .type('test with whitespace,test')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .WhitespaceLabelValueError,
+        );
+        CreateOSDWizardPage.clusterAutoscalingBalancingIgnoredLabelsInput()
+          .clear()
+          .type('test,test,')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .EmptyLabelValueError,
+        );
+        CreateOSDWizardPage.clusterAutoscalingBalancingIgnoredLabelsInput()
+          .clear()
+          .type('test@434$,123,&test_(t)35435')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage('Empty labels are not allowed', false);
+        CreateOSDWizardPage.clusterAutoscalingCoresTotalMinInput()
+          .type('{selectAll}')
+          .type('10')
+          .blur();
+        CreateOSDWizardPage.clusterAutoscalingCoresTotalMaxInput()
+          .type('{selectAll}')
+          .type('9')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling.MinMaxLimitError,
+        );
+        CreateOSDWizardPage.clusterAutoscalingCoresTotalMinInput()
+          .type('{selectAll}')
+          .type('9')
+          .blur();
+        CreateOSDWizardPage.clusterAutoscalingCoresTotalMaxInput()
+          .type('{selectAll}')
+          .type('10')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling.MinMaxLimitError,
+          false,
+        );
+        CreateOSDWizardPage.clusterAutoscalingMemoryTotalMinInput()
+          .type('{selectAll}')
+          .type('10')
+          .blur();
+        CreateOSDWizardPage.clusterAutoscalingMemoryTotalMaxInput()
+          .type('{selectAll}')
+          .type('9')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling.MinMaxLimitError,
+        );
+        CreateOSDWizardPage.clusterAutoscalingMemoryTotalMinInput()
+          .type('{selectAll}')
+          .type('-1')
+          .blur();
+
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .NegativeValueError,
+        );
+        CreateOSDWizardPage.clusterAutoscalingMemoryTotalMaxInput()
+          .type('{selectAll}')
+          .type('-1')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .NegativeValueError,
+        );
+        CreateOSDWizardPage.clusterAutoscalingMemoryTotalMinInput()
+          .type('{selectAll}')
+          .type('9')
+          .blur();
+        CreateOSDWizardPage.clusterAutoscalingMemoryTotalMaxInput()
+          .type('{selectAll}')
+          .type('10')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .NegativeValueError,
+          false,
+        );
+        CreateOSDWizardPage.clusterAutoscalingMaxNodesTotalInput().should('have.value', '255');
+        CreateOSDWizardPage.clusterAutoscalingMaxNodesTotalInput()
+          .type('{selectAll}')
+          .type('257')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .MaxNodesValueMultizoneLimitError,
+        );
+        CreateOSDWizardPage.clusterAutoscalingRevertAllToDefaultsButton().click();
+        CreateOSDWizardPage.clusterAutoscalingCloseButton().click();
+        CreateOSDWizardPage.wizardBackButton().click();
+        CreateOSDWizardPage.selectAvailabilityZone('Single Zone');
+        CreateOSDWizardPage.wizardNextButton().click();
+        CreateOSDWizardPage.enableAutoscalingCheckbox().uncheck();
+        CreateOSDWizardPage.enableAutoscalingCheckbox().check();
+        CreateOSDWizardPage.editClusterAutoscalingSettingsButton().click();
+        CreateOSDWizardPage.clusterAutoscalingMaxNodesTotalInput().should('have.value', '254');
+        CreateOSDWizardPage.clusterAutoscalingMaxNodesTotalInput()
+          .type('{selectAll}')
+          .type('255')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .MaxNodesValueSinglezoneLimitError,
+        );
+        if (
+          clusterProperties.CloudProvider.includes('AWS') ||
+          clusterProperties.CloudProvider.includes('GCP')
+        ) {
+          CreateOSDWizardPage.clusterAutoscalingRevertAllToDefaultsButton().click();
+          CreateOSDWizardPage.clusterAutoscalingCloseButton().click();
+          CreateOSDWizardPage.wizardBackButton().click();
+          CreateOSDWizardPage.selectAvailabilityZone('Multi-zone');
+          CreateOSDWizardPage.wizardNextButton().click();
+          CreateOSDWizardPage.enableAutoscalingCheckbox().uncheck();
+          CreateOSDWizardPage.enableAutoscalingCheckbox().check();
+          CreateOSDWizardPage.editClusterAutoscalingSettingsButton().click();
+        }
+        CreateOSDWizardPage.clusterAutoscalingGPUsInput().type('{selectAll}').type('test').blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .InvalidGPUValueError,
+        );
+        CreateOSDWizardPage.clusterAutoscalingGPUsInput()
+          .type('{selectAll}')
+          .type('test:10:5')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .InvalidGPUValueError,
+        );
+        CreateOSDWizardPage.clusterAutoscalingGPUsInput()
+          .type('{selectAll}')
+          .type('test:10:5,')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .InvalidGPUValueError,
+        );
+        CreateOSDWizardPage.clusterAutoscalingGPUsInput()
+          .type('{selectAll}')
+          .type('test:10:12,test:1:5')
+          .blur();
+        cy.get('div')
+          .contains(
+            ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+              .InvalidGPUValueError,
+          )
+          .should('not.exist');
+        CreateOSDWizardPage.clusterAutoscalingScaleDownUtilizationThresholdInput()
+          .type('{selectAll}')
+          .type('1.5')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .ThreasholdLimitError,
+        );
+        CreateOSDWizardPage.clusterAutoscalingScaleDownUtilizationThresholdInput()
+          .type('{selectAll}')
+          .type('-1.5')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .NegativeValueError,
+        );
+        CreateOSDWizardPage.clusterAutoscalingScaleDownUtilizationThresholdInput()
+          .type('{selectAll}')
+          .type('0.5')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .NegativeValueError,
+          false,
+        );
+        CreateOSDWizardPage.clusterAutoscalingScaleDownUnneededTimeInput()
+          .type('{selectAll}')
+          .type('7H')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .InvalidTimeValueError,
+        );
+        CreateOSDWizardPage.clusterAutoscalingScaleDownUnneededTimeInput()
+          .type('{selectAll}')
+          .type('7h')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .InvalidTimeValueError,
+          false,
+        );
+
+        CreateOSDWizardPage.clusterAutoscalingScaleDownDelayAfterAddInput()
+          .type('{selectAll}')
+          .type('8Sec')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .InvalidTimeValueError,
+        );
+        CreateOSDWizardPage.clusterAutoscalingScaleDownDelayAfterAddInput()
+          .type('{selectAll}')
+          .type('8s')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .InvalidTimeValueError,
+          false,
+        );
+
+        CreateOSDWizardPage.clusterAutoscalingScaleDownDelayAfterDeleteInput()
+          .type('{selectAll}')
+          .type('10milli')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .InvalidTimeValueError,
+        );
+
+        CreateOSDWizardPage.clusterAutoscalingScaleDownDelayAfterDeleteInput()
+          .type('{selectAll}')
+          .type('10s')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .InvalidTimeValueError,
+          false,
+        );
+
+        CreateOSDWizardPage.clusterAutoscalingScaleDownDelayAfterFailureInput()
+          .type('{selectAll}')
+          .type('5M')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .InvalidTimeValueError,
+        );
+
+        CreateOSDWizardPage.clusterAutoscalingScaleDownDelayAfterFailureInput()
+          .type('{selectAll}')
+          .type('5m')
+          .blur();
+        CreateOSDWizardPage.isTextContainsInPage(
+          ClustersValidation.ClusterSettings.Machinepool.Common.ClusterAutoscaling
+            .InvalidTimeValueError,
+          false,
+        );
+
+        CreateOSDWizardPage.clusterAutoscalingRevertAllToDefaultsButton().click();
+        CreateOSDWizardPage.clusterAutoscalingCloseButton().click();
+      });
+    }
     it(`OSD wizard - ${clusterProperties.CloudProvider} -${clusterProperties.SubscriptionType}-${clusterProperties.InfrastructureType} : Cluster Settings - Machinepool(Labels) field validations`, () => {
       CreateOSDWizardPage.addNodeLabelLink().click();
       CreateOSDWizardPage.addNodeLabelKeyAndValue(
@@ -323,7 +638,7 @@ describe('OSD Wizard validation tests(OCP-54134,OCP-73204)', { tags: ['smoke'] }
         0,
       );
       CreateOSDWizardPage.isTextContainsInPage(
-        ClustersValidation.ClusterSettings.Machinepool.Common.NodeLabel[2].KeyError,
+        ClustersValidation.ClusterSettings.Machinepool.Common.NodeLabel[2].LabelError,
       );
       CreateOSDWizardPage.addNodeLabelKeyAndValue(
         'example12-ing.com/MyName',

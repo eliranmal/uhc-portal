@@ -1,7 +1,7 @@
 import { FormikValues } from 'formik';
 
 import { getDefaultSecurityGroupsSettings } from '~/common/securityGroupsHelpers';
-import { billingModels, normalizedProducts } from '~/common/subscriptionTypes';
+import { normalizedProducts } from '~/common/subscriptionTypes';
 import { getDefaultClusterAutoScaling } from '~/components/clusters/common/clusterAutoScalingValues';
 import {
   HOST_PREFIX_DEFAULT,
@@ -17,6 +17,7 @@ import {
 } from '~/components/clusters/wizards/common/constants';
 import { GCPAuthType } from '~/components/clusters/wizards/osd/ClusterSettings/CloudProvider/types';
 import { BreadcrumbPath } from '~/components/common/Breadcrumbs';
+import { SubscriptionCommonFieldsCluster_billing_model as SubscriptionCommonFieldsClusterBillingModel } from '~/types/accounts_mgmt.v1';
 
 import { ApplicationIngressType, ClusterPrivacyType } from './Networking/constants';
 
@@ -89,9 +90,9 @@ export const breadcrumbs: BreadcrumbPath[] = [
 export const initialValues: FormikValues = {
   [FieldId.Product]: normalizedProducts.OSD,
   [FieldId.Byoc]: 'true',
-  [FieldId.CloudProvider]: CloudProviderType.Aws,
+  [FieldId.CloudProvider]: CloudProviderType.Gcp,
   [FieldId.AcknowledgePrereq]: false,
-  [FieldId.BillingModel]: billingModels.STANDARD,
+  [FieldId.BillingModel]: SubscriptionCommonFieldsClusterBillingModel.standard,
   [FieldId.MultiAz]: 'false',
   [FieldId.SelectedVpc]: { id: '', name: '' },
   [FieldId.MachinePoolsSubnets]: [emptyAWSSubnet()],
@@ -122,6 +123,8 @@ export const initialValues: FormikValues = {
   [FieldId.HasDomainPrefix]: false,
   [FieldId.GcpAuthType]: GCPAuthType.ServiceAccounts,
   [FieldId.GcpWifConfig]: '',
+  [FieldId.PrivateServiceConnect]: false,
+  [FieldId.PSCSubnet]: '',
 };
 
 export const initialTouched = {

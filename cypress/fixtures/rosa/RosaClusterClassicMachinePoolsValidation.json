@@ -1,7 +1,7 @@
 {
   "Clusters": [
     {
-      "ClusterName": "cyprosa-def-11",
+      "ClusterName": "cyp-rosa-classic-default-sz-public-profile",
       "ControlPlaneType": "Classic",
       "Type": "ROSA",
       "Region": "us-west-2, US West, Oregon",
@@ -16,7 +16,7 @@
       "NodeLabel": [
         {
           "Key": "ocmcypress-tests-key",
-          "Value": "cyprosa-def-11"
+          "Value": "cyp-rosa-classic-default-sz-public-profile"
         },
         {
           "Key": "Available-zone",
@@ -53,7 +53,7 @@
       ]
     },
     {
-      "ClusterName": "cyprosa-def-12",
+      "ClusterName": "cyp-rosa-classic-advanced-mz-public-profile",
       "ControlPlaneType": "Classic",
       "Type": "ROSA",
       "Region": "us-west-2, US West, Oregon",
@@ -68,7 +68,7 @@
       "NodeLabel": [
         {
           "Key": "ocmcypress-tests-key",
-          "Value": "cyprosa-def-12"
+          "Value": "cyp-rosa-classic-advanced-mz-public-profile"
         },
         {
           "Key": "Available-zone",

@@ -1,13 +1,13 @@
 import React from 'react';
-import { useLocation } from 'react-router-dom';
 
 import {
+  Alert,
+  AlertVariant,
   ButtonVariant,
   Card,
   CardBody,
   CardHeader,
   CardTitle,
-  ExpandableSection,
   Grid,
   GridItem,
   PageSection,
@@ -17,11 +17,11 @@ import {
   StackItem,
   Text,
   TextContent,
+  TextList,
+  TextListItem,
   TextVariants,
   Title,
 } from '@patternfly/react-core';
-import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
-import { WarningTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/warning-triangle-icon';
 
 import links from '~/common/installLinks.mjs';
 import { AppPage } from '~/components/App/AppPage';
@@ -31,9 +31,11 @@ import Instruction from '~/components/common/Instruction';
 import Instructions from '~/components/common/Instructions';
 import PageTitle from '~/components/common/PageTitle';
 
+import StepCreateNetwork from './StepCreateAWSAccountRoles/StepCreateNetwork';
 import StepCreateAWSAccountRoles from './StepCreateAWSAccountRoles';
 import StepDownloadROSACli from './StepDownloadROSACli';
 import WithCLICard from './WithCLICard';
+import WithTerraformCard from './WithTerraformCard';
 import WithWizardCard from './WithWizardCard';
 
 import '../createROSAWizard.scss';
@@ -51,129 +53,147 @@ const breadcrumbs = (
   />
 );
 
-const CreateRosaGetStarted = () => {
-  const { search } = useLocation();
-  const sourceIsAWS = search.indexOf('source=aws') !== -1;
-  const [isAWSPrereqOpen, setIsAWSPrereqOpen] = React.useState(!sourceIsAWS);
+const CreateRosaGetStarted = () => (
+  <AppPage>
+    <PageTitle breadcrumbs={breadcrumbs} title={title(productName)}>
+      <TextContent className="pf-v5-u-mt-md pf-v5-u-mb-md">
+        <Text component={TextVariants.p}>
+          Deploy fully operational and managed Red Hat OpenShift clusters while leveraging the full
+          breadth and depth of AWS using ROSA.
+        </Text>
+        <Text component={TextVariants.p}>
+          Learn more about <ExternalLink href={links.WHAT_IS_ROSA}>ROSA</ExternalLink> or{' '}
+          <ExternalLink href={links.ROSA_COMMUNITY_SLACK}>Slack us</ExternalLink>
+        </Text>
+      </TextContent>
+      <Alert
+        variant={AlertVariant.info}
+        isInline
+        id="env-override-message"
+        component="h2"
+        title={<>ROSA in AWS GovCloud (US) with FedRAMP</>}
+      >
+        <ExternalLink data-testid="rosa-aws-fedramp" href={links.ROSA_AWS_FEDRAMP}>
+          Learn more about ROSA in AWS GovCloud (US) with FedRAMP
+        </ExternalLink>
+        or start the onboarding process with the
+        <ExternalLink
+          data-testid="fedramp-access-request-form"
+          href={links.FEDRAMP_ACCESS_REQUEST_FORM}
+        >
+          FedRAMP access request form
+        </ExternalLink>
+      </Alert>
+    </PageTitle>
+    <PageSection>
+      <Stack hasGutter>
+        {/* ************ Start of AWS prerequisites section ***************** */}
+        <StackItem>
+          <Card>
+            <CardTitle>
+              <Title headingLevel="h2">Complete AWS prerequisites</Title>
+            </CardTitle>
+            <CardBody>
+              <TextContent>
+                <Title headingLevel="h3">Have you prepared your AWS account?</Title>
+                <Text component={TextVariants.p}>
+                  Make sure your AWS account is set up for ROSA deployment. If you&apos;ve already
+                  set it up, you can continue to the ROSA prerequisites.
+                </Text>
 
-  return (
-    <AppPage>
-      <PageTitle breadcrumbs={breadcrumbs} title={title(productName)}>
-        <TextContent className="pf-v5-u-mt-md">
-          <Text component={TextVariants.p}>
-            <ExternalLink href={links.WHAT_IS_ROSA}>Learn more about ROSA</ExternalLink> or{' '}
-            <ExternalLink href={links.ROSA_COMMUNITY_SLACK}>Slack us</ExternalLink>
-          </Text>
-        </TextContent>
-      </PageTitle>
-      <PageSection>
-        <Stack hasGutter>
-          {/* ************ Start of AWS prerequisites section ***************** */}
-          <StackItem>
-            <Card>
-              <CardBody>
-                <ExpandableSection
-                  onToggle={() => setIsAWSPrereqOpen(!isAWSPrereqOpen)}
-                  isExpanded={isAWSPrereqOpen}
-                  toggleContent={
-                    <div>
-                      <span>Complete AWS prerequisites</span>
-                      <span className="pf-v5-u-ml-sm">
-                        {isAWSPrereqOpen ? (
-                          <WarningTriangleIcon className="warning" />
-                        ) : (
-                          <CheckCircleIcon className="success" />
-                        )}
-                      </span>
-                    </div>
-                  }
-                >
-                  <TextContent className="pf-v5-u-mt-md">
-                    <Title headingLevel="h2">Have you prepared your AWS account?</Title>
-                    <Text component={TextVariants.p}>
-                      You will need to enable ROSA on AWS, configure Elastic Load Balancer (ELB),
-                      and verify your quotas on AWS console. If you have already prepared your AWS
-                      account, you can continue to complete ROSA prerequisites.
-                    </Text>
-                    <ExternalLink
-                      href={links.AWS_CONSOLE_ROSA_HOME_GET_STARTED}
-                      isButton
-                      variant={ButtonVariant.secondary}
-                    >
-                      Open AWS Console
-                    </ExternalLink>
-                  </TextContent>
-                </ExpandableSection>
-              </CardBody>
-            </Card>
-          </StackItem>
-          <StackItem>
-            <Card>
-              <CardBody>
-                <Split className="pf-v5-u-mb-lg">
-                  <SplitItem isFilled>
-                    <Title headingLevel="h2">Complete ROSA prerequisites</Title>
-                  </SplitItem>
-                  <SplitItem>
-                    <ExternalLink href={links.AWS_ROSA_GET_STARTED}>
-                      More information on ROSA setup
-                    </ExternalLink>
-                  </SplitItem>
-                </Split>
-
-                {/* ************* START OF PREREQ STEPS ******************* */}
-                <Instructions wide>
-                  <Instruction simple>
-                    <StepDownloadROSACli />
-                  </Instruction>
-
-                  <Instruction simple>
-                    <StepCreateAWSAccountRoles />
-                  </Instruction>
-                </Instructions>
-              </CardBody>
-            </Card>
-          </StackItem>
-          {/* ************ Start of Deploy the cluster and setup access cards ***************** */}
-          <StackItem>
-            <Card>
-              <CardHeader
-                className="rosa-get-started"
-                actions={{
-                  actions: (
-                    <ExternalLink href={links.ROSA_GET_STARTED}>
-                      More information on ROSA cluster creation
-                    </ExternalLink>
-                  ),
-                  hasNoOffset: false,
-                }}
-              >
-                <CardTitle>
-                  <Title headingLevel="h2" size="xl">
-                    Deploy the cluster and set up access
-                  </Title>
-                  <Text component={TextVariants.p} className="pf-v5-u-font-weight-normal">
-                    Select a deployment method
-                  </Text>
-                </CardTitle>
-              </CardHeader>
-
-              <CardBody>
-                <Grid hasGutter>
-                  <GridItem span={6}>
-                    <WithCLICard />
+                <Grid hasGutter span={10}>
+                  <GridItem span={4}>
+                    <TextList>
+                      <TextListItem>Enable AWS</TextListItem>
+                      <TextListItem>Configure Elastic Load Balancer (ELB)</TextListItem>
+                    </TextList>
                   </GridItem>
+
                   <GridItem span={6}>
-                    <WithWizardCard />
+                    <TextList>
+                      <TextListItem>
+                        Set up a VPC for ROSA HCP clusters (optional for ROSA classic clusters)
+                      </TextListItem>
+                      <TextListItem>Verify your quotas on AWS console</TextListItem>
+                    </TextList>
                   </GridItem>
                 </Grid>
-              </CardBody>
-            </Card>
-          </StackItem>
-        </Stack>
-      </PageSection>
-    </AppPage>
-  );
-};
+
+                <ExternalLink
+                  className="pf-v5-u-mt-md"
+                  href={links.AWS_CONSOLE_ROSA_HOME_GET_STARTED}
+                  isButton
+                  variant={ButtonVariant.secondary}
+                >
+                  Open AWS Console
+                </ExternalLink>
+              </TextContent>
+            </CardBody>
+          </Card>
+        </StackItem>
+        <StackItem>
+          <Card>
+            <CardBody>
+              <Split className="pf-v5-u-mb-lg">
+                <SplitItem isFilled>
+                  <Title headingLevel="h2">Complete ROSA prerequisites</Title>
+                </SplitItem>
+                <SplitItem>
+                  <ExternalLink href={links.AWS_ROSA_GET_STARTED}>
+                    More information on ROSA setup
+                  </ExternalLink>
+                </SplitItem>
+              </Split>
+
+              {/* ************* START OF PREREQ STEPS ******************* */}
+              <Instructions wide>
+                <Instruction simple>
+                  <StepDownloadROSACli />
+                </Instruction>
+
+                <Instruction simple>
+                  <StepCreateAWSAccountRoles />
+                </Instruction>
+
+                <Instruction simple>
+                  <StepCreateNetwork />
+                </Instruction>
+              </Instructions>
+            </CardBody>
+          </Card>
+        </StackItem>
+        {/* ************ Start of Deploy the cluster and setup access cards ***************** */}
+        <StackItem>
+          <Card>
+            <CardHeader className="rosa-get-started">
+              <CardTitle>
+                <Title headingLevel="h2" size="xl">
+                  Deploy the cluster and set up access
+                </Title>
+                <Text component={TextVariants.p} className="pf-v5-u-font-weight-normal">
+                  Select a deployment method
+                </Text>
+              </CardTitle>
+            </CardHeader>
+
+            <CardBody>
+              <Grid hasGutter>
+                <GridItem span={4}>
+                  <WithCLICard />
+                </GridItem>
+                <GridItem span={4}>
+                  <WithWizardCard />
+                </GridItem>
+                <GridItem span={4}>
+                  <WithTerraformCard />
+                </GridItem>
+              </Grid>
+            </CardBody>
+          </Card>
+        </StackItem>
+      </Stack>
+    </PageSection>
+  </AppPage>
+);
 
 export default CreateRosaGetStarted;

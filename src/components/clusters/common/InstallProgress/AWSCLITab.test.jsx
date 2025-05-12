@@ -4,7 +4,7 @@ import accountsService from '~/services/accountsService';
 import clusterService from '~/services/clusterService';
 import { checkAccessibility, render, screen } from '~/testUtils';
 
-import fixtures from '../../ClusterDetails/__tests__/ClusterDetails.fixtures';
+import fixtures from '../../ClusterDetailsMultiRegion/__tests__/ClusterDetails.fixtures';
 
 import AWSCLITab from './AWSCLITab';
 

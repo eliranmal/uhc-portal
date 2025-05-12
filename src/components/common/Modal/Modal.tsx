@@ -6,13 +6,13 @@ import {
   Modal as PfModal,
   ModalProps,
   ModalVariant,
+  Spinner,
   Split,
   SplitItem,
   Stack,
   StackItem,
   Title,
 } from '@patternfly/react-core';
-import { Spinner } from '@redhat-cloud-services/frontend-components/Spinner';
 
 import { NavigateFunction, useNavigate } from '~/common/routing';
 
@@ -95,7 +95,7 @@ const Modal = ({
       // For a medium size modal use variant="large".
       // For a full screen modal use isSmall=false.
       className={isPending ? 'pending-modal' : undefined}
-      aria-label={title}
+      aria-label={typeof title === 'string' ? title : ''}
       variant={isSmall ? ModalVariant.small : modalSize}
       title={title}
       header={header}
@@ -176,7 +176,13 @@ const Modal = ({
       }
       {...extraProps}
     >
-      {isPending ? <Spinner centered /> : children}
+      {isPending ? (
+        <div className="pf-v5-u-text-align-center">
+          <Spinner size="lg" aria-label="Loading..." />
+        </div>
+      ) : (
+        children
+      )}
     </PfModal>
   );
 };

@@ -1,16 +1,25 @@
+import get from 'lodash/get';
+
 import { useQuery } from '@tanstack/react-query';
 
 import { queryClient } from '~/components/App/queryClient';
 import clusterService, { getClusterServiceForRegion } from '~/services/clusterService';
 
+import { formatErrorData } from '../helpers';
 import { queryConstants } from '../queriesConstants';
 
 /**
  * Query for invalidating cluster IDPs (refetch)
  */
-export const invalidateClusterIdentityProviders = (clusterID?: string) => {
+export const refetchClusterIdentityProviders = (clusterID: string, region?: string) => {
   queryClient.invalidateQueries({
-    queryKey: ['clusterIdentityProviders', 'clusterService', clusterID],
+    queryKey: [
+      queryConstants.FETCH_CLUSTER_DETAILS_QUERY_KEY,
+      'clusterIdentityProviders',
+      'clusterService',
+      clusterID,
+      region,
+    ],
   });
 };
 
@@ -21,26 +30,52 @@ export const invalidateClusterIdentityProviders = (clusterID?: string) => {
  * @returns cluster IDPs list
  */
 export const useFetchClusterIdentityProviders = (clusterID: string, region?: string) => {
-  const { isLoading, data, isError, error } = useQuery({
-    queryKey: ['clusterIdentityProviders', 'clusterService', clusterID, region],
+  const { isLoading, data, isError, error, isSuccess } = useQuery({
+    queryKey: [
+      queryConstants.FETCH_CLUSTER_DETAILS_QUERY_KEY,
+      'clusterIdentityProviders',
+      'clusterService',
+      clusterID,
+      region,
+    ],
     queryFn: async () => {
       if (region) {
         const clusterService = getClusterServiceForRegion(region);
-        const response = await clusterService.getIdentityProviders(clusterID);
+        const response = clusterService.getIdentityProviders(clusterID).then((res) => {
+          // eslint-disable-next-line no-param-reassign
+          (res.data as any).items = get(res.data, 'items', []);
+          return res;
+        });
         return response;
       }
-      const response = await clusterService.getIdentityProviders(clusterID);
+      const response = clusterService.getIdentityProviders(clusterID).then((res) => {
+        // eslint-disable-next-line no-param-reassign
+        (res.data as any).items = get(res.data, 'items', []);
+        return res;
+      });
 
       return response;
     },
-    staleTime: queryConstants.STALE_TIME,
     enabled: !!clusterID,
   });
 
+  if (isError) {
+    const formattedError = formatErrorData(isLoading, isError, error);
+
+    return {
+      clusterIdentityProviders: data?.data,
+      isError,
+      isLoading,
+      error: formattedError,
+      isSuccess,
+    };
+  }
+
   return {
     isLoading,
-    clusterIdentityProviders: data,
+    clusterIdentityProviders: data?.data,
     isError,
     error,
+    isSuccess,
   };
 };

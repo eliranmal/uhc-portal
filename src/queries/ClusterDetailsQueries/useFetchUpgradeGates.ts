@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { clusterService } from '~/services';
 import { getClusterServiceForRegion } from '~/services/clusterService';
-import { SubscriptionCommonFields } from '~/types/accounts_mgmt.v1';
+import { SubscriptionCommonFieldsStatus } from '~/types/accounts_mgmt.v1';
 
 import { queryConstants } from '../queriesConstants';
 import { SubscriptionResponseType } from '../types';
@@ -20,20 +20,26 @@ export const useFetchUpgradeGates = (
   mainQueryKey: string,
 ) => {
   const { isLoading, data } = useQuery({
-    queryKey: [mainQueryKey, 'upgradeGates', 'clusterService', clusterID, subscription],
+    queryKey: [
+      queryConstants.FETCH_CLUSTER_DETAILS_QUERY_KEY,
+      mainQueryKey,
+      'upgradeGates',
+      'clusterService',
+      clusterID,
+      subscription,
+    ],
     queryFn: async () => {
-      if (subscription?.subscription.xcm_id) {
-        const clusterService = getClusterServiceForRegion(subscription?.subscription.xcm_id);
+      if (subscription?.subscription.rh_region_id) {
+        const clusterService = getClusterServiceForRegion(subscription?.subscription.rh_region_id);
         const response = await clusterService.getClusterGateAgreements(clusterID);
         return response;
       }
       const response = await clusterService.getClusterGateAgreements(clusterID);
       return response;
     },
-    staleTime: queryConstants.STALE_TIME,
     enabled:
       !!subscription &&
-      subscription.subscription.status !== SubscriptionCommonFields.status.DEPROVISIONED &&
+      subscription.subscription.status !== SubscriptionCommonFieldsStatus.Deprovisioned &&
       (subscription.subscription.managed || subscription.isAROCluster),
   });
   return {

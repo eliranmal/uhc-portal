@@ -28,7 +28,7 @@ const getUpstreamRemote = async () => {
   const remoteUrls = await listGitRemotesPromise(__dirname);
   // eslint-disable-next-line no-restricted-syntax
   for (const remoteName of Object.keys(remoteUrls)) {
-    if (remoteUrls[remoteName].match('.*gitlab\\.cee\\.redhat\\.com[:/]service/uhc-portal.*')) {
+    if (remoteUrls[remoteName].match('.*github\\.com[:/]RedHatInsights/uhc-portal.*')) {
       return remoteName;
     }
   }
@@ -101,7 +101,7 @@ const getEnvs = async (upstream) => {
     // .info fields are promises, later replaced with their results..
     {
       name: `${upstream}/master`,
-      comment: 'https://gitlab.cee.redhat.com/service/uhc-portal/commits/master',
+      comment: 'https://github.com/RedHatInsights/uhc-portal/commits/master',
       info: gitRev(`${upstream}/master`),
     },
     {
@@ -122,7 +122,7 @@ const getEnvs = async (upstream) => {
     },
     {
       name: `${upstream}/stable`,
-      comment: 'https://gitlab.cee.redhat.com/service/uhc-portal/commits/stable',
+      comment: 'https://github.com/RedHatInsights/uhc-portal/commits/stable',
       info: gitRev(`${upstream}/stable`),
     },
     {

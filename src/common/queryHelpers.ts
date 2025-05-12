@@ -116,6 +116,8 @@ const createViewQueryObject = (viewOptions?: ViewOptions, username?: string): Qu
 const createServiceLogQueryObject = (
   viewOptions?: ViewOptions,
   format?: GetClusterHistoryParams['format'],
+  page?: number,
+  pageSize?: number,
 ): GetClusterHistoryParams => {
   const queryObject: GetClusterHistoryParams = {
     page: 1,
@@ -124,8 +126,17 @@ const createServiceLogQueryObject = (
   };
 
   if (viewOptions) {
-    queryObject.page = viewOptions.currentPage;
-    queryObject.page_size = viewOptions.pageSize;
+    if (page) {
+      queryObject.page = page;
+    } else {
+      queryObject.page = viewOptions.currentPage;
+    }
+
+    if (pageSize) {
+      queryObject.page_size = pageSize;
+    } else {
+      queryObject.page_size = viewOptions.pageSize;
+    }
 
     const { sortField, isAscending } = viewOptions.sorting;
     if (sortField !== null) {

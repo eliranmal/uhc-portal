@@ -1,10 +1,11 @@
 import {
   AutoscalerResourceLimits,
-  AutoscalerResourceLimitsGPULimit,
+  AutoscalerResourceLimitsGpuLimit,
   ClusterAutoscaler,
 } from '~/types/clusters_mgmt.v1';
 
-const MAX_NODES_DEFAULT = 180;
+import { MAX_NODES as MAX_NODES_DEFAULT } from './machinePools/constants';
+
 const MAX_CORES_DEFAULT = MAX_NODES_DEFAULT * 64;
 const MAX_MEMORY_DEFAULT = MAX_NODES_DEFAULT * 64 * 20;
 
@@ -36,7 +37,9 @@ export type ClusterAutoScalingForm = Omit<
  *
  * @returns ClusterAutoscaler object with correct defaults
  */
-const getDefaultClusterAutoScaling = (): ClusterAutoScalingForm => ({
+const getDefaultClusterAutoScaling = (
+  maxNodesTotal = MAX_NODES_DEFAULT,
+): ClusterAutoScalingForm => ({
   // UI General settings (not grouped on the API object definition)
   balance_similar_node_groups: false,
 
@@ -54,7 +57,7 @@ const getDefaultClusterAutoScaling = (): ClusterAutoScalingForm => ({
 
   // UI Resource limits section
   resource_limits: {
-    max_nodes_total: MAX_NODES_DEFAULT,
+    max_nodes_total: maxNodesTotal,
     cores: {
       min: 0,
       max: MAX_CORES_DEFAULT,
@@ -92,7 +95,7 @@ const getClusterAutoScalingSubmitSettings = (
     scaleDown = { enabled: false };
   }
 
-  let apiGpus: AutoscalerResourceLimitsGPULimit[] = [];
+  let apiGpus: AutoscalerResourceLimitsGpuLimit[] = [];
 
   if (formAutoscaler.resource_limits.gpus) {
     const gpuStr = formAutoscaler.resource_limits.gpus || '';
@@ -174,4 +177,5 @@ export {
   getDefaultClusterAutoScaling,
   getClusterAutoScalingSubmitSettings,
   getCompleteFormClusterAutoscaling,
+  MAX_NODES_DEFAULT,
 };

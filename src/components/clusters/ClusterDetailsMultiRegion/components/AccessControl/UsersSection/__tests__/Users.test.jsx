@@ -2,11 +2,20 @@ import React from 'react';
 
 import { checkAccessibility, render, screen } from '~/testUtils';
 
+import { useFetchUsers } from '../../../../../../../queries/ClusterDetailsQueries/AccessControlTab/UserQueries/useFetchUsers';
 import fixtures from '../../../../__tests__/ClusterDetails.fixtures';
 import { initialState } from '../UsersReducer';
 import UsersSection from '../UsersSection';
 
-import { stateWithUsers } from './Users.fixtures';
+import { users } from './Users.fixtures';
+
+jest.mock(
+  '../../../../../../../queries/ClusterDetailsQueries/AccessControlTab/UserQueries/useFetchUsers',
+  () => ({
+    useFetchUsers: jest.fn(),
+    refetchUsers: jest.fn(),
+  }),
+);
 
 describe('<Users />', () => {
   const getUsers = jest.fn();
@@ -31,9 +40,29 @@ describe('<Users />', () => {
   afterEach(() => {
     getUsers.mockClear();
   });
-  it('is accessible without users', async () => {
+  const useFetchUsersMock = useFetchUsers;
+  it('shows skeleton while loading', async () => {
+    useFetchUsersMock.mockReturnValue({
+      data: [],
+      isLoading: true,
+      osError: false,
+      error: null,
+      isRefetching: true,
+    });
+
     const { container } = render(<UsersSection {...props} />);
-    expect(getUsers).toHaveBeenCalled();
+
+    expect(container.querySelectorAll('.pf-v5-c-skeleton').length).toBeGreaterThan(0);
+  });
+  it('is accessible without users', async () => {
+    useFetchUsersMock.mockReturnValue({
+      data: [],
+      isLoading: false,
+      osError: false,
+      error: null,
+    });
+    const { container } = render(<UsersSection {...props} />);
+    expect(useFetchUsersMock).toHaveBeenCalled();
     await checkAccessibility(container);
   });
 
@@ -43,9 +72,16 @@ describe('<Users />', () => {
     });
 
     it('is accessible', async () => {
-      const newProps = { ...props, clusterGroupUsers: stateWithUsers.groupUsers, hasUsers: true };
-      const { container } = render(<UsersSection {...newProps} />);
-      expect(getUsers).toHaveBeenCalled();
+      useFetchUsersMock.mockReturnValue({
+        data: {
+          users,
+        },
+        isLoading: false,
+        osError: false,
+        error: null,
+      });
+      const { container } = render(<UsersSection {...props} />);
+      expect(useFetchUsersMock).toHaveBeenCalled();
       expect(await screen.findAllByRole('cell', { name: 'dedicated-admins' })).toHaveLength(2);
       expect(screen.getAllByRole('cell', { name: 'cluster-admins' })).toHaveLength(2);
       await checkAccessibility(container);

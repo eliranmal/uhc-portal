@@ -1,0 +1,23 @@
+// The following resets are required because the OIDC Select is used inside the
+// custom <Instructions /> component. <Instructions /> is wrapping everything inside a PF TextContent component, which
+// should only be used for text. The PF content classes are interfering with the PF select list classes, adding
+// extra paddings and margins to the lists inside the Select menu.
+.pf-v5-c-content {
+  .oidc-config-select {
+    ol ul {
+      margin-block-start: 0;
+    }
+    ul {
+      padding-inline-start: 0;
+      margin-inline-start: 0;
+      list-style: none;
+    }
+    ol,
+    ul {
+      margin: 0;
+    }
+    hr:not(:last-child) {
+      margin-block-end: 0;
+    }
+  }
+}

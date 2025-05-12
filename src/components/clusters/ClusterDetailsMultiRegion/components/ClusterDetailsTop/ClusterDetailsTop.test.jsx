@@ -1,0 +1,306 @@
+import React from 'react';
+import * as reactRedux from 'react-redux';
+
+import { normalizedProducts } from '~/common/subscriptionTypes';
+import * as clusterService from '~/services/clusterService';
+import { checkAccessibility, render, screen, within } from '~/testUtils';
+import { SubscriptionCommonFieldsStatus } from '~/types/accounts_mgmt.v1';
+
+import clusterStates from '../../../common/clusterStates';
+import fixtures from '../../__tests__/ClusterDetails.fixtures';
+
+import ClusterDetailsTop from './ClusterDetailsTop';
+
+const mockGetClusterServiceForRegion = jest.spyOn(clusterService, 'getClusterServiceForRegion');
+const mockedGetLogs = jest.fn();
+
+const mockNavigate = jest.fn();
+
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useNavigate: () => mockNavigate,
+}));
+
+jest.mock('react-redux', () => {
+  const config = {
+    __esModule: true,
+    ...jest.requireActual('react-redux'),
+  };
+  return config;
+});
+
+describe('<ClusterDetailsTop />', () => {
+  const useDispatchMock = jest.spyOn(reactRedux, 'useDispatch');
+  const mockedDispatch = jest.fn();
+  useDispatchMock.mockReturnValue(mockedDispatch);
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+  afterAll(() => {
+    jest.resetAllMocks();
+  });
+
+  const defaultCluster = {
+    console: { url: 'https:myConsoleURL.com' },
+    subscription: { status: SubscriptionCommonFieldsStatus.Active },
+    canEdit: true,
+    managed: true,
+  };
+
+  const props = {
+    cluster: defaultCluster,
+    pending: false,
+    clusterIdentityProviders: {},
+    organization: {},
+    error: false,
+    errorMessage: '',
+    children: null,
+    canSubscribeOCP: true,
+    canTransferClusterOwnership: true,
+    canHibernateCluster: true,
+    autoRefreshEnabled: true,
+    toggleSubscriptionReleased: jest.fn(),
+    showPreviewLabel: false,
+    isClusterIdentityProvidersLoading: false,
+    clusterIdentityProvidersError: false,
+    isRefetching: false,
+    gcpOrgPolicyWarning: '',
+    regionalInstance: undefined,
+    openDrawer: jest.fn(),
+    closeDrawer: jest.fn(),
+    selectedCardTitle: undefined,
+    refreshFunc: jest.fn(),
+    region: undefined,
+    hasNetworkOndemand: false,
+  };
+
+  it('is accessible', async () => {
+    const { container } = render(<ClusterDetailsTop {...props} />);
+
+    expect(await screen.findByRole('heading', { level: 1 })).toBeInTheDocument();
+    await checkAccessibility(container);
+  });
+
+  it('should show refresh button', async () => {
+    render(<ClusterDetailsTop {...props} />);
+
+    expect(await screen.findByRole('button', { name: 'Refresh' })).toBeInTheDocument();
+  });
+
+  it('should enable open console button when cluster has console url and cluster is not uninstalling', async () => {
+    render(<ClusterDetailsTop {...props} />);
+    expect(await screen.findByRole('button', { name: 'Open console' })).toHaveAttribute(
+      'aria-disabled',
+      'false',
+    );
+  });
+
+  it('should disable open console button when console url is missing', async () => {
+    const newProps = {
+      ...props,
+      cluster: { ...defaultCluster, console: { url: '' } },
+    };
+
+    render(<ClusterDetailsTop {...newProps} />);
+    expect(await screen.findByRole('button', { name: 'Open console' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+  });
+
+  it('should disable open console button when cluster is unistalling', async () => {
+    const cluster = { ...defaultCluster, state: clusterStates.uninstalling };
+    mockedGetLogs.mockResolvedValue('hello world');
+    mockGetClusterServiceForRegion.mockReturnValue({ getLogs: mockedGetLogs });
+
+    const newProps = { ...props, cluster };
+
+    render(<ClusterDetailsTop {...newProps} />);
+    expect(await screen.findByRole('button', { name: 'Open console' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+  });
+
+  it('should show error icon if an error occurred', async () => {
+    const newProps = { ...props, error: true, errorMessage: 'I am an error message' };
+
+    render(<ClusterDetailsTop {...newProps} />);
+
+    expect(await screen.findByLabelText('Warning')).toBeInTheDocument();
+  });
+
+  it('should show only Unarchive button if the cluster is archived', async () => {
+    const cluster = {
+      ...fixtures.clusterDetails.cluster,
+      subscription: { status: 'Archived', id: 'fake' },
+    };
+
+    const newProps = { ...props, cluster };
+
+    render(<ClusterDetailsTop {...newProps} />);
+
+    const unArchiveButton = await screen.findByRole('button', { name: 'Unarchive' });
+
+    expect(unArchiveButton).toBeInTheDocument();
+    expect(unArchiveButton).toHaveClass('pf-m-secondary');
+    expect(screen.queryByRole('button', { name: 'Refresh' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+  });
+
+  it('clicking on unarchive button bring up unarchive modal', async () => {
+    const cluster = {
+      ...fixtures.clusterDetails.cluster,
+      subscription: { status: 'Archived', id: 'fake' },
+    };
+
+    const newProps = { ...props, cluster };
+    const { user } = render(<ClusterDetailsTop {...newProps} />);
+
+    await user.click(screen.getByRole('button', { name: 'Unarchive' }));
+    expect(mockedDispatch).toHaveBeenCalled();
+    const mockedCalledWith = mockedDispatch.mock.calls[0][0];
+
+    expect(mockedCalledWith.type).toEqual('OPEN_MODAL');
+    expect(mockedCalledWith.payload.name).toEqual('unarchive-cluster');
+  });
+
+  it('forwards to cluster list when uninstallation is complete', async () => {
+    mockedGetLogs.mockResolvedValue('hello world');
+    mockGetClusterServiceForRegion.mockReturnValue({ getLogs: mockedGetLogs });
+    const cluster = { ...defaultCluster, state: 'uninstalling' };
+
+    const newProps = { ...props, cluster };
+    const { rerender } = render(<ClusterDetailsTop {...newProps} />);
+
+    // Cluster uninstallation
+    expect(await screen.findByText('Cluster uninstallation')).toBeInTheDocument();
+
+    const endCluster = { ...cluster };
+    endCluster.state = '';
+    endCluster.subscription.status = 'Deprovisioned';
+    const endProps = { ...props, endCluster };
+
+    rerender(<ClusterDetailsTop {...endProps} />);
+    expect(mockNavigate).toHaveBeenCalledWith('/openshift/cluster-list', undefined);
+    const dispatchCall = mockedDispatch.mock.calls[0][0];
+    expect(dispatchCall.type).toEqual('@@INSIGHTS-CORE/NOTIFICATIONS/ADD_NOTIFICATION');
+    expect(dispatchCall.payload.title).toEqual('Successfully uninstalled cluster Unnamed Cluster');
+  });
+
+  it('should show expiration alert based on expiration_time', async () => {
+    const { cluster } = fixtures.OSDTrialClusterDetails;
+    const expDate = new Date();
+    expDate.setDate(expDate.getDate() - (365 * 2 + 1)); // should have expired 2 years ago
+
+    const expirationTimestamp = expDate.toISOString();
+    cluster.subscription.trial_end_date = '';
+    cluster.subscription.billing_expiration_date = '';
+    cluster.expiration_timestamp = expirationTimestamp;
+
+    const newProps = { ...props, cluster };
+
+    render(<ClusterDetailsTop {...newProps} />);
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('alert')).getByText('Warning alert', {
+        exact: false,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('alert')).getByText('This cluster should have been deleted', {
+        exact: false,
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('should show expiration alert for OSDTrial', async () => {
+    const { cluster } = fixtures.OSDTrialClusterDetails;
+    const expDate = new Date();
+    expDate.setDate(expDate.getDate() + 1); // now + 1 day
+    cluster.subscription.trial_end_date = expDate.toISOString();
+    cluster.subscription.billing_expiration_date = '';
+    cluster.expiration_timestamp = '';
+
+    const newProps = { ...props, cluster };
+
+    render(<ClusterDetailsTop {...newProps} />);
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('alert')).getByText('Danger alert', {
+        exact: false,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('alert')).getByText('This cluster will be deleted in a day', {
+        exact: false,
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('should show expiration alert for OSD RHM', async () => {
+    const { cluster } = fixtures.OSDRHMClusterDetails;
+
+    const expDate = new Date();
+    expDate.setDate(expDate.getDate() + 1); // now + 1 day
+    cluster.subscription.trial_end_date = '';
+    cluster.subscription.billing_expiration_date = expDate.toISOString();
+    cluster.expiration_timestamp = '';
+
+    const newProps = { ...props, cluster };
+
+    render(<ClusterDetailsTop {...newProps} />);
+
+    expect(
+      within(screen.getByRole('alert')).getByText('Danger alert', {
+        exact: false,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('alert')).getByText('This cluster will be deleted in a day', {
+        exact: false,
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('should show non-editable alert for AI clusters', async () => {
+    const cluster = {
+      ...defaultCluster,
+      ccs: { enabled: true },
+      aiCluster: { id: 'myClusterId' },
+      canEdit: false,
+      subscription: {
+        ...defaultCluster.subscription,
+        plan: { id: normalizedProducts.OCP_AssistedInstall, type: normalizedProducts.OCP },
+      },
+    };
+    const newProps = { ...props, cluster };
+
+    render(<ClusterDetailsTop {...newProps} />);
+
+    expect(
+      within(screen.getByRole('alert')).getByText('Info alert', {
+        exact: false,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('alert')).getByText(
+        'To get permission to edit, contact the Cluster Owner or Organization Admin',
+        {
+          exact: false,
+        },
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('should not show non-editable alert for non-AI clusters', async () => {
+    const newProps = { ...props };
+
+    render(<ClusterDetailsTop {...newProps} />);
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+});

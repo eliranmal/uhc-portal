@@ -50,7 +50,7 @@
           "NoWIFConfigSelectionError": "Wif configuration is required",
           "NoMatchingWIFConfigValue": "nomatchingwif",
           "NoMatchingWIFConfigError": "No results found",
-          "WIFCommandValue": "ocm gcp create wif-config --name $WIF_NAME --project $GCP_PROJECT_ID"
+          "WIFCommandValue": "ocm gcp create wif-config --name <wif_name> --project <gcp_project_id>"
         }
       },
       "Details": {
@@ -87,29 +87,29 @@
           "CCS": {
             "SingleZone": {
               "LowerLimitError": "Input cannot be less than 2",
-              "UpperLimitError": "Input cannot be more than 180",
+              "UpperLimitError": "Input cannot be more than 249",
               "MinAndMaxLimitDependencyError": "Max nodes cannot be less than min nodes"
             },
             "MultiZone": {
               "LowerLimitError": "Input cannot be less than 1",
-              "UpperLimitError": "Input cannot be more than 60",
+              "UpperLimitError": "Input cannot be more than 83",
               "MinAndMaxLimitDependencyError": "Max nodes cannot be less than min nodes"
             }
           },
           "NonCCS": {
             "SingleZone": {
               "LowerLimitError": "Input cannot be less than 4",
-              "UpperLimitError": "Input cannot be more than 180",
+              "UpperLimitError": "Input cannot be more than 249",
               "MinAndMaxLimitDependencyError": "Max nodes cannot be less than min nodes"
             },
             "MultiZone": {
               "LowerLimitError": "Input cannot be less than 3",
-              "UpperLimitError": "Input cannot be more than 60",
+              "UpperLimitError": "Input cannot be more than 83",
               "MinAndMaxLimitDependencyError": "Max nodes cannot be less than min nodes"
             }
           }
         },
-        "AWS": {
+        "Common": {
           "ClusterAutoscaling": {
             "LogVerbosityLimitError": "Value must be between 1 and 6",
             "ThreasholdLimitError": "Value must be between 0 and 1",
@@ -118,10 +118,13 @@
             "EmptyLabelValueError": "Empty labels are not allowed",
             "MinMaxLimitError": "The minimum cannot be above the maximum value",
             "InvalidGPUValueError": "Invalid params",
-            "RequiredFieldError": "Field is required"
-          }
-        },
-        "Common": {
+            "RequiredFieldError": "Field is required",
+            "MaxNodesValueMultizoneLimitError": "Value must not be greater than 255",
+            "MaxNodesValueSinglezoneLimitError": "Value must not be greater than 254",
+            "MaxNodesValueOcpLower41414MultizoneLimitError": "Value must not be greater than 186",
+            "MaxNodesValueOcpLower41414SinglezoneLimitError": "Value must not be greater than 185",
+            "NegativeValueError": "Value cannot be a negative number"
+          },
           "NodeLabel": [
             {
               "UpperCharacterLimitValue": "characterslimtgreaterthan60testingssssssssssssssssssssssssssssssssssssssssssssssssssssssss",
@@ -135,7 +138,8 @@
             },
             {
               "InvalidValue": "example.com/MyName/",
-              "KeyError": "A qualified name must consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character with an optional DNS subdomain prefix and '/' (e.g. 'example.com/MyName')"
+              "KeyError": "A qualified name must consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character with an optional DNS subdomain prefix and '/' (e.g. 'example.com/MyName')",
+              "LabelError": "A valid value must consist of alphanumeric characters, '-', '.' or '_' and must start and end with an alphanumeric character"
             }
           ]
         }
@@ -197,7 +201,7 @@
           "HostPrefix": [
             {
               "Value": "hello",
-              "Error": "The value 'hello' isn't a valid subnet mask. It must follow the RFC-4632 format: '/16'"
+              "Error": "The value '/hello' isn't a valid subnet mask. It must follow the RFC-4632 format: '/16'"
             },
             {
               "Value": "28",

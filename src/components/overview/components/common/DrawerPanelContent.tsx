@@ -1,15 +1,13 @@
-import { ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 
-import AdvancedClusterSecurityDrawerPanelBody from './DrawerPanelContents/AdvancedClusterSecurity/DrawerPanelBody';
-import AdvancedClusterSecurityDrawerPanelHead from './DrawerPanelContents/AdvancedClusterSecurity/DrawerPanelHead';
-import GitopsDrawerPanelBody from './DrawerPanelContents/Gitops/DrawerPanelBody';
-import GitopsDrawerPanelHead from './DrawerPanelContents/Gitops/DrawerPanelHead';
-import OpenshiftAiDrawerPanelBody from './DrawerPanelContents/OpenshiftAi/DrawerPanelBody';
-import OpenshiftAiDrawerPanelHead from './DrawerPanelContents/OpenshiftAi/DrawerPanelHead';
-import PipelinesDrawerPanelBody from './DrawerPanelContents/Pipelines/DrawerPanelBody';
-import PipelinesDrawerPanelHead from './DrawerPanelContents/Pipelines/DrawerPanelHead';
-import ServiceMeshDrawerPanelBody from './DrawerPanelContents/ServiceMesh/DrawerPanelBody';
-import ServiceMeshDrawerPanelHead from './DrawerPanelContents/ServiceMesh/DrawerPanelHead';
+import { AdvancedClusterSecurityDrawerPanelBody } from './DrawerPanelContents/AdvancedClusterSecurity/DrawerPanelBody';
+import { GeneralDrawerPanelHead } from './DrawerPanelContents/GeneralDrawerPanelHead';
+import { GitopsDrawerPanelBody } from './DrawerPanelContents/Gitops/DrawerPanelBody';
+import { OpenShiftAiDrawerPanelBody } from './DrawerPanelContents/OpenshiftAi/DrawerPanelBody';
+import { OpenShiftVirtualizationPanelBody } from './DrawerPanelContents/OpenShiftVirtualization/DrawerPanelBody';
+import { PipelinesDrawerPanelBody } from './DrawerPanelContents/Pipelines/DrawerPanelBody';
+import { ServiceMeshDrawerPanelBody } from './DrawerPanelContents/ServiceMesh/DrawerPanelBody';
+import PRODUCT_CARD_LOGOS from './ProductCardLogos';
 
 import './DrawerPanelContent.scss';
 
@@ -19,16 +17,39 @@ type DrawerPanelContentNode = {
 };
 
 const DRAWER_PANEL_CONTENT = {
-  gitops: { head: GitopsDrawerPanelHead, body: GitopsDrawerPanelBody },
-  pipelines: { head: PipelinesDrawerPanelHead, body: PipelinesDrawerPanelBody },
-  serviceMesh: { head: ServiceMeshDrawerPanelHead, body: ServiceMeshDrawerPanelBody },
+  gitops: {
+    head: <GeneralDrawerPanelHead {...PRODUCT_CARD_LOGOS.gitops} />,
+    body: GitopsDrawerPanelBody,
+  },
+  pipelines: {
+    head: <GeneralDrawerPanelHead {...PRODUCT_CARD_LOGOS.pipelines} />,
+    body: PipelinesDrawerPanelBody,
+  },
+  serviceMesh: {
+    head: <GeneralDrawerPanelHead {...PRODUCT_CARD_LOGOS.serviceMesh} />,
+    body: ServiceMeshDrawerPanelBody,
+  },
   advancedClusterSecurity: {
-    head: AdvancedClusterSecurityDrawerPanelHead,
+    head: (
+      <GeneralDrawerPanelHead
+        {...PRODUCT_CARD_LOGOS.advancedClusterSecurity}
+        trialButtonLink="https://www.redhat.com/en/technologies/cloud-computing/openshift/advanced-cluster-security-kubernetes/trial"
+      />
+    ),
     body: AdvancedClusterSecurityDrawerPanelBody,
   },
   OpenshiftAi: {
-    head: OpenshiftAiDrawerPanelHead,
-    body: OpenshiftAiDrawerPanelBody,
+    head: (
+      <GeneralDrawerPanelHead
+        {...PRODUCT_CARD_LOGOS.openshiftAi}
+        trialButtonLink="https://www.redhat.com/en/technologies/cloud-computing/openshift/openshift-ai/trial"
+      />
+    ),
+    body: OpenShiftAiDrawerPanelBody,
+  },
+  OpenshiftVirtualization: {
+    head: <GeneralDrawerPanelHead {...PRODUCT_CARD_LOGOS.openshiftVirtualization} />,
+    body: OpenShiftVirtualizationPanelBody,
   },
 };
 

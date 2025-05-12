@@ -229,7 +229,7 @@ export function TreeViewSelect(props: TreeViewSelectProps) {
       isExpanded={isOpen}
       badge={menuToggleBadge}
     >
-      {getSelectionText()}
+      {getSelectionText() as React.ReactNode}
     </MenuToggle>
   );
 

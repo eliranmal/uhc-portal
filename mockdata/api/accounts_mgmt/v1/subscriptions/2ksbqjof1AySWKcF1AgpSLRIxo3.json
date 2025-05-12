@@ -13,6 +13,7 @@
   "eval_expiration_date": "0001-01-01T00:00:00Z",
   "href": "/api/accounts_mgmt/v1/subscriptions/2ksbqjof1AySWKcF1AgpSLRIxo3",
   "id": "2ksbqjof1AySWKcF1AgpSLRIxo3",
+  "external_cluster_id": "-EXPECT-AMS-null",
   "kind": "Subscription",
   "last_reconcile_date": "0001-01-01T00:00:00Z",
   "last_released_at": "0001-01-01T00:00:00Z",

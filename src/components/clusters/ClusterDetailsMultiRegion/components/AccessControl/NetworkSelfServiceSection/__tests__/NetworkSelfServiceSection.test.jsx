@@ -1,18 +1,67 @@
 import React from 'react';
+import * as reactRedux from 'react-redux';
+
+import { addNotification } from '@redhat-cloud-services/frontend-components-notifications/redux/actions/notifications';
 
 import { checkAccessibility, render, screen } from '~/testUtils';
 
+import { useAddGrant } from '../../../../../../../queries/ClusterDetailsQueries/AccessControlTab/NetworkSelfServiceQueries/useAddGrant';
+import { useFetchGrants } from '../../../../../../../queries/ClusterDetailsQueries/AccessControlTab/NetworkSelfServiceQueries/useFetchGrants';
+import { useFetchRoles } from '../../../../../../../queries/ClusterDetailsQueries/AccessControlTab/NetworkSelfServiceQueries/useFetchRoles';
 import NetworkSelfServiceSection from '../NetworkSelfServiceSection';
 
 jest.useFakeTimers({
   legacyFakeTimers: true, // TODO 'modern'
 });
 
-const baseResponse = {
-  fulfilled: false,
-  pending: false,
-  error: false,
+jest.mock(
+  '@redhat-cloud-services/frontend-components-notifications/redux/actions/notifications',
+  () => ({
+    addNotification: jest.fn(),
+  }),
+);
+
+jest.mock(
+  '../../../../../../../queries/ClusterDetailsQueries/AccessControlTab/NetworkSelfServiceQueries/useFetchRoles',
+  () => ({
+    useFetchRoles: jest.fn(),
+  }),
+);
+jest.mock(
+  '../../../../../../../queries/ClusterDetailsQueries/AccessControlTab/NetworkSelfServiceQueries/useFetchGrants',
+  () => ({
+    useFetchGrants: jest.fn(),
+    refetchGrants: jest.fn(),
+  }),
+);
+jest.mock(
+  '../../../../../../../queries/ClusterDetailsQueries/AccessControlTab/NetworkSelfServiceQueries/useAddGrant',
+  () => ({
+    useAddGrant: jest.fn(),
+  }),
+);
+
+jest.mock('react-redux', () => {
+  const config = {
+    __esModule: true,
+    ...jest.requireActual('react-redux'),
+  };
+  return config;
+});
+
+const fakeAddGrantResponse = {
+  data: {
+    user_arn: 'fake-arn',
+    state: 'failed',
+    role: {
+      id: 'network-mgmt',
+    },
+    id: 'fake-id-1',
+    roleName: 'Network Management',
+    console_url: 'http://example.com',
+  },
 };
+
 const fakeGrants = [
   {
     user_arn: 'fake-arn',
@@ -37,29 +86,34 @@ const fakeGrants = [
 ];
 
 describe('<NetworkSelfServiceSection />', () => {
-  const getRoles = jest.fn();
-  const getGrants = jest.fn();
+  const useFetchGrantsMock = useFetchGrants;
+  const useFetchRolesMock = useFetchRoles;
+  const useAddGrantMock = useAddGrant;
+
   const deleteGrant = jest.fn();
   const openAddGrantModal = jest.fn();
-  const addNotification = jest.fn();
+  // const addNotification = jest.fn();
+
+  const useDispatchMock = jest.spyOn(reactRedux, 'useDispatch');
+  const dispatchMock = jest.fn();
 
   const props = {
     canEdit: true,
-    getRoles,
-    getGrants,
     deleteGrant,
     openAddGrantModal,
-    addNotification,
-    grants: { ...baseResponse, data: [] },
-    deleteGrantResponse: baseResponse,
-    addGrantResponse: baseResponse,
+    // addNotification,
     clusterHibernating: false,
     isReadOnly: false,
   };
 
+  useAddGrantMock.mockReturnValue({
+    data: fakeAddGrantResponse,
+  });
+
   afterEach(() => {
-    getRoles.mockClear();
-    getGrants.mockClear();
+    useFetchGrantsMock.mockClear();
+    useFetchRolesMock.mockClear();
+    useAddGrantMock.mockClear();
     deleteGrant.mockClear();
     openAddGrantModal.mockClear();
     addNotification.mockClear();
@@ -75,155 +129,234 @@ describe('<NetworkSelfServiceSection />', () => {
   });
 
   it('should call getGrants and getRoles on mount', () => {
-    expect(getRoles).not.toHaveBeenCalled();
-    expect(getGrants).not.toHaveBeenCalled();
+    expect(useFetchGrantsMock).not.toHaveBeenCalled();
+    expect(useFetchRolesMock).not.toHaveBeenCalled();
 
+    useFetchGrantsMock.mockReturnValue({
+      data: [],
+      isLoading: true,
+      isError: false,
+      error: null,
+    });
+    useFetchRolesMock.mockReturnValue({
+      data: [],
+      isLoading: true,
+      isError: false,
+      error: null,
+    });
     render(<NetworkSelfServiceSection {...props} />);
 
-    expect(getRoles).toHaveBeenCalled();
-    expect(getGrants).toHaveBeenCalled();
+    expect(useFetchRolesMock).toHaveBeenCalled();
+    expect(useFetchGrantsMock).toHaveBeenCalled();
   });
 
   it('should open modal when needed', async () => {
+    useFetchGrantsMock.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+    useFetchRolesMock.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
     const { user } = render(<NetworkSelfServiceSection {...props} />);
     expect(openAddGrantModal).not.toHaveBeenCalled();
     await user.click(screen.getByRole('button', { name: 'Grant role' }));
 
     jest.runAllTimers();
-    expect(openAddGrantModal).toHaveBeenCalled();
+    expect(
+      await screen.findByRole('dialog', {
+        name: 'Grant AWS infrastructure role Grant AWS infrastructure role',
+      }),
+    ).toBeInTheDocument();
   });
 
   it('should call getGrants() when a grant is added', () => {
-    expect(getGrants).not.toHaveBeenCalled();
-    const pendingProps = { ...props, addGrantResponse: { ...baseResponse, pending: true } };
+    expect(useFetchGrantsMock).not.toHaveBeenCalled();
+    useFetchGrantsMock.mockReturnValue({
+      data: [],
+      isLoading: true,
+      isError: false,
+      error: null,
+    });
 
-    const { rerender } = render(<NetworkSelfServiceSection {...pendingProps} />);
-    expect(getGrants).toHaveBeenCalledTimes(1);
+    const { rerender } = render(<NetworkSelfServiceSection {...props} />);
+    expect(useFetchGrantsMock).toHaveBeenCalledTimes(1);
+    useFetchGrantsMock.mockReturnValue({
+      data: [
+        {
+          user_arn: 'fake-arn',
+          state: 'pending',
+          role: {
+            id: 'network-mgmt',
+          },
+          id: 'fake-id-1',
+          roleName: 'Network Management',
+          console_url: 'http://example.com',
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
 
-    const fulfilledProps = { ...props, addGrantResponse: { ...baseResponse, fulfilled: true } };
+    rerender(<NetworkSelfServiceSection {...props} />);
 
-    rerender(<NetworkSelfServiceSection {...fulfilledProps} />);
-
-    expect(getGrants).toHaveBeenCalledTimes(2);
+    expect(useFetchGrantsMock).toHaveBeenCalledTimes(3);
   });
 
   it('should call getGrants() when a grant is removed', () => {
-    expect(getGrants).not.toHaveBeenCalled();
-    const pendingProps = { ...props, deleteGrantResponse: { ...baseResponse, pending: true } };
+    expect(useFetchGrantsMock).not.toHaveBeenCalled();
+    useFetchGrantsMock.mockReturnValue({
+      data: [
+        {
+          user_arn: 'fake-arn',
+          state: 'pending',
+          role: {
+            id: 'network-mgmt',
+          },
+          id: 'fake-id-1',
+          roleName: 'Network Management',
+          console_url: 'http://example.com',
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
 
-    const { rerender } = render(<NetworkSelfServiceSection {...pendingProps} />);
-    expect(getGrants).toHaveBeenCalledTimes(1);
+    const { rerender } = render(<NetworkSelfServiceSection {...props} />);
+    expect(useFetchGrantsMock).toHaveBeenCalledTimes(2);
 
-    const fulfilledProps = { ...props, deleteGrantResponse: { ...baseResponse, fulfilled: true } };
+    useFetchGrantsMock.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
 
-    rerender(<NetworkSelfServiceSection {...fulfilledProps} />);
+    rerender(<NetworkSelfServiceSection {...props} />);
 
-    expect(getGrants).toHaveBeenCalledTimes(2);
+    expect(useFetchGrantsMock).toHaveBeenCalledTimes(4);
   });
 
   it('should render skeleton when pending and no grants are set', () => {
-    const newProps = { ...props, grants: { ...baseResponse, pending: true, data: [] } };
-    const { container } = render(<NetworkSelfServiceSection {...newProps} />);
+    useFetchGrantsMock.mockReturnValue({
+      data: [],
+      isLoading: true,
+      isError: false,
+      error: null,
+    });
+
+    const { container } = render(<NetworkSelfServiceSection {...props} />);
     // There isn't an easy besides class to find skeletons
     expect(container.querySelectorAll('.pf-v5-c-skeleton').length).toBeGreaterThan(0);
   });
 
   it('displays grant arns in table cells', async () => {
-    const newProps = {
-      ...props,
-      grants: {
-        ...baseResponse,
-        fulfilled: true,
-        data: fakeGrants,
-      },
-    };
-    render(<NetworkSelfServiceSection {...newProps} />);
-    expect(screen.getByRole('cell', { name: 'fake-arn' })).toBeInTheDocument();
-    expect(screen.getByRole('cell', { name: 'fake-arn2' })).toBeInTheDocument();
+    useFetchGrantsMock.mockReturnValue({
+      data: fakeGrants,
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
+    render(<NetworkSelfServiceSection {...props} />);
+    expect(screen.getByText('fake-arn')).toBeInTheDocument();
+    expect(screen.getByText('fake-arn2')).toBeInTheDocument();
   });
 
   it('should notify when a grant fails', () => {
-    const pendingProps = {
-      ...props,
-      grants: { ...baseResponse, pending: true, data: fakeGrants },
-    };
-    const { rerender } = render(<NetworkSelfServiceSection {...pendingProps} />);
+    useDispatchMock.mockReturnValue(dispatchMock);
+    useFetchGrantsMock.mockReturnValue({
+      data: fakeGrants,
+      isLoading: true,
+      isFetching: true,
+      isError: false,
+      error: null,
+    });
+
+    const { rerender } = render(<NetworkSelfServiceSection {...props} />);
 
     expect(addNotification).not.toHaveBeenCalled();
-
-    const fulfilledProps = {
-      ...props,
-      grants: {
-        ...baseResponse,
-        fulfilled: true,
-        data: [
-          {
-            ...fakeGrants[0],
-            state: 'failed',
-            state_description: 'some failure',
-          },
-          fakeGrants[1],
-        ],
-      },
-    };
-    rerender(<NetworkSelfServiceSection {...fulfilledProps} />);
-
-    expect(addNotification).toHaveBeenCalledWith({
-      variant: 'danger',
-      title: 'Role creation failed for fake-arn',
-      description: 'some failure',
-      dismissDelay: 8000,
-      dismissable: false,
+    useFetchGrantsMock.mockReturnValue({
+      data: [
+        {
+          ...fakeGrants[0],
+          state: 'failed',
+          state_description: 'some failure',
+        },
+        fakeGrants[1],
+      ],
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      error: null,
     });
+
+    rerender(<NetworkSelfServiceSection {...props} />);
+    expect(dispatchMock).toHaveBeenCalledWith(
+      addNotification({
+        variant: 'danger',
+        title: 'Role creation failed for fake-arn',
+        description: 'some failure',
+        dismissDelay: 8000,
+        dismissable: false,
+      }),
+    );
   });
 
   it('should notify when a grant succeeds', () => {
-    const pendingProps = {
-      ...props,
-      grants: { ...baseResponse, pending: true, data: fakeGrants },
-    };
-    const { rerender } = render(<NetworkSelfServiceSection {...pendingProps} />);
+    useDispatchMock.mockReturnValue(dispatchMock);
+    useFetchGrantsMock.mockReturnValue({
+      data: fakeGrants,
+      isLoading: true,
+      isFetching: true,
+      isError: false,
+      error: null,
+    });
+    const { rerender } = render(<NetworkSelfServiceSection {...props} />);
 
     expect(addNotification).not.toHaveBeenCalled();
-
-    const fulfilledProps = {
-      ...props,
-      grants: {
-        ...baseResponse,
-        fulfilled: true,
-        data: [
-          fakeGrants[0],
-          {
-            ...fakeGrants[1],
-            state: 'ready',
-          },
-        ],
-      },
-    };
-    rerender(<NetworkSelfServiceSection {...fulfilledProps} />);
-    expect(addNotification).toHaveBeenCalledWith({
-      variant: 'success',
-      title: 'Read Only role successfully created for fake-arn2',
-      dismissDelay: 8000,
-      dismissable: false,
+    useFetchGrantsMock.mockReturnValue({
+      data: [
+        fakeGrants[0],
+        {
+          ...fakeGrants[1],
+          state: 'ready',
+        },
+      ],
+      isLoading: true,
+      isFetching: true,
+      isError: false,
+      error: null,
     });
+
+    rerender(<NetworkSelfServiceSection {...props} />);
+    expect(dispatchMock).toHaveBeenCalledWith(
+      addNotification({
+        variant: 'success',
+        title: 'Read Only role successfully created for fake-arn2',
+        dismissDelay: 8000,
+        dismissable: false,
+      }),
+    );
   });
 
   it('should disable add button when canEdit is false', () => {
+    useFetchGrantsMock.mockReturnValue({
+      data: fakeGrants,
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      error: null,
+    });
     render(
-      <NetworkSelfServiceSection
-        canEdit={false}
-        getRoles={getRoles}
-        getGrants={getGrants}
-        deleteGrant={deleteGrant}
-        openAddGrantModal={openAddGrantModal}
-        addNotification={addNotification}
-        grants={{ ...baseResponse, fulfilled: true, data: fakeGrants }}
-        deleteGrantResponse={baseResponse}
-        addGrantResponse={baseResponse}
-        clusterHibernating={false}
-        isReadOnly={false}
-      />,
+      <NetworkSelfServiceSection canEdit={false} clusterHibernating={false} isReadOnly={false} />,
     );
 
     expect(screen.getByRole('button', { name: 'Grant role' })).toHaveAttribute(
@@ -233,21 +366,14 @@ describe('<NetworkSelfServiceSection />', () => {
   });
 
   it('should disable add button when hibernating', () => {
-    render(
-      <NetworkSelfServiceSection
-        canEdit
-        getRoles={getRoles}
-        getGrants={getGrants}
-        deleteGrant={deleteGrant}
-        openAddGrantModal={openAddGrantModal}
-        addNotification={addNotification}
-        grants={{ ...baseResponse, fulfilled: true, data: fakeGrants }}
-        deleteGrantResponse={baseResponse}
-        addGrantResponse={baseResponse}
-        clusterHibernating
-        isReadOnly={false}
-      />,
-    );
+    useFetchGrantsMock.mockReturnValue({
+      data: fakeGrants,
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      error: null,
+    });
+    render(<NetworkSelfServiceSection canEdit clusterHibernating isReadOnly={false} />);
     expect(screen.getByRole('button', { name: 'Grant role' })).toHaveAttribute(
       'aria-disabled',
       'true',
@@ -255,21 +381,14 @@ describe('<NetworkSelfServiceSection />', () => {
   });
 
   it('should disable add button when read_only', () => {
-    render(
-      <NetworkSelfServiceSection
-        canEdit
-        getRoles={getRoles}
-        getGrants={getGrants}
-        deleteGrant={deleteGrant}
-        openAddGrantModal={openAddGrantModal}
-        addNotification={addNotification}
-        grants={{ ...baseResponse, fulfilled: true, data: fakeGrants }}
-        deleteGrantResponse={baseResponse}
-        addGrantResponse={baseResponse}
-        clusterHibernating={false}
-        isReadOnly
-      />,
-    );
+    useFetchGrantsMock.mockReturnValue({
+      data: fakeGrants,
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      error: null,
+    });
+    render(<NetworkSelfServiceSection canEdit clusterHibernating={false} isReadOnly />);
     expect(screen.getByRole('button', { name: 'Grant role' })).toHaveAttribute(
       'aria-disabled',
       'true',

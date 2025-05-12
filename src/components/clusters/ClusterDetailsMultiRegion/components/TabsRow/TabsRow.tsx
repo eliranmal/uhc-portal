@@ -24,6 +24,11 @@ const TabsRow = ({ tabsInfo, onTabSelected, initTabOpen }: TabsRowProps) => {
   const [initialTab, setInitialTab] = React.useState<TabsRowTabType | null>();
   const [historyPush, setHistoryPush] = React.useState<boolean>(false);
 
+  React.useEffect(() => {
+    const newTabs = getTabs(tabsInfo);
+    setTabs(newTabs);
+  }, [tabsInfo]);
+
   const handleTabClick = React.useCallback(
     (
       _: React.MouseEvent<HTMLElement, MouseEvent> | undefined,

@@ -2,7 +2,7 @@ import React from 'react';
 
 import { defaultSubscription } from '~/components/clusters/common/__tests__/defaultClusterFromSubscription.fixtures';
 import { checkAccessibility, render, screen, userEvent } from '~/testUtils';
-import { SubscriptionCommonFields } from '~/types/accounts_mgmt.v1';
+import { SubscriptionCommonFieldsSystem_units as SubscriptionCommonFieldsSystemUnits } from '~/types/accounts_mgmt.v1';
 
 import CpuSocketNumberField from '../CpuSocketNumberField';
 
@@ -87,7 +87,7 @@ describe('<CpuSocketNumberField />', () => {
             minVal={0}
             subscription={{
               ...defaultSubscription,
-              system_units: SubscriptionCommonFields.system_units.SOCKETS,
+              system_units: SubscriptionCommonFieldsSystemUnits.Sockets,
             }}
             cpuSocketValue={10}
             cpuSocketLabel="whatever the label"
@@ -173,7 +173,7 @@ describe('<CpuSocketNumberField />', () => {
               minVal={0}
               subscription={{
                 ...defaultSubscription,
-                system_units: SubscriptionCommonFields.system_units.SOCKETS,
+                system_units: SubscriptionCommonFieldsSystemUnits.Sockets,
               }}
               cpuSocketValue={10}
               cpuSocketLabel="whatever the label"
@@ -232,7 +232,7 @@ describe('<CpuSocketNumberField />', () => {
               minVal={0}
               subscription={{
                 ...defaultSubscription,
-                system_units: SubscriptionCommonFields.system_units.SOCKETS,
+                system_units: SubscriptionCommonFieldsSystemUnits.Sockets,
                 cpu_total: 100,
                 socket_total: 200,
               }}

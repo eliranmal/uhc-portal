@@ -1,0 +1,15 @@
+diff --git a/src/types/accounts_mgmt.v1/index.ts b/src/types/accounts_mgmt.v1/index.ts
+index 18dd2e52d..1dd8e9f59 100644
+--- a/src/types/accounts_mgmt.v1/index.ts
++++ b/src/types/accounts_mgmt.v1/index.ts
+@@ -14629,6 +14629,10 @@ export enum SelfAccessReviewResource_type {
+   ClusterSelfManagedStatus = 'ClusterSelfManagedStatus',
+   ClusterKubeletConfig = 'ClusterKubeletConfig',
+   ClusterBreakGlassCredential = 'ClusterBreakGlassCredential',
++  AccessRequestDecision = 'AccessRequestDecision',
++  Idp = 'Idp',
++  ClusterAutoscaler = 'ClusterAutoscaler',
++  MachinePool = 'MachinePool',
+ }
+ export enum SelfResourceReviewAction {
+   get = 'get',

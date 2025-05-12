@@ -1,6 +1,11 @@
 import dayjs from 'dayjs';
 
-import { ClusterResource, SubscriptionCommonFields } from '~/types/accounts_mgmt.v1';
+import {
+  ClusterResource,
+  OndemandMetricsAlerts,
+  OndemandMetricsClusterOperators,
+  SubscriptionCommonFieldsStatus,
+} from '~/types/accounts_mgmt.v1';
 import { ClusterConsole } from '~/types/clusters_mgmt.v1';
 import { ClusterFromSubscription } from '~/types/types';
 
@@ -50,6 +55,31 @@ type monitoringItemLinkType = {
   rel: typeof baseURLProps.rel;
   target: typeof baseURLProps.target;
   href: string;
+};
+
+type CommonMetricsData = {
+  hasData: boolean;
+  numOfIssues: number | null;
+  numOfWarnings: number | null;
+};
+
+type OperatorMetricsData = CommonMetricsData & {
+  data?: Array<OndemandMetricsClusterOperators>;
+};
+
+type OndemandMetricsNodes = {
+  up: boolean;
+  hostname: string;
+  internal_ip: string;
+  time: string;
+};
+
+type NodeMetricsData = CommonMetricsData & {
+  data?: Array<OndemandMetricsNodes>;
+};
+
+type AlertsMetricsData = CommonMetricsData & {
+  data?: Array<OndemandMetricsAlerts>;
 };
 
 /**
@@ -106,9 +136,9 @@ const maxMetricsTimeDelta = 3;
 const hasResourceUsageMetrics = <E extends ClusterFromSubscription>(cluster: E) => {
   const metricsLastUpdate = dayjs.utc(cluster.metrics?.cpu.updated_timestamp ?? 0); // according to model, metrics can't be undefined, but since OCMUI-1034 was technical refactoring, this is about to keep functionallity as it was
   const now = dayjs.utc();
-  const isArchived = cluster.subscription?.status === SubscriptionCommonFields.status.ARCHIVED;
+  const isArchived = cluster.subscription?.status === SubscriptionCommonFieldsStatus.Archived;
   const isDisconnected =
-    cluster.subscription?.status === SubscriptionCommonFields.status.DISCONNECTED;
+    cluster.subscription?.status === SubscriptionCommonFieldsStatus.Disconnected;
   const showOldMetrics = !!config.configData.showOldMetrics;
 
   return (
@@ -154,7 +184,7 @@ const consoleURLSetup = (clusterConsole?: ClusterConsole) => {
 function monitoringItemLinkProps(
   clusterConsole: ClusterConsole | undefined,
   itemType: monitoringItemTypes | undefined,
-  itemName: string,
+  itemName?: string,
 ): monitoringItemLinkType | null {
   const consoleURL = consoleURLSetup(clusterConsole);
   let href;
@@ -178,7 +208,9 @@ function monitoringItemLinkProps(
 }
 
 export {
+  AlertsMetricsData,
   alertsSeverity,
+  CommonMetricsData,
   getIssuesAndWarnings,
   hasData,
   hasResourceUsageMetrics,
@@ -187,6 +219,9 @@ export {
   monitoringItemLinkType,
   monitoringItemTypes,
   monitoringStatuses,
+  NodeMetricsData,
+  OndemandMetricsNodes,
+  OperatorMetricsData,
   operatorsStatuses,
   resourceUsageIssuesHelper,
   thresholds,

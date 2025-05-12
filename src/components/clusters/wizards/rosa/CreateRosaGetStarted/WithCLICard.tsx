@@ -19,7 +19,7 @@ import InstructionCommand from '~/components/common/InstructionCommand';
 import { RosaCliCommand } from '../AccountsRolesScreen/constants/cliCommands';
 
 const WithCLICard = () => (
-  <Card isFlat isFullHeight>
+  <Card isFlat isFullHeight data-testid="deploy-with-cli-card">
     <CardTitle>
       <Title headingLevel="h3" size="lg">
         <CodeIcon className="ocm-c-wizard-get-started--card-icon" />
@@ -38,8 +38,9 @@ const WithCLICard = () => (
       </InstructionCommand>
     </CardBody>
     <CardFooter>
-      <ExternalLink href={links.AWS_CLI_INSTRUCTIONS}>
-        More information on CLI instruction
+      Learn how to{' '}
+      <ExternalLink href={links.ROSA_HCP_CLI_URL}>
+        deploy ROSA clusters with the ROSA CLI
       </ExternalLink>
     </CardFooter>
   </Card>

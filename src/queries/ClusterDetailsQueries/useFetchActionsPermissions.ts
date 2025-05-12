@@ -6,17 +6,22 @@ import { useCallback } from 'react';
 import { useQueries, useQuery, UseQueryResult } from '@tanstack/react-query';
 
 import { authorizationsService } from '~/services';
-import { SelfAccessReview, SubscriptionCommonFields } from '~/types/accounts_mgmt.v1';
+import {
+  SelfAccessReview,
+  SelfAccessReviewAction,
+  SelfAccessReviewResource_type as SelfAccessReviewResourceType,
+  SubscriptionCommonFieldsStatus,
+} from '~/types/accounts_mgmt.v1';
 
 import { queryConstants } from '../queriesConstants';
 import { SubscriptionResponseType } from '../types';
 
 const actions = [
-  SelfAccessReview.action.CREATE,
-  SelfAccessReview.action.UPDATE,
-  SelfAccessReview.action.GET,
-  SelfAccessReview.action.LIST,
-  SelfAccessReview.action.DELETE,
+  SelfAccessReviewAction.create,
+  SelfAccessReviewAction.update,
+  SelfAccessReviewAction.get,
+  SelfAccessReviewAction.list,
+  SelfAccessReviewAction.delete,
 ];
 /**
  * Function assembling permissions
@@ -24,7 +29,7 @@ const actions = [
  * @param action crud action
  * @returns
  */
-const buildPermissionsByActionObj = (obj: any, action: SelfAccessReview.action) => {
+const buildPermissionsByActionObj = (obj: any, action: SelfAccessReviewAction) => {
   // eslint-disable-next-line no-param-reassign
   obj[action] = false;
   return obj;
@@ -37,16 +42,8 @@ const buildPermissionsByActionObj = (obj: any, action: SelfAccessReview.action) 
  * @param subscriptionID
  * @returns boolean if action is permitted
  */
-export const fetchPermissions = async (
-  action: SelfAccessReview.action,
-  resourceType: SelfAccessReview.resource_type,
-  subscriptionID: string,
-) => {
-  const response = await authorizationsService.selfAccessReview({
-    action,
-    resource_type: resourceType,
-    subscription_id: subscriptionID,
-  });
+export const fetchPermissions = async (params: SelfAccessReview) => {
+  const response = await authorizationsService.selfAccessReview(params);
   return response.data.allowed;
 };
 
@@ -61,6 +58,7 @@ export const useFetchActionsPermissions = (
   subscriptionID: string,
   mainQueryKey: string,
   subscriptionStatus?: string,
+  clusterID?: string,
 ) => {
   const { isLoading, data, isError, error, isFetching } = useQueries({
     queries: [
@@ -69,159 +67,151 @@ export const useFetchActionsPermissions = (
           mainQueryKey,
           'authorizationService',
           'selfResourceReview',
-          SelfAccessReview.action.UPDATE,
-          SelfAccessReview.resource_type.SUBSCRIPTION,
+          SelfAccessReviewAction.update,
+          SelfAccessReviewResourceType.Subscription,
         ],
         queryFn: async () => {
-          const canEdit = fetchPermissions(
-            SelfAccessReview.action.UPDATE,
-            SelfAccessReview.resource_type.SUBSCRIPTION,
-            subscriptionID,
-          );
+          const canEdit = fetchPermissions({
+            action: SelfAccessReviewAction.update,
+            resource_type: SelfAccessReviewResourceType.Subscription,
+            subscription_id: subscriptionID,
+          });
           return canEdit;
         },
-        staleTime: queryConstants.STALE_TIME,
-        enabled: subscriptionStatus !== SubscriptionCommonFields.status.DEPROVISIONED,
+        enabled: subscriptionStatus !== SubscriptionCommonFieldsStatus.Deprovisioned,
       },
       {
         queryKey: [
           mainQueryKey,
           'authorizationService',
           'selfResourceReview',
-          SelfAccessReview.action.UPDATE,
-          SelfAccessReview.resource_type.CLUSTER_AUTOSCALER,
+          SelfAccessReviewAction.update,
+          SelfAccessReviewResourceType.ClusterAutoscaler,
           subscriptionID,
         ],
         queryFn: async () => {
-          const canEditClusterAutoscaler = fetchPermissions(
-            SelfAccessReview.action.UPDATE,
-            SelfAccessReview.resource_type.CLUSTER_AUTOSCALER,
-            subscriptionID,
-          );
+          const canEditClusterAutoscaler = fetchPermissions({
+            action: SelfAccessReviewAction.update,
+            resource_type: SelfAccessReviewResourceType.ClusterAutoscaler,
+            subscription_id: subscriptionID,
+          });
           return canEditClusterAutoscaler;
         },
-        staleTime: queryConstants.STALE_TIME,
-        enabled: subscriptionStatus !== SubscriptionCommonFields.status.DEPROVISIONED,
+        enabled: subscriptionStatus !== SubscriptionCommonFieldsStatus.Deprovisioned,
       },
       {
         queryKey: [
           mainQueryKey,
           'authorizationService',
           'selfResourceReview',
-          SelfAccessReview.action.CREATE,
-          SelfAccessReview.resource_type.SUBSCRIPTION_ROLE_BINDING,
+          SelfAccessReviewAction.create,
+          SelfAccessReviewResourceType.SubscriptionRoleBinding,
           subscriptionID,
         ],
         queryFn: async () => {
-          const canEditOCMRoles = fetchPermissions(
-            SelfAccessReview.action.CREATE,
-            SelfAccessReview.resource_type.SUBSCRIPTION_ROLE_BINDING,
-            subscriptionID,
-          );
+          const canEditOCMRoles = fetchPermissions({
+            action: SelfAccessReviewAction.create,
+            resource_type: SelfAccessReviewResourceType.SubscriptionRoleBinding,
+            subscription_id: subscriptionID,
+          });
           return canEditOCMRoles;
         },
-        staleTime: queryConstants.STALE_TIME,
-        enabled: subscriptionStatus !== SubscriptionCommonFields.status.DEPROVISIONED,
+        enabled: subscriptionStatus !== SubscriptionCommonFieldsStatus.Deprovisioned,
       },
       {
         queryKey: [
           mainQueryKey,
           'authorizationService',
           'selfResourceReview',
-          SelfAccessReview.action.GET,
-          SelfAccessReview.resource_type.SUBSCRIPTION_ROLE_BINDING,
+          SelfAccessReviewAction.get,
+          SelfAccessReviewResourceType.SubscriptionRoleBinding,
           subscriptionID,
         ],
         queryFn: async () => {
-          const canViewOCMRoles = fetchPermissions(
-            SelfAccessReview.action.GET,
-            SelfAccessReview.resource_type.SUBSCRIPTION_ROLE_BINDING,
-            subscriptionID,
-          );
+          const canViewOCMRoles = fetchPermissions({
+            action: SelfAccessReviewAction.get,
+            resource_type: SelfAccessReviewResourceType.SubscriptionRoleBinding,
+            subscription_id: subscriptionID,
+          });
           return canViewOCMRoles;
         },
-        staleTime: queryConstants.STALE_TIME,
-        enabled: subscriptionStatus !== SubscriptionCommonFields.status.DEPROVISIONED,
+        enabled: subscriptionStatus !== SubscriptionCommonFieldsStatus.Deprovisioned,
       },
       {
         queryKey: [
           mainQueryKey,
           'authorizationService',
           'selfResourceReview',
-          SelfAccessReview.action.GET,
-          SelfAccessReview.resource_type.SUBSCRIPTION_ROLE_BINDING,
+          SelfAccessReviewAction.get,
+          SelfAccessReviewResourceType.SubscriptionRoleBinding,
           subscriptionID,
         ],
         queryFn: async () => {
-          const canUpdateClusterResource = fetchPermissions(
-            SelfAccessReview.action.UPDATE,
-            SelfAccessReview.resource_type.CLUSTER,
-            subscriptionID,
-          );
+          const canUpdateClusterResource = fetchPermissions({
+            action: SelfAccessReviewAction.update,
+            resource_type: SelfAccessReviewResourceType.Cluster,
+            cluster_id: clusterID,
+          });
           return canUpdateClusterResource;
         },
-        staleTime: queryConstants.STALE_TIME,
-        enabled: subscriptionStatus !== SubscriptionCommonFields.status.DEPROVISIONED,
+        enabled: subscriptionStatus !== SubscriptionCommonFieldsStatus.Deprovisioned,
       },
       {
         queryKey: [mainQueryKey, 'kubeletConfigPermissions', actions, subscriptionID],
         queryFn: async () => {
           const kubeletConfigActions: { [action: string]: boolean } = actions.reduce(
             buildPermissionsByActionObj,
-            {} as Record<SelfAccessReview.action, boolean>,
+            {} as Record<SelfAccessReviewAction, boolean>,
           );
           for (const action of actions) {
-            kubeletConfigActions[action] = await fetchPermissions(
+            kubeletConfigActions[action] = await fetchPermissions({
               action,
-              SelfAccessReview.resource_type.CLUSTER_KUBELET_CONFIG,
-              subscriptionID,
-            );
+              resource_type: SelfAccessReviewResourceType.ClusterKubeletConfig,
+              subscription_id: subscriptionID,
+            });
           }
           return kubeletConfigActions;
         },
-        staleTime: queryConstants.STALE_TIME,
         enabled:
-          !!subscriptionID && subscriptionStatus !== SubscriptionCommonFields.status.DEPROVISIONED,
+          !!subscriptionID && subscriptionStatus !== SubscriptionCommonFieldsStatus.Deprovisioned,
       },
       {
         queryKey: [mainQueryKey, 'machinePoolPermissions', actions, subscriptionID],
         queryFn: async () => {
           const machinePoolsActions: { [action: string]: boolean } = actions.reduce(
             buildPermissionsByActionObj,
-            {} as Record<SelfAccessReview.action, boolean>,
+            {} as Record<SelfAccessReviewAction, boolean>,
           );
           for (const action of actions) {
-            machinePoolsActions[action] = await fetchPermissions(
+            machinePoolsActions[action] = await fetchPermissions({
               action,
-              SelfAccessReview.resource_type.MACHINE_POOL,
-              subscriptionID,
-            );
+              resource_type: SelfAccessReviewResourceType.MachinePool,
+              subscription_id: subscriptionID,
+            });
           }
           return machinePoolsActions;
         },
-        staleTime: queryConstants.STALE_TIME,
         enabled:
-          !!subscriptionID && subscriptionStatus !== SubscriptionCommonFields.status.DEPROVISIONED,
+          !!subscriptionID && subscriptionStatus !== SubscriptionCommonFieldsStatus.Deprovisioned,
       },
       {
         queryKey: [mainQueryKey, 'idpPermissions', actions, subscriptionID],
         queryFn: async () => {
           const idpActions: { [action: string]: boolean } = actions.reduce(
             buildPermissionsByActionObj,
-            {} as Record<SelfAccessReview.action, boolean>,
+            {} as Record<SelfAccessReviewAction, boolean>,
           );
           for (const action of actions) {
-            idpActions[action] = await fetchPermissions(
+            idpActions[action] = await fetchPermissions({
               action,
-              SelfAccessReview.resource_type.IDP,
-              subscriptionID,
-            );
+              resource_type: SelfAccessReviewResourceType.Idp,
+              subscription_id: subscriptionID,
+            });
           }
           return idpActions;
         },
-        staleTime: queryConstants.STALE_TIME,
         enabled:
-          !!subscriptionID && subscriptionStatus !== SubscriptionCommonFields.status.DEPROVISIONED,
+          !!subscriptionID && subscriptionStatus !== SubscriptionCommonFieldsStatus.Deprovisioned,
       },
     ],
     combine: useCallback((results: UseQueryResult[]) => {
@@ -280,16 +270,15 @@ export const useCanDeleteAccessReview = (
     queryKey: [mainQueryKey, 'authorizationService', 'canDeleteAccessReview', actions, clusterID],
     queryFn: async () => {
       const response = await authorizationsService.selfAccessReview({
-        action: SelfAccessReview.action.DELETE,
-        resource_type: SelfAccessReview.resource_type.CLUSTER,
+        action: SelfAccessReviewAction.delete,
+        resource_type: SelfAccessReviewResourceType.Cluster,
         cluster_id: clusterID,
       });
       return response;
     },
-    staleTime: queryConstants.STALE_TIME,
     enabled:
       !!subscription &&
-      subscription.subscription.status !== SubscriptionCommonFields.status.DEPROVISIONED &&
+      subscription.subscription.status !== SubscriptionCommonFieldsStatus.Deprovisioned &&
       (subscription.subscription.managed || subscription.isAROCluster),
   });
   return {
@@ -312,16 +301,16 @@ export const useCanUpdateBreakGlassCredentials = (subscriptionID: string, mainQu
       mainQueryKey,
       'authorizationService',
       'selfResourceReview',
-      SelfAccessReview.action.GET,
-      SelfAccessReview.resource_type.CLUSTER_BREAK_GLASS_CREDENTIAL,
+      SelfAccessReviewAction.get,
+      SelfAccessReviewResourceType.ClusterBreakGlassCredential,
       subscriptionID,
     ],
     queryFn: async () => {
-      const response = fetchPermissions(
-        SelfAccessReview.action.GET,
-        SelfAccessReview.resource_type.CLUSTER_BREAK_GLASS_CREDENTIAL,
-        subscriptionID,
-      );
+      const response = fetchPermissions({
+        action: SelfAccessReviewAction.get,
+        resource_type: SelfAccessReviewResourceType.ClusterBreakGlassCredential,
+        subscription_id: subscriptionID,
+      });
 
       return response;
     },
@@ -330,6 +319,37 @@ export const useCanUpdateBreakGlassCredentials = (subscriptionID: string, mainQu
   return {
     isLoading,
     canUpdateBreakGlassCredentials,
+    isError,
+    error,
+  };
+};
+
+export const useCanCreateManagedCluster = () => {
+  const {
+    isLoading,
+    data: canCreateManagedCluster,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: [
+      'authorizationService',
+      'selfResourceReview',
+      SelfAccessReviewAction.create,
+      SelfAccessReviewResourceType.Cluster,
+    ],
+    queryFn: async () => {
+      const response = fetchPermissions({
+        action: SelfAccessReviewAction.create,
+        resource_type: SelfAccessReviewResourceType.Cluster,
+      });
+
+      return response;
+    },
+    staleTime: queryConstants.STALE_TIME_60_SEC,
+  });
+  return {
+    isLoading,
+    canCreateManagedCluster,
     isError,
     error,
   };

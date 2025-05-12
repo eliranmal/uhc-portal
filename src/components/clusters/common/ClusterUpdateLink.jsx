@@ -1,20 +1,23 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { useDispatch } from 'react-redux';
 
 import { Button, Popover } from '@patternfly/react-core';
 import { InfoCircleIcon } from '@patternfly/react-icons/dist/esm/icons/info-circle-icon';
 import { OutlinedArrowAltCircleUpIcon } from '@patternfly/react-icons/dist/esm/icons/outlined-arrow-alt-circle-up-icon';
 
 import getClusterVersion from '~/components/clusters/common/getClusterVersion';
-import { SubscriptionCommonFields } from '~/types/accounts_mgmt.v1';
+import { SubscriptionCommonFieldsStatus } from '~/types/accounts_mgmt.v1';
 
 import getClusterName from '../../../common/getClusterName';
 import links from '../../../common/installLinks.mjs';
+import { openModal } from '../../common/Modal/ModalActions';
 import modals from '../../common/Modal/modals';
 
 import { isHibernating, isHypershiftCluster } from './clusterStates';
 
-const ClusterUpdateLink = ({ cluster, openModal, hideOSDUpdates }) => {
+const ClusterUpdateLink = ({ cluster, hideOSDUpdates }) => {
+  const dispatch = useDispatch();
   const clusterVersion = getClusterVersion(cluster);
   const { upgrade } = cluster.metrics;
   // eslint-disable-next-line camelcase
@@ -23,7 +26,7 @@ const ClusterUpdateLink = ({ cluster, openModal, hideOSDUpdates }) => {
     cluster.version?.available_upgrades?.length > 0 &&
     clusterVersion &&
     !hideOSDUpdates;
-  const isStale = cluster?.subscription?.status === SubscriptionCommonFields.status.STALE;
+  const isStale = cluster?.subscription?.status === SubscriptionCommonFieldsStatus.Stale;
 
   // Show which version the cluster is currently updating to
   if (
@@ -59,10 +62,12 @@ const ClusterUpdateLink = ({ cluster, openModal, hideOSDUpdates }) => {
         className="cluster-inline-link pf-v5-u-mt-0"
         variant="link"
         onClick={() =>
-          openModal(modals.UPGRADE_WIZARD, {
-            clusterName: getClusterName(cluster),
-            subscriptionID: cluster.subscription.id,
-          })
+          dispatch(
+            openModal(modals.UPGRADE_WIZARD, {
+              clusterName: getClusterName(cluster),
+              subscriptionID: cluster.subscription.id,
+            }),
+          )
         }
         icon={<OutlinedArrowAltCircleUpIcon />}
       >
@@ -110,7 +115,6 @@ const ClusterUpdateLink = ({ cluster, openModal, hideOSDUpdates }) => {
 
 ClusterUpdateLink.propTypes = {
   cluster: PropTypes.object.isRequired,
-  openModal: PropTypes.func,
   hideOSDUpdates: PropTypes.bool,
 };
 

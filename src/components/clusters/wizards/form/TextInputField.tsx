@@ -15,6 +15,7 @@ interface TextInputFieldProps {
   isDisabled?: boolean;
   helperText?: React.ReactNode;
   tooltip?: React.ReactNode;
+  tooltipWidth?: string;
   field?: FieldConfig;
   formGroup?: FormGroupProps;
   input?: TextInputProps;
@@ -74,6 +75,7 @@ export const TextInputField = ({
   helperText,
   placeHolderText,
   tooltip,
+  tooltipWidth = '',
   field,
   formGroup,
   input,
@@ -87,7 +89,7 @@ export const TextInputField = ({
         fieldId={field.name}
         label={label}
         className={formGroupClassName}
-        {...(tooltip && { labelIcon: <PopoverHint hint={tooltip} /> })}
+        {...(tooltip && { labelIcon: <PopoverHint maxWidth={tooltipWidth} hint={tooltip} /> })}
         {...(validate && { isRequired: true })}
         {...formGroup}
       >

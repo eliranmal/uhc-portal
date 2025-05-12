@@ -7,18 +7,6 @@ import { FieldId, initialValues } from '../constants';
 
 import SecurityGroupsSection from './SecurityGroupsSection';
 
-const mockState = {
-  applyControlPlaneToAll: true,
-  controlPlane: ['sg-abc', 'sg-def'],
-  worker: [],
-  infra: [],
-};
-
-jest.mock('redux-form', () => ({
-  ...jest.requireActual('redux-form'),
-  formValueSelector: () => () => mockState,
-}));
-
 const defaultProps = {
   openshiftVersion: '4.14.0',
   selectedVPC: { id: 'my-vpc', name: 'my vpc' },

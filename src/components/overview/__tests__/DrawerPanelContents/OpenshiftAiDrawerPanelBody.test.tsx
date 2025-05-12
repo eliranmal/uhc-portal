@@ -1,14 +1,13 @@
-import VideoImg from '~/styles/images/OpenshiftAiExplanationVideoImg.png';
 import { render, screen } from '~/testUtils';
 
-import OpenshiftAiDrawerPanelBody from '../../components/common/DrawerPanelContents/OpenshiftAi/DrawerPanelBody';
+import { OpenShiftAiDrawerPanelBody } from '../../components/common/DrawerPanelContents/OpenshiftAi/DrawerPanelBody';
 
 import '@testing-library/jest-dom';
 
-describe('<OpenshiftAiDrawerPanelBody />', () => {
+describe('<OpenShiftAiDrawerPanelBody />', () => {
   it('renders elements', async () => {
     // Arrange
-    render(OpenshiftAiDrawerPanelBody);
+    render(OpenShiftAiDrawerPanelBody);
 
     // Assert
     expect(
@@ -17,14 +16,9 @@ describe('<OpenshiftAiDrawerPanelBody />', () => {
       ),
     ).toBeInTheDocument();
 
-    const VideoImgElement = screen.getByTestId('drawer-panel-content__explanation-video');
-    expect(VideoImgElement).toBeInTheDocument();
-    expect(VideoImgElement).toHaveAttribute('src', VideoImg);
-    expect(VideoImgElement).toHaveAttribute('alt', 'explanation-video');
-
-    expect(screen.getByTestId('drawer-panel-content__explanation-video-parent')).toHaveAttribute(
-      'href',
-      'https://www.youtube.com/watch?v=JGesQwL-lkg&t=6s',
+    expect(screen.getByTestId('drawer-panel-content__explanation-video')).toHaveAttribute(
+      'src',
+      'https://www.youtube.com/embed/JGesQwL-lkg',
     );
 
     expect(screen.getByText(/Video duration 5:26/i)).toBeInTheDocument();

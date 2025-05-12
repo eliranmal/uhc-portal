@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 
-import Skeleton from '@redhat-cloud-services/frontend-components/Skeleton';
+import { Skeleton } from '@patternfly/react-core';
 
 import { getSupportStatus } from '~/redux/actions/supportStatusActions';
 import { useGlobalState } from '~/redux/hooks';
@@ -40,7 +40,7 @@ const SupportStatusLabel = ({ clusterVersion }: SupportStatusLabelProps) => {
   }, [dispatch, supportStatus.fulfilled, supportStatus.pending]);
 
   if (supportStatus.pending) {
-    return <Skeleton className="inline-skeleton" size="sm" />;
+    return <Skeleton fontSize="sm" className="inline-skeleton" screenreaderText="Loading..." />;
   }
 
   return shouldHideComponent ? <>N/A</> : <SupportStatus status={status} />;

@@ -33,7 +33,7 @@ const ClusterStateIcon = ({
     size: 'md',
   };
 
-  if (limitedSupport && clusterState !== clusterStates.ERROR) {
+  if (limitedSupport && clusterState !== clusterStates.error) {
     return (
       <Icon {...iconProps}>
         <ExclamationCircleIcon color={dangerColor.value} data-icon-type="limited-support" />
@@ -42,13 +42,13 @@ const ClusterStateIcon = ({
   }
 
   switch (clusterState) {
-    case clusterStates.WAITING:
-    case clusterStates.PENDING:
-    case clusterStates.INSTALLING:
-    case clusterStates.VALIDATING:
-    case clusterStates.UPDATING:
-    case clusterStates.POWERING_DOWN:
-    case clusterStates.RESUMING:
+    case clusterStates.waiting:
+    case clusterStates.pending:
+    case clusterStates.installing:
+    case clusterStates.validating:
+    case clusterStates.updating:
+    case clusterStates.powering_down:
+    case clusterStates.resuming:
       if (animated) {
         return <Spinner {...iconProps} size={spinnerSize.md} />;
       }
@@ -57,19 +57,19 @@ const ClusterStateIcon = ({
           <InProgressIcon data-icon-type="inprogress" />
         </Icon>
       );
-    case clusterStates.DISCONNECTED:
+    case clusterStates.disconnected:
       return (
         <Icon {...iconProps}>
           <DisconnectedIcon />
         </Icon>
       );
-    case clusterStates.READY:
+    case clusterStates.ready:
       return (
         <Icon {...iconProps}>
           <CheckCircleIcon color={successColor.value} data-icon-type="check" />
         </Icon>
       );
-    case clusterStates.UNINSTALLING:
+    case clusterStates.uninstalling:
       if (animated) {
         return <Spinner {...iconProps} size={spinnerSize.md} />;
       }
@@ -78,31 +78,31 @@ const ClusterStateIcon = ({
           <InProgressIcon data-icon-type="inprogress" />
         </Icon>
       );
-    case clusterStates.ERROR:
+    case clusterStates.error:
       return (
         <Icon {...iconProps}>
           <ExclamationCircleIcon color={dangerColor.value} data-icon-type="exclamation" />
         </Icon>
       );
-    case clusterStates.DEPROVISIONED:
+    case clusterStates.deprovisioned:
       return (
         <Icon {...iconProps}>
           <BanIcon data-icon-type="deprovisioned" />
         </Icon>
       );
-    case clusterStates.ARCHIVED:
+    case clusterStates.archived:
       return (
         <Icon {...iconProps}>
           <FolderOpenIcon data-icon-type="archived" />
         </Icon>
       );
-    case clusterStates.HIBERNATING:
+    case clusterStates.hibernating:
       return (
         <Icon {...iconProps}>
           <AsleepIcon />
         </Icon>
       );
-    case clusterStates.STALE:
+    case clusterStates.stale:
       return (
         <Icon {...iconProps}>
           <NotStartedIcon />

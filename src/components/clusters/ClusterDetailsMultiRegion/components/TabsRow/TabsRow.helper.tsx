@@ -1,11 +1,29 @@
 import React from 'react';
 
-import { TabTitleIcon, TabTitleText } from '@patternfly/react-core';
+import { Badge, Spinner, TabTitleIcon, TabTitleText } from '@patternfly/react-core';
 import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 
 import { ClusterTabsId } from '../common/ClusterTabIds';
 
 import { TabsRowInfoType, TabsRowTabType } from './TabsRow.model';
+
+const AccessRequestIcon = ({
+  numberOfIssues,
+  isLoading,
+}: {
+  numberOfIssues?: number;
+  isLoading?: boolean;
+}) =>
+  isLoading ? (
+    <Spinner size="sm" aria-label="Loading..." />
+  ) : (
+    <Badge
+      screenReaderText="Pending Access Requests"
+      isRead={numberOfIssues === undefined || numberOfIssues === 0}
+    >
+      {numberOfIssues}
+    </Badge>
+  );
 
 export const getTabs = (tabsInfo: TabsRowInfoType): TabsRowTabType[] => [
   {
@@ -98,6 +116,29 @@ export const getTabs = (tabsInfo: TabsRowInfoType): TabsRowTabType[] => [
     ref: tabsInfo.addAssisted.ref,
     isDisabled: tabsInfo.addAssisted.isDisabled,
     tooltip: tabsInfo.addAssisted.tooltip,
+  },
+  {
+    key: 10,
+    title:
+      tabsInfo.accessRequest.isLoading || tabsInfo.accessRequest.numberOfIssues !== undefined ? (
+        <>
+          <TabTitleIcon style={{ paddingRight: '10px' }}>
+            <AccessRequestIcon
+              numberOfIssues={tabsInfo.accessRequest.numberOfIssues}
+              isLoading={tabsInfo.accessRequest.isLoading}
+            />
+          </TabTitleIcon>
+          <TabTitleText>Access Requests</TabTitleText>
+        </>
+      ) : (
+        <TabTitleText>Access Requests</TabTitleText>
+      ),
+    contentId: 'accessRequestContent',
+    id: ClusterTabsId.ACCESS_REQUEST,
+    show: tabsInfo.accessRequest.show,
+    ref: tabsInfo.accessRequest.ref,
+    isDisabled: tabsInfo.accessRequest.isDisabled,
+    tooltip: tabsInfo.accessRequest.tooltip,
   },
 ];
 

@@ -1,7 +1,6 @@
 /* Sentry middleware for redux, adds "breadcrumbs" logging the redux events in case of an error */
 
 import { Dispatch } from 'redux';
-import { actionTypes } from 'redux-form';
 import { PayloadMetaAction } from 'typesafe-actions';
 
 import { addBreadcrumb, Breadcrumb } from '@sentry/browser';
@@ -15,9 +14,9 @@ const sentryMiddleware =
     // for some actions, we want to keep some of the parameters in the breadcrumb
     let data: Breadcrumb['data'] = {};
     switch (action.type) {
-      case actionTypes.DESTROY:
-        data.form = action.meta.form;
-        break;
+      // case actionTypes.DESTROY:
+      //   data.form = action.meta.form;
+      //   break;
       case OPEN_MODAL:
         data.modalName = action.payload.name;
         break;

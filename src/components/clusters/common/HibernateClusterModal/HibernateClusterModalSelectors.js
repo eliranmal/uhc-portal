@@ -1,5 +1,7 @@
 import get from 'lodash/get';
 
+import { useGlobalState } from '~/redux/hooks';
+
 const userCanHibernateClustersSelector = (state) => {
   const capabilities = get(state, 'userProfile.organization.details.capabilities', []);
   const canHibernateCluster = capabilities.find(
@@ -8,12 +10,11 @@ const userCanHibernateClustersSelector = (state) => {
   return canHibernateCluster?.value === 'true';
 };
 
-const canHibernateClusterListSelector = (state) => {
-  const canHibernateClusters = userCanHibernateClustersSelector(state);
+export const useCanHibernateClusterListFromClusters = (clusters) => {
+  const canHibernateClusters = useGlobalState((state) => userCanHibernateClustersSelector(state));
 
   const canHibernateClusterList = {};
   if (canHibernateClusters) {
-    const clusters = get(state, 'clusters.clusters.clusters', []);
     clusters.forEach((cluster) => {
       canHibernateClusterList[cluster.id] = true;
     });
@@ -22,4 +23,4 @@ const canHibernateClusterListSelector = (state) => {
   return canHibernateClusterList;
 };
 
-export { userCanHibernateClustersSelector, canHibernateClusterListSelector };
+export { userCanHibernateClustersSelector };

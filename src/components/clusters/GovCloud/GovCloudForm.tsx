@@ -11,7 +11,6 @@ import {
   CardFooter,
   CardTitle,
   Checkbox,
-  FileUpload,
   Flex,
   FlexItem,
   FormGroup,
@@ -23,14 +22,10 @@ import {
   TextVariants,
 } from '@patternfly/react-core';
 
-import { humanizeValueWithUnit } from '~/common/units';
 import config from '~/config';
 import fedrampService from '~/services/fedrampService';
 
 import redhatLogoImg from '../../../styles/images/Logo-RedHat-Hat-Color-RGB.png';
-
-const maxFileSize = 10 * 1024 * 1024; // 10 MB
-const maxFileSizeHumanized = humanizeValueWithUnit(maxFileSize, 'B').value;
 
 const GovCloudForm = ({
   title,
@@ -44,14 +39,12 @@ const GovCloudForm = ({
   const [isUSPerson, setIsUSPerson] = React.useState(false);
   const [govContract, setGovContract] = React.useState(false);
   const [authPerson, setAuthPerson] = React.useState(false);
-  const [fileUpload, setFileUpload] = React.useState<File>();
-  const [uploadError, setUploadError] = React.useState<string>();
-  const [fileReadError, setFileReadError] = React.useState<string>();
-  const [isUploading, setUploading] = React.useState(false);
-  const [isReadingFile, setIsReadingFile] = React.useState(false);
   const [contractID, setContractID] = React.useState<string>();
+  const [rulesOfBehavior, setRulesOfBehavior] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [submitError, setSubmitError] = React.useState<string>();
 
-  const formReady = isUSPerson && govContract && authPerson;
+  const formReady = isUSPerson && govContract && authPerson && rulesOfBehavior;
   return (
     <Card style={{ maxWidth: '80rem', borderTopColor: '#e00', borderTopStyle: 'solid' }}>
       <CardTitle>
@@ -114,6 +107,25 @@ const GovCloudForm = ({
               onChange={(_event, value) => setAuthPerson(value)}
               id="training-checkbox"
             />
+            <Checkbox
+              label={
+                <div>
+                  Requestor will abide by the{' '}
+                  <Button variant="link" isInline>
+                    <a
+                      href={`${config.configData.fedrampS3}/fedramp-rules-of-behavior.pdf`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      FedRAMP Rules of Behavior.
+                    </a>
+                  </Button>
+                </div>
+              }
+              isChecked={rulesOfBehavior}
+              onChange={(_event, value) => setRulesOfBehavior(value)}
+              id="rulesOfBehavior-checkbox"
+            />
           </StackItem>
           {!hasGovEmail && (
             <StackItem>
@@ -128,7 +140,7 @@ const GovCloudForm = ({
                     >
                       U.S. Spending government
                     </a>{' '}
-                    website.
+                    website . If the contract is not numbered, specify ‘N/A’.
                   </>
                 }
               >
@@ -140,81 +152,14 @@ const GovCloudForm = ({
               </FormGroup>
             </StackItem>
           )}
-          <StackItem>
-            <FormGroup
-              label={
-                <TextContent>
-                  <Text component={TextVariants.p}>
-                    Please download the{' '}
-                    <Button variant="link" isInline>
-                      <a
-                        href={`${config.configData.fedrampS3}/fedramp-rules-of-behavior.pdf`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        FedRAMP Rules of Behavior document.
-                      </a>
-                    </Button>{' '}
-                    Read the document and attest to the requirements by signing and uploading it to
-                    the designated area below.
-                  </Text>
-                </TextContent>
-              }
-            >
-              <FileUpload
-                id="doc-upload"
-                value={fileUpload}
-                filename={fileUpload?.name}
-                filenamePlaceholder="Drag and drop a file or upload one"
-                dropzoneProps={{
-                  accept: { pdf: ['.pdf'] },
-                  maxSize: maxFileSize,
-                  onDropRejected: () => {
-                    setFileReadError(
-                      `File must be pdf and has ${maxFileSizeHumanized} Mb or less.`,
-                    );
-                  },
-                }}
-                onFileInputChange={(_, file) => {
-                  if (file.size > maxFileSize) {
-                    setFileReadError(
-                      `File size is too big. Upload a new file ${maxFileSizeHumanized} Mb or less`,
-                    );
-                    setFileUpload(undefined);
-                  } else {
-                    setFileReadError(undefined);
-                    setFileUpload(file);
-                  }
-                }}
-                onClearClick={() => {
-                  setFileReadError(undefined);
-                  setFileUpload(undefined);
-                }}
-                onReadFailed={(_event, error) => {
-                  setFileReadError(error.message);
-                  setIsReadingFile(false);
-                }}
-                onReadStarted={() => {
-                  setFileReadError(undefined);
-                  setIsReadingFile(true);
-                }}
-                onReadFinished={() => {
-                  setIsReadingFile(false);
-                }}
-                isDisabled={isReadingFile}
-                isLoading={isReadingFile}
-                browseButtonText="Upload"
-              />
-            </FormGroup>
-          </StackItem>
         </Stack>
       </CardBody>
       <CardFooter>
         <Stack hasGutter>
-          {(!!uploadError || !!fileReadError) && (
+          {!!submitError && (
             <StackItem>
               <Alert isInline variant="danger" title="An error occured.">
-                {uploadError || fileReadError}
+                {submitError}
               </Alert>
             </StackItem>
           )}
@@ -222,33 +167,30 @@ const GovCloudForm = ({
             <Bullseye>
               <Button
                 variant="primary"
-                isDisabled={!formReady || isUploading || !!fileReadError || !fileUpload}
+                isDisabled={!formReady || isSubmitting}
                 onClick={async () => {
-                  if (fileUpload) {
-                    setUploading(true);
-                    setUploadError(undefined);
-                    try {
-                      await fedrampService.createIncident(
-                        fileUpload,
-                        {
-                          isUSPerson,
-                          authPerson,
-                          govContract,
-                        },
-                        contractID,
-                      );
-                      onSubmitSuccess();
-                    } catch (err) {
-                      const axiosErr = err as any as AxiosError;
-                      setUploadError(`${axiosErr.code}: ${axiosErr.message}`);
-                    } finally {
-                      setUploading(false);
-                    }
+                  setIsSubmitting(true);
+                  try {
+                    await fedrampService.createIncident(
+                      {
+                        isUSPerson,
+                        authPerson,
+                        govContract,
+                        rulesOfBehavior,
+                      },
+                      contractID,
+                    );
+                    onSubmitSuccess();
+                  } catch (err) {
+                    const axiosErr = err as any as AxiosError;
+                    setSubmitError(`${axiosErr.code}: ${axiosErr.message}`);
+                  } finally {
+                    setIsSubmitting(false);
                   }
                 }}
-                isLoading={isUploading}
+                isLoading={isSubmitting}
               >
-                {isUploading ? 'Submitting' : 'Submit'}
+                {isSubmitting ? 'Submitting' : 'Submit'}
               </Button>
             </Bullseye>
           </StackItem>

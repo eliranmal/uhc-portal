@@ -7,12 +7,12 @@ import {
   HelperText,
   HelperTextItem,
   isValidDate,
+  MenuToggle,
+  Select,
+  SelectList,
+  SelectOption,
   ToolbarItem,
 } from '@patternfly/react-core';
-import {
-  Select as SelectDeprecated,
-  SelectOption as SelectOptionDeprecated,
-} from '@patternfly/react-core/deprecated';
 
 import './ClusterLogsDatePicker.scss';
 
@@ -180,6 +180,15 @@ const ClusterLogsDatePicker = ({ setFilter, currentFilter, createdAt }) => {
 
   const isValid = (dateStr) => isValidDate(new Date(dateStr));
 
+  const handleInvalidDateFormatState = (dateStr, callback) => {
+    callback(false);
+    if (!isValid(dateStr) || !dateFormatRegex.test(dateStr)) {
+      callback(true);
+      return false;
+    }
+    return true;
+  };
+
   const inputOnChangeFrom = (dateStr, date) => {
     setInvalidDateFormatFrom(false);
     setSelected(optionValues.Custom);
@@ -192,8 +201,7 @@ const ClusterLogsDatePicker = ({ setFilter, currentFilter, createdAt }) => {
       return;
     }
     // Throw error if dateStr is invalid or for Chrome and Safari if it does not satisfy regex YYYY-MM-DD
-    if (!isValid(dateStr) || !dateFormatRegex.test(dateStr)) {
-      setInvalidDateFormatFrom(true);
+    if (!handleInvalidDateFormatState(dateStr, setInvalidDateFormatFrom)) {
       return;
     }
     onDateChangeFrom(dateStr, date);
@@ -212,8 +220,7 @@ const ClusterLogsDatePicker = ({ setFilter, currentFilter, createdAt }) => {
     }
 
     // Throw error if dateStr is invalid or for Chrome and Safari if it does not satisfy regex YYYY-MM-DD
-    if (!isValid(dateStr) || !dateFormatRegex.test(dateStr)) {
-      setInvalidDateFormatTo(true);
+    if (!handleInvalidDateFormatState(dateStr, setInvalidDateFormatTo)) {
       return;
     }
     onDateChangeTo(dateStr, date);
@@ -283,6 +290,8 @@ const ClusterLogsDatePicker = ({ setFilter, currentFilter, createdAt }) => {
         // Ignore when a user selects Custom
         return;
     }
+    handleInvalidDateFormatState(dateFormat(newStartDate), setInvalidDateFormatFrom);
+    handleInvalidDateFormatState(dateFormat(now), setInvalidDateFormatTo);
     setStartDateStr(dateFormat(newStartDate));
     setEndDateStr(dateFormat(now));
     onDateChange([
@@ -291,20 +300,37 @@ const ClusterLogsDatePicker = ({ setFilter, currentFilter, createdAt }) => {
     ]);
   };
 
+  const toggle = (toggleRef) => (
+    <MenuToggle
+      ref={toggleRef}
+      onClick={() => setSelectorOpen(!selectorOpen)}
+      isExpanded={selectorOpen}
+      isFullWidth
+      aria-label="Date range menu"
+    >
+      {selected}
+    </MenuToggle>
+  );
+
   const dateSelector = (
-    <SelectDeprecated
-      onToggle={(_event, val) => setSelectorOpen(val)}
-      onSelect={onSelectorSelect}
-      selections={selected}
+    <Select
       isOpen={selectorOpen}
+      selected={selected}
+      onOpenChange={(selectorOpen) => setSelectorOpen(selectorOpen)}
+      toggle={toggle}
+      onSelect={onSelectorSelect}
       aria-label="Select a date range"
       aria-labelledby="select-date-range"
     >
-      {options.map((option, index) => (
-        // eslint-disable-next-line react/no-array-index-key
-        <SelectOptionDeprecated key={index} value={option.value} isDisabled={option.isDisabled} />
-      ))}
-    </SelectDeprecated>
+      <SelectList aria-label="date range list">
+        {options.map((option, index) => (
+          // eslint-disable-next-line react/no-array-index-key
+          <SelectOption key={index} value={option.value}>
+            {option.value}
+          </SelectOption>
+        ))}
+      </SelectList>
+    </Select>
   );
 
   useEffect(

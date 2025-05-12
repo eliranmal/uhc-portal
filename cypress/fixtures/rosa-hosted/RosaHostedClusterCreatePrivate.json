@@ -8,7 +8,6 @@
       "ClusterName": "cyp-rosa-hosted-private",
       "Region": "us-west-2, US West, Oregon",
       "Availability": "Multi-zone",
-      "AWSBillingAccountId": "425464789085",
       "AdditionalEncryption": "Disabled",
       "EncryptVolumesWithCustomerKeys": "Disabled",
       "Nodes": {
@@ -53,7 +52,6 @@
       "ClusterName": "cyp-rosa-hosted-private-advanced",
       "Region": "us-west-2, US West, Oregon",
       "Availability": "Multi-zone",
-      "AWSBillingAccountId": "425464789085",
       "AdditionalEncryption": "Disabled",
       "EncryptVolumesWithCustomerKeys": "Disabled",
       "Nodes": {

@@ -1,12 +1,12 @@
 import { ClusterFromSubscription } from '~/types/types';
 
-import { hasCpuAndMemory } from '../clusters/ClusterDetails/clusterDetailsHelper';
-import { InsightsRuleCategories } from '../clusters/ClusterDetails/components/Insights/InsightsConstants';
+import { hasCpuAndMemory } from '../clusters/ClusterDetailsMultiRegion/clusterDetailsHelper';
+import { InsightsRuleCategories } from '../clusters/ClusterDetailsMultiRegion/components/Insights/InsightsConstants';
 import {
   hasResourceUsageMetrics,
   resourceUsageIssuesHelper,
   thresholds,
-} from '../clusters/ClusterDetails/components/Monitoring/monitoringHelper';
+} from '../clusters/ClusterDetailsMultiRegion/components/Monitoring/monitoringHelper';
 
 const RULE_SEVERITIES: { [key: number]: string } = {
   1: 'Low',

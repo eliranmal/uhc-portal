@@ -8,7 +8,7 @@ const LoadingPage = () => (
   <AppPage>
     <EmptyState id="not-found">
       <EmptyStateBody>
-        <Spinner />
+        <Spinner aria-label="Loading..." />
       </EmptyStateBody>
     </EmptyState>
   </AppPage>

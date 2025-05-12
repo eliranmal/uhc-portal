@@ -1,23 +1,17 @@
 import { combineReducers } from 'redux';
-import { reducer as formReducer } from 'redux-form';
 
 // TODO remove ignore statement once frontend-components-notifications has types
 // @ts-ignore
 import { notificationsReducer } from '@redhat-cloud-services/frontend-components-notifications/redux';
 
 import apiErrorReducer from '../../components/App/ApiError/ApiErrorReducer';
-import NetworkSelfServiceReducer from '../../components/clusters/ClusterDetails/components/AccessControl/NetworkSelfServiceSection/NetworkSelfServiceReducer';
-import clusterUsersReducer from '../../components/clusters/ClusterDetails/components/AccessControl/UsersSection/UsersReducer';
-import addOnsReducer from '../../components/clusters/ClusterDetails/components/AddOns/AddOnsReducer';
-import { clusterLogReducer } from '../../components/clusters/ClusterDetails/components/ClusterLogs/clusterLogReducer';
-import { IdentityProvidersReducer } from '../../components/clusters/ClusterDetails/components/IdentityProvidersPage/IdentityProvidersReducer';
-import insightsReducer from '../../components/clusters/ClusterDetails/components/Insights/InsightsReducer';
-import machinePools from '../../components/clusters/ClusterDetails/components/MachinePools/MachinePoolsReducer';
-import { MonitoringReducer } from '../../components/clusters/ClusterDetails/components/Monitoring/MonitoringReducer';
-import { NetworkingReducer } from '../../components/clusters/ClusterDetails/components/Networking/NetworkingReducer';
-import { deleteProtectionReducer } from '../../components/clusters/ClusterDetails/components/Overview/DetailsRight/DeleteProtection/deleteProtectionReducer';
-import { InstallationLogReducer } from '../../components/clusters/ClusterDetails/components/Overview/InstallationLogView/InstallationLogReducer';
-import { deleteClusterDialogReducer } from '../../components/clusters/common/DeleteClusterDialog/DeleteClusterDialogReducer';
+import clusterUsersReducer from '../../components/clusters/ClusterDetailsMultiRegion/components/AccessControl/UsersSection/UsersReducer';
+import addOnsReducer from '../../components/clusters/ClusterDetailsMultiRegion/components/AddOns/AddOnsReducer';
+import insightsReducer from '../../components/clusters/ClusterDetailsMultiRegion/components/Insights/InsightsReducer';
+import { MonitoringReducer } from '../../components/clusters/ClusterDetailsMultiRegion/components/Monitoring/MonitoringReducer';
+import { NetworkingReducer } from '../../components/clusters/ClusterDetailsMultiRegion/components/Networking/NetworkingReducer';
+import { deleteProtectionReducer } from '../../components/clusters/ClusterDetailsMultiRegion/components/Overview/DetailsRight/DeleteProtection/deleteProtectionReducer';
+import { InstallationLogReducer } from '../../components/clusters/ClusterDetailsMultiRegion/components/Overview/InstallationLogView/InstallationLogReducer';
 import clusterUpgrades from '../../components/clusters/common/Upgrades/clusterUpgradeReducer';
 import modalReducer from '../../components/common/Modal/ModalReducer';
 
@@ -31,7 +25,6 @@ import { costReducer } from './costReducer';
 import { dashboardsReducer } from './dashboardsReducer';
 import dnsDomainsReducer from './dnsDomainsReducer';
 import entitlementConfigReducer from './entitlementConfigReducer';
-import featuresReducer from './featuresReducer';
 import flavoursReducer from './flavoursReducer';
 import githubReducer from './githubReducer';
 import globalErrorReducer from './globalErrorReducer';
@@ -54,15 +47,13 @@ const reducers = {
   accessRequest: accessRequestReducer,
   accessProtection: accessProtectionReducer,
   clusters: clustersReducer,
-  deleteCluster: deleteClusterDialogReducer,
+
   cloudProviders: cloudProvidersReducer,
   viewOptions: viewOptionsReducer,
   userProfile: userReducer,
-  form: formReducer,
   tollbooth: tollboothReducer,
   modal: modalReducer,
   logs: InstallationLogReducer,
-  identityProviders: IdentityProvidersReducer,
   clusterAutoscaler: clusterAutoscalerReducer,
   clusterUsers: clusterUsersReducer,
   clusterSupport: supportReducer,
@@ -76,9 +67,8 @@ const reducers = {
   subscriptions: subscriptionsReducer,
   persistentStorageValues: persistentStorageReducer,
   loadBalancerValues: loadBalancersReducer,
-  clusterLogs: clusterLogReducer,
+
   notifications: notificationsReducer,
-  networkSelfService: NetworkSelfServiceReducer,
   subscriptionSettings: subscriptionSettingsReducer,
   subscriptionReleased: subscriptionReleasedReducer,
   insightsData: insightsReducer,
@@ -87,10 +77,9 @@ const reducers = {
   dashboards: dashboardsReducer,
   supportStatus: supportStatusReducer,
   entitlementConfig: entitlementConfigReducer,
-  features: featuresReducer,
+
   clusterUpgrades,
   apiError: apiErrorReducer,
-  machinePools,
   githubReleases: githubReducer,
   ccsInquiries: ccsInquiriesReducer,
   ocmRoles: ocmRolesReducer,

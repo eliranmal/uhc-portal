@@ -4,6 +4,7 @@ import { Alert } from '@patternfly/react-core';
 
 import { ENV_OVERRIDE_LOCALSTORAGE_KEY } from '~/common/localStorageConstants';
 import { Link } from '~/common/routing';
+import { APP_API_ENV } from '~/config';
 
 type Props = {
   env: string;

@@ -3,9 +3,9 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "outDir": "./dist/",
-    "target": "es2015",
+    "target": "es2018",
     "jsx": "react",
     "allowJs": true,
     "experimentalDecorators": false,
@@ -19,7 +19,7 @@
       "~/*": ["src/*"]
     },
     "resolveJsonModule": true,
-    "lib": ["dom", "dom.iterable", "es2015"]
+    "lib": ["dom", "dom.iterable", "es2018"]
   },
   "include": ["@types", "src/**/*.ts", "src/**/*.tsx"]
 }

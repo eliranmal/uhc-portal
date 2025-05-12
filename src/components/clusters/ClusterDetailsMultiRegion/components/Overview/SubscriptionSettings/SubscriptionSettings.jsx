@@ -15,18 +15,23 @@ import {
   DescriptionListTerm,
   Grid,
   GridItem,
+  Skeleton,
   Title,
 } from '@patternfly/react-core';
 import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
-import { Skeleton } from '@redhat-cloud-services/frontend-components';
 
 import { modalActions } from '~/components/common/Modal/ModalActions';
 import modals from '~/components/common/Modal/modals';
-import { SubscriptionCommonFields } from '~/types/accounts_mgmt.v1';
+import {
+  SubscriptionCommonFieldsCluster_billing_model as SubscriptionCommonFieldsClusterBillingModel,
+  SubscriptionCommonFieldsService_level as SubscriptionCommonFieldsServiceLevel,
+  SubscriptionCommonFieldsStatus,
+  SubscriptionCommonFieldsSupport_level as SubscriptionCommonFieldsSupportLevel,
+  SubscriptionCommonFieldsSystem_units as SubscriptionCommonFieldsSystemUnits,
+} from '~/types/accounts_mgmt.v1';
 
 import {
-  billingModels,
   normalizedProducts,
   subscriptionSettings,
 } from '../../../../../../common/subscriptionTypes';
@@ -51,19 +56,19 @@ function SubscriptionSettings({
   const status = get(subscription, 'status');
   const isEditViewable =
     canEdit &&
-    status !== SubscriptionCommonFields.status.ARCHIVED &&
-    status !== SubscriptionCommonFields.status.DEPROVISIONED;
+    status !== SubscriptionCommonFieldsStatus.Archived &&
+    status !== SubscriptionCommonFieldsStatus.Deprovisioned;
 
   // SUPPORT_LEVEL
   const supportLevel = get(subscription, subscriptionSettings.SUPPORT_LEVEL, 'Not set');
   let supportLevelStr = supportLevel;
   let titleIcon = null;
-  if (supportLevel === SubscriptionCommonFields.support_level.EVAL) {
+  if (supportLevel === SubscriptionCommonFieldsSupportLevel.Eval) {
     supportLevelStr = 'Self-Support 60-day evaluation';
     if (isEditViewable) {
       titleIcon = <ExclamationTriangleIcon className="subscription-settings warning-title-icon" />;
     }
-  } else if (supportLevel === SubscriptionCommonFields.support_level.NONE) {
+  } else if (supportLevel === SubscriptionCommonFieldsSupportLevel.None) {
     supportLevelStr = 'Evaluation expired';
     if (isEditViewable) {
       titleIcon = <ExclamationCircleIcon className="subscription-settings danger-title-icon" />;
@@ -73,17 +78,17 @@ function SubscriptionSettings({
   // the rest
   const billingModel = get(subscription, subscriptionSettings.CLUSTER_BILLING_MODEL);
   let billingModelStr = 'Not set';
-  if (billingModel === billingModels.STANDARD) {
+  if (billingModel === SubscriptionCommonFieldsClusterBillingModel.standard) {
     billingModelStr = 'Annual: Fixed capacity subscription from Red Hat';
-  } else if (billingModel === billingModels.MARKETPLACE) {
+  } else if (billingModel === SubscriptionCommonFieldsClusterBillingModel.marketplace) {
     billingModelStr = 'On-Demand (Hourly)';
   }
   const usageStr = get(subscription, subscriptionSettings.USAGE, 'Not set');
   const serviceLevel = get(subscription, subscriptionSettings.SERVICE_LEVEL);
   let serviceLevelStr = 'Not set';
-  if (serviceLevel === SubscriptionCommonFields.service_level.L1_L3) {
+  if (serviceLevel === SubscriptionCommonFieldsServiceLevel.L1_L3) {
     serviceLevelStr = 'Red Hat support (L1-L3)';
-  } else if (serviceLevel === SubscriptionCommonFields.service_level.L3_ONLY) {
+  } else if (serviceLevel === SubscriptionCommonFieldsServiceLevel.L3_only) {
     serviceLevelStr = 'Partner support (L3)';
   }
   const cpuTotal = get(subscription, subscriptionSettings.CPU_TOTAL, undefined);
@@ -93,29 +98,29 @@ function SubscriptionSettings({
   let systemUnits = get(subscription, subscriptionSettings.SYSTEM_UNITS, undefined);
   if (systemUnits === undefined) {
     if (cpuTotal !== undefined) {
-      systemUnits = SubscriptionCommonFields.system_units.CORES_V_CPU;
+      systemUnits = SubscriptionCommonFieldsSystemUnits.Cores_vCPU;
     } else if (socketTotal !== undefined) {
-      systemUnits = SubscriptionCommonFields.system_units.SOCKETS;
+      systemUnits = SubscriptionCommonFieldsSystemUnits.Sockets;
     } else {
       systemUnits = 'Not set';
     }
   }
   let systemUnitsStr = 'Not set';
-  if (systemUnits === SubscriptionCommonFields.system_units.SOCKETS && socketTotal !== undefined) {
+  if (systemUnits === SubscriptionCommonFieldsSystemUnits.Sockets && socketTotal !== undefined) {
     systemUnitsStr = 'Sockets';
   } else if (
-    systemUnits === SubscriptionCommonFields.system_units.CORES_VCPU &&
+    systemUnits === SubscriptionCommonFieldsSystemUnits.Cores_vCPU &&
     cpuTotal !== undefined
   ) {
     systemUnitsStr = 'Cores or vCPUs';
   }
   const displayObligation = cpuTotal !== undefined || socketTotal !== undefined;
   const obligationLabel =
-    systemUnits === SubscriptionCommonFields.system_units.SOCKETS
+    systemUnits === SubscriptionCommonFieldsSystemUnits.Sockets
       ? 'Number of compute sockets'
       : 'Number of compute cores';
   const obligationStr =
-    systemUnits === SubscriptionCommonFields.system_units.SOCKETS ? socketTotalStr : cpuTotalStr;
+    systemUnits === SubscriptionCommonFieldsSystemUnits.Sockets ? socketTotalStr : cpuTotalStr;
 
   const SALES_URL = 'https://www.redhat.com/en/contact';
 
@@ -141,22 +146,28 @@ function SubscriptionSettings({
       )}
       <CardBody className="ocm-c-overview-subscription-settings__card--body">
         {isLoading ? (
-          <Skeleton />
+          <Skeleton screenreaderText="Loading..." />
         ) : (
           <Grid>
             <GridItem md={6}>
               <DescriptionList>
                 <DescriptionListGroup>
                   <DescriptionListTerm>Subscription type</DescriptionListTerm>
-                  <DescriptionListDescription>{billingModelStr}</DescriptionListDescription>
+                  <DescriptionListDescription data-testid="subscription-type">
+                    {billingModelStr}
+                  </DescriptionListDescription>
                 </DescriptionListGroup>
                 <DescriptionListGroup>
                   <DescriptionListTerm>Service level agreement (SLA)</DescriptionListTerm>
-                  <DescriptionListDescription>{supportLevelStr}</DescriptionListDescription>
+                  <DescriptionListDescription data-testid="service-level-agreement">
+                    {supportLevelStr}
+                  </DescriptionListDescription>
                 </DescriptionListGroup>
                 <DescriptionListGroup>
                   <DescriptionListTerm>Support type</DescriptionListTerm>
-                  <DescriptionListDescription>{serviceLevelStr}</DescriptionListDescription>
+                  <DescriptionListDescription data-testid="support-type">
+                    {serviceLevelStr}
+                  </DescriptionListDescription>
                   {isEditViewable && (
                     <DescriptionListDescription class="pf-v5-u-mt-lg">
                       <Button
@@ -176,16 +187,22 @@ function SubscriptionSettings({
               <DescriptionList>
                 <DescriptionListGroup>
                   <DescriptionListTerm>Cluster usage</DescriptionListTerm>
-                  <DescriptionListDescription>{usageStr}</DescriptionListDescription>
+                  <DescriptionListDescription data-testid="cluster-usage">
+                    {usageStr}
+                  </DescriptionListDescription>
                 </DescriptionListGroup>
                 <DescriptionListGroup>
                   <DescriptionListTerm>Subscription units</DescriptionListTerm>
-                  <DescriptionListDescription>{systemUnitsStr}</DescriptionListDescription>
+                  <DescriptionListDescription data-testid="subscription-units">
+                    {systemUnitsStr}
+                  </DescriptionListDescription>
                 </DescriptionListGroup>
                 {displayObligation && (
                   <DescriptionListGroup>
                     <DescriptionListTerm>{obligationLabel}</DescriptionListTerm>
-                    <DescriptionListDescription>{obligationStr}</DescriptionListDescription>
+                    <DescriptionListDescription data-testid="cores-or-sockets">
+                      {obligationStr}
+                    </DescriptionListDescription>
                   </DescriptionListGroup>
                 )}
               </DescriptionList>

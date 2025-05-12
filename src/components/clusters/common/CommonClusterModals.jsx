@@ -2,40 +2,55 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import ConnectedModal from '../../common/Modal/ConnectedModal';
-import { ConnectedEditMachinePoolModal } from '../ClusterDetails/components/MachinePools/components/EditMachinePoolModal/EditMachinePoolModal';
+import AddHtpasswdUserModal from '~/components/clusters/ClusterDetailsMultiRegion/components/IdentityProvidersPage/components/HtpasswdDetails/AddUserModal';
+import EditHtpasswdUserModal from '~/components/clusters/ClusterDetailsMultiRegion/components/IdentityProvidersPage/components/HtpasswdDetails/EditUserModal';
 
-import DeleteProtectionModal from './DeleteProtectionModal/DeleteProtectionModal';
-import EditSubscriptionSettingsDialog from './EditSubscriptionSettingsDialog/EditSubscriptionSettingsDialog';
-import UpgradeWizard from './Upgrades/UpgradeWizard';
-import ArchiveClusterDialog from './ArchiveClusterDialog';
-import DeleteClusterDialog from './DeleteClusterDialog';
-import EditConsoleURLDialog from './EditConsoleURLDialog';
-import EditDisplayNameDialog from './EditDisplayNameDialog';
-import HibernateClusterModal from './HibernateClusterModal';
-import ResumeClusterModal from './ResumeClusterModal';
-import ScaleClusterDialog from './ScaleClusterDialog';
-import TransferClusterOwnershipDialog from './TransferClusterOwnershipDialog';
-import UnarchiveClusterDialog from './UnarchiveClusterDialog';
-import UpgradeTrialClusterDialog from './UpgradeTrialClusterDialog';
+import ConnectedModal from '../../common/Modal/ConnectedModal';
+import { ConnectedEditMachinePoolModal as ConnectedEditMachinePoolModalMR } from '../ClusterDetailsMultiRegion/components/MachinePools/components/EditMachinePoolModal/EditMachinePoolModal';
+import AutoTransferClusterOwnershipFormMR from '../ClusterTransfer/AutoTransferClusterOwnershipForm';
+
+import DeleteProtectionModalMR from './DeleteProtectionModal/DeleteProtectionModal';
+import EditSubscriptionSettingsDialogMR from './EditSubscriptionSettingsDialog/EditSubscriptionSettingsDialog';
+import TransferClusterOwnershipDialogMR from './TransferClusterOwnershipDialog/TransferClusterOwnershipDialog';
+import UpgradeWizardMR from './Upgrades/UpgradeWizard/UpgradeWizard';
+import ArchiveClusterDialogMR from './ArchiveClusterDialog';
+import DeleteClusterDialogMR from './DeleteClusterDialog';
+import EditConsoleURLDialogMR from './EditConsoleURLDialog';
+import EditDisplayNameDialogMR from './EditDisplayNameDialog';
+import HibernateClusterModalMR from './HibernateClusterModal';
+import ResumeClusterModalMR from './ResumeClusterModal';
+import ScaleClusterDialogMR from './ScaleClusterDialog';
+import UnarchiveClusterDialogMR from './UnarchiveClusterDialog';
+import UpgradeTrialClusterDialogMR from './UpgradeTrialClusterDialog';
 
 function CommonClusterModals({ onClose, onClusterDeleted, clearMachinePools }) {
   return (
     <>
-      <ConnectedModal ModalComponent={EditDisplayNameDialog} onClose={onClose} />
-      <ConnectedModal ModalComponent={EditConsoleURLDialog} onClose={onClose} />
-      <ConnectedModal ModalComponent={TransferClusterOwnershipDialog} onClose={onClose} />
-      <ConnectedModal ModalComponent={EditSubscriptionSettingsDialog} onClose={onClose} isDialog />
-      <ConnectedModal ModalComponent={ScaleClusterDialog} onClose={onClose} />
-      <ConnectedModal ModalComponent={ArchiveClusterDialog} onClose={onClose} />
-      <ConnectedModal ModalComponent={HibernateClusterModal} onClose={onClose} />
-      <ConnectedModal ModalComponent={ResumeClusterModal} onClose={onClose} />
-      <ConnectedModal ModalComponent={UnarchiveClusterDialog} onClose={onClose} />
-      <ConnectedModal ModalComponent={UpgradeTrialClusterDialog} onClose={onClose} />
-      <ConnectedModal ModalComponent={UpgradeWizard} />
-      <ConnectedModal ModalComponent={DeleteProtectionModal} onClose={onClose} />
+      <ConnectedModal ModalComponent={EditDisplayNameDialogMR} onClose={onClose} />
+      <ConnectedModal ModalComponent={EditConsoleURLDialogMR} onClose={onClose} />
       <ConnectedModal
-        ModalComponent={DeleteClusterDialog}
+        ModalComponent={EditSubscriptionSettingsDialogMR}
+        onClose={onClose}
+        isDialog
+      />
+      <ConnectedModal ModalComponent={ScaleClusterDialogMR} onClose={onClose} />
+
+      <ConnectedModal ModalComponent={ArchiveClusterDialogMR} onClose={onClose} />
+      <ConnectedModal ModalComponent={TransferClusterOwnershipDialogMR} onClose={onClose} />
+      <ConnectedModal ModalComponent={AutoTransferClusterOwnershipFormMR} onClose={onClose} />
+      <ConnectedModal ModalComponent={HibernateClusterModalMR} onClose={onClose} />
+      <ConnectedModal ModalComponent={ResumeClusterModalMR} onClose={onClose} />
+      <ConnectedModal ModalComponent={UpgradeTrialClusterDialogMR} onClose={onClose} />
+      <ConnectedModal ModalComponent={UnarchiveClusterDialogMR} onClose={onClose} />
+      <ConnectedModal ModalComponent={UpgradeWizardMR} />
+
+      <ConnectedModal ModalComponent={AddHtpasswdUserModal} />
+      <ConnectedModal ModalComponent={EditHtpasswdUserModal} />
+
+      <ConnectedModal ModalComponent={DeleteProtectionModalMR} onClose={onClose} />
+
+      <ConnectedModal
+        ModalComponent={DeleteClusterDialogMR}
         onClose={(clusterDeleted) => {
           if (clusterDeleted) {
             if (onClusterDeleted) {
@@ -47,7 +62,7 @@ function CommonClusterModals({ onClose, onClusterDeleted, clearMachinePools }) {
         }}
       />
       <ConnectedModal
-        ModalComponent={ConnectedEditMachinePoolModal}
+        ModalComponent={ConnectedEditMachinePoolModalMR}
         clearMachinePools={clearMachinePools}
       />
     </>

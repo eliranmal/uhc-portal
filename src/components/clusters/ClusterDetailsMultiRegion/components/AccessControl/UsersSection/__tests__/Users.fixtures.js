@@ -68,13 +68,13 @@ const users = [
   {
     group: 'cluster-admins',
     href: '/api/clusters_mgmt/v1/clusters/1cnov3ee6p0d3n1tuu5e0a96n8rh4q5o/groups/cluster-admins/users/u2',
-    id: 'u2',
+    id: 'u3',
     kind: 'User',
   },
   {
     group: 'cluster-admins',
     href: '/api/clusters_mgmt/v1/clusters/1cnov3ee6p0d3n1tuu5e0a96n8rh4q5o/groups/cluster-admins/users/u3',
-    id: 'u3',
+    id: 'u4',
     kind: 'User',
   },
 ];
@@ -90,4 +90,4 @@ const stateWithUsers = {
   },
 };
 
-export { mockGetUsersPayload, stateWithUsers };
+export { mockGetUsersPayload, stateWithUsers, users };

@@ -12,21 +12,25 @@ import {
   TextVariants,
 } from '@patternfly/react-core';
 
+import links from '~/common/installLinks.mjs';
 import { FieldId } from '~/components/clusters/wizards/common/constants';
 import { useFormState } from '~/components/clusters/wizards/hooks';
 import { useGetWifConfigs } from '~/components/clusters/wizards/osd/ClusterSettings/CloudProvider/GcpByocFields/WorkloadIdentityFederation/useWifConfigs';
 import { WifConfigSelector } from '~/components/clusters/wizards/osd/ClusterSettings/CloudProvider/GcpByocFields/WorkloadIdentityFederation/WifConfigSelector';
-import { WifConfig } from '~/components/clusters/wizards/osd/ClusterSettings/CloudProvider/tempWifTypes/WifConfig';
 import { WifConfigList } from '~/components/clusters/wizards/osd/ClusterSettings/CloudProvider/types';
 import ExternalLink from '~/components/common/ExternalLink';
+import { WifConfig } from '~/types/clusters_mgmt.v1';
 
 export interface WorkloadIdentityFederationProps {
   getWifConfigsService: (projectId: string) => Promise<AxiosResponse<WifConfigList>>;
 }
 
+const createCommand = `ocm gcp create wif-config --name <wif_name> --project <gcp_project_id>`;
+
 const WorkloadIdentityFederation = (props: WorkloadIdentityFederationProps) => {
   const { getWifConfigsService } = props;
   const { isLoading, wifConfigs, getWifConfigs, error } = useGetWifConfigs(getWifConfigsService);
+
   useEffect(() => {
     getWifConfigs('');
   }, [getWifConfigs]);
@@ -48,6 +52,18 @@ const WorkloadIdentityFederation = (props: WorkloadIdentityFederationProps) => {
   const validateWifConfig = (value?: WifConfig) =>
     value?.id ? undefined : 'Wif configuration is required';
 
+  useEffect(() => {
+    // if the selected wif config value is not in the wif config list, reset the selection
+    // this edge case could happen if the user deletes a wif config after he selected it
+    if (
+      wifConfigs &&
+      selectedGcpWifConfig &&
+      !wifConfigs.find((config) => config.id === selectedGcpWifConfig.id)
+    ) {
+      setFieldValue(FieldId.GcpWifConfig, null, true);
+    }
+  }, [wifConfigs, selectedGcpWifConfig, setFieldValue]);
+
   return (
     <Stack hasGutter>
       <StackItem>
@@ -63,7 +79,8 @@ const WorkloadIdentityFederation = (props: WorkloadIdentityFederationProps) => {
           </Text>
           <Text component={TextVariants.p}>
             Run the following <code>ocm</code> CLI command to create a Workload Identity Federation
-            configuration (automatic mode)
+            configuration (automatic mode). Make sure to replace the WIF name and GCP Project ID
+            with your own values.
           </Text>
         </TextContent>
       </StackItem>
@@ -76,7 +93,7 @@ const WorkloadIdentityFederation = (props: WorkloadIdentityFederationProps) => {
           isCode
           isBlock
         >
-          ocm gcp create wif-config --name $WIF_NAME --project $GCP_PROJECT_ID
+          {createCommand}
         </ClipboardCopy>
       </StackItem>
       <StackItem>
@@ -84,8 +101,8 @@ const WorkloadIdentityFederation = (props: WorkloadIdentityFederationProps) => {
           <Text component={TextVariants.small}>
             This command creates all the necessary resources for deploying OSD on GCP using only
             temporary credentials. You can also run the command in manual mode.{' '}
-            <ExternalLink noIcon href="#">
-              Learn more (link TBD)
+            <ExternalLink noIcon href={links.OSD_CCS_GCP_WIF_CREATION_LEARN_MORE}>
+              Learn more
             </ExternalLink>
             .
           </Text>
@@ -96,11 +113,11 @@ const WorkloadIdentityFederation = (props: WorkloadIdentityFederationProps) => {
           <Text component="h4">2. Select configuration</Text>
         </TextContent>
       </StackItem>
-      {error && (
+      {error ? (
         <StackItem>
           <Alert variant="danger" isInline title="Error retrieving WIF configurations" />
         </StackItem>
-      )}
+      ) : null}
       <StackItem>
         <Field
           component={WifConfigSelector}

@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Flex, FlexItem } from '@patternfly/react-core';
 
-import SecurityGroupsViewList from '~/components/clusters/ClusterDetails/components/SecurityGroups/SecurityGroupsViewList';
+import SecurityGroupsViewList from '~/components/clusters/ClusterDetailsMultiRegion/components/SecurityGroups/SecurityGroupsViewList';
 import { SecurityGroup } from '~/types/clusters_mgmt.v1';
 
 type SecurityGroupsTableProps = {

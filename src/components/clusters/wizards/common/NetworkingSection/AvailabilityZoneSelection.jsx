@@ -1,15 +1,11 @@
-// a redux-form Field-compatible component for selecting an availability zone
-
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { FormGroup } from '@patternfly/react-core';
-import {
-  Select as SelectDeprecated,
-  SelectOption as SelectOptionDeprecated,
-} from '@patternfly/react-core/deprecated';
+import { FormGroup, MenuToggle, Select, SelectList, SelectOption } from '@patternfly/react-core';
 
 import { FormGroupHelperText } from '~/components/common/FormGroupHelperText';
+
+import './AvailabilityZoneSelection.scss';
 
 // AWS availability zones are comprised from the region name
 // followed by a single letter. For more information please see:
@@ -64,6 +60,20 @@ class AvailabilityZoneSelection extends React.Component {
         return azA.zoneId.localeCompare(azB.zoneId);
       });
 
+    const toggle = (toggleRef) => (
+      <MenuToggle
+        ref={toggleRef}
+        onClick={() => this.onToggle(!isOpen)}
+        isExpanded={isOpen}
+        isDisabled={isDisabled}
+        isFullWidth
+        aria-label="Options menu"
+        className="availability-zone-select"
+      >
+        {input.value ? input.value : 'Select availability zone'}
+      </MenuToggle>
+    );
+
     return (
       <FormGroup
         fieldId={input.name}
@@ -71,26 +81,29 @@ class AvailabilityZoneSelection extends React.Component {
         className="ocm-c-create-osd-az-select"
         isRequired
       >
-        <SelectDeprecated
+        <Select
           isOpen={isOpen}
-          selections={input.value}
-          onToggle={(_event, isOpen) => this.onToggle(isOpen)}
+          selected={input.value}
+          onOpenChange={(isOpen) => this.onToggle(isOpen)}
+          toggle={toggle}
           onSelect={this.onSelect}
-          isDisabled={isDisabled}
-          placeholderText="Select availability zone"
           aria-label={label}
         >
-          {availabilityZones.map(({ zoneId, isDisabled }) => (
-            <SelectOptionDeprecated
-              key={zoneId}
-              value={zoneId}
-              isDisabled={isDisabled}
-              description={isDisabled ? 'This zone does not have all required subnets' : undefined}
-            >
-              {zoneId}
-            </SelectOptionDeprecated>
-          ))}
-        </SelectDeprecated>
+          <SelectList aria-label="availability zone list">
+            {availabilityZones.map(({ zoneId, isDisabled }) => (
+              <SelectOption
+                key={zoneId}
+                value={zoneId}
+                isDisabled={isDisabled}
+                description={
+                  isDisabled ? 'This zone does not have all required subnets' : undefined
+                }
+              >
+                {zoneId}
+              </SelectOption>
+            ))}
+          </SelectList>
+        </Select>
 
         <FormGroupHelperText touched={touched} error={error} />
       </FormGroup>

@@ -16,11 +16,15 @@ const DeleteProtection = ({
   clusterID,
   canToggle,
   isUninstalling,
+  pending,
+  region,
 }: {
   protectionEnabled: boolean;
   clusterID: string;
   canToggle: boolean;
   isUninstalling?: boolean;
+  pending?: boolean;
+  region?: string;
 }) => {
   const dispatch = useDispatch();
   const disableToggleReason =
@@ -36,10 +40,12 @@ const DeleteProtection = ({
             variant="link"
             isInline
             onClick={() =>
-              dispatch(openModal(modals.DELETE_PROTECTION, { clusterID, protectionEnabled }))
+              dispatch(
+                openModal(modals.DELETE_PROTECTION, { clusterID, protectionEnabled, region }),
+              )
             }
             disableReason={disableToggleReason}
-            isAriaDisabled={!!disableToggleReason}
+            isAriaDisabled={!!disableToggleReason || pending}
           >
             {`${protectionEnabled ? 'Disable' : 'Enable'}`}
           </ButtonWithTooltip>

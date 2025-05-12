@@ -19,6 +19,7 @@ const tabNames = {
   support: 'Support',
   settings: 'Settings',
   addhosts: 'Add Hosts',
+  accessRequest: 'Access Requests',
 };
 
 describe('<TabsRow />', () => {
@@ -37,6 +38,7 @@ describe('<TabsRow />', () => {
       support: { ref: mockRef },
       upgradeSettings: { ref: mockRef },
       addAssisted: { ref: mockRef },
+      accessRequest: { ref: mockRef },
     },
     onTabSelected: onTabSelectedMock,
   };
@@ -71,6 +73,7 @@ describe('<TabsRow />', () => {
           support: { ...props.tabsInfo.support, show: true },
           upgradeSettings: { ...props.tabsInfo.upgradeSettings, show: true },
           addAssisted: { ...props.tabsInfo.addAssisted, show: true },
+          accessRequest: { ...props.tabsInfo.accessRequest, show: true },
         },
       };
 
@@ -106,6 +109,7 @@ describe('<TabsRow />', () => {
           support: { ...props.tabsInfo.support, show: true },
           upgradeSettings: { ...props.tabsInfo.upgradeSettings, show: true },
           addAssisted: { ...props.tabsInfo.addAssisted, show: true, isDisabled: true },
+          accessRequest: { ...props.tabsInfo.accessRequest, show: true, isDisabled: true },
         },
       };
 
@@ -120,7 +124,7 @@ describe('<TabsRow />', () => {
       ).toBeInTheDocument();
 
       Object.values(tabNames)
-        .filter((tabName) => tabName !== tabNames.overview)
+        .filter((tabName) => tabName !== tabNames.overview && tabName !== tabNames.overview)
         .forEach((tabName) =>
           expect(screen.getByRole('tab', { name: tabName, selected: false })).toBeInTheDocument(),
         );
@@ -146,6 +150,9 @@ describe('<TabsRow />', () => {
 
       Object.values(tabNames)
         .filter((tabName) => ![tabNames.overview, tabNames.monitoring].includes(tabName))
+        .map((tabName) =>
+          tabName === 'Access Requests' ? 'Pending Access Requests Access Requests' : tabName,
+        )
         .forEach((tabName) =>
           expect(screen.queryByRole('tab', { name: tabName })).not.toBeInTheDocument(),
         );

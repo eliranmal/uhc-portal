@@ -1,10 +1,10 @@
 import { indexRegions, processAWSVPCs } from '~/redux/reducers/ccsInquiriesReducer';
-import { CloudRegion, CloudVPC } from '~/types/clusters_mgmt.v1';
+import { CloudRegion, CloudVpc } from '~/types/clusters_mgmt.v1';
 
 import awsRegions from '../../../mockdata/api/clusters_mgmt/v1/aws_inquiries/regions.json';
 import vpcResponse from '../../../mockdata/api/clusters_mgmt/v1/aws_inquiries/vpcs.json';
 
-const vpcItems = vpcResponse.items as CloudVPC[];
+const vpcItems = vpcResponse.items as CloudVpc[];
 
 describe('processAWSVPCs', () => {
   const vpcId = 'vpc-with-security-groups-one';
@@ -21,7 +21,7 @@ describe('processAWSVPCs', () => {
   it('removes the Red Hat managed security groups', () => {
     const result = processAWSVPCs(vpcItems);
 
-    const processedVpcWithSGs = result.items.find((vpc) => vpc.id === vpcId) as CloudVPC;
+    const processedVpcWithSGs = result.items.find((vpc) => vpc.id === vpcId) as CloudVpc;
 
     const resultSgs = processedVpcWithSGs.aws_security_groups || [];
     expect(resultSgs.length).toEqual(5);
@@ -32,7 +32,7 @@ describe('processAWSVPCs', () => {
 
   it('sorts the VPC security groups by their display order', () => {
     const result = processAWSVPCs(vpcItems);
-    const processedVpcWithSGs = result.items.find((vpc) => vpc.id === vpcId) as CloudVPC;
+    const processedVpcWithSGs = result.items.find((vpc) => vpc.id === vpcId) as CloudVpc;
     const resultSgs = processedVpcWithSGs.aws_security_groups || [];
 
     const expectSortOrder = [

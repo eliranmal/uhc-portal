@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { render, screen, within } from '~/testUtils';
+import { render, screen } from '~/testUtils';
 
 import * as Fixtures from './__tests__/Quota.fixtures';
 import SubscriptionNotFulfilled from './SubscriptionNotFulfilled';
@@ -16,7 +16,8 @@ describe('<SubscriptionNotFulfilled />', () => {
     const quotaCost = { ...Fixtures.quotaCost, pending: true, type: 'osd' };
     render(<SubscriptionNotFulfilled data={quotaCost} refresh={refreshFn} />);
 
-    expect(within(screen.getByRole('status')).getByText('Loading...')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByLabelText('Loading...')).toBeInTheDocument();
   });
 
   it('shows empty OSD quota summary', () => {

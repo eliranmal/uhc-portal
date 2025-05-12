@@ -46,21 +46,27 @@ export const getAwsCcsCredentials = (values: FormikValues): AWSCredentials => {
 
 /**
  * Gets GCP CCS credentials from form state, in form suitable for actions.
- * We return JSON string; parsing it is deferred to action time,
- * when it's easier to present errors to user.
+ * When auth type is service account, we return the whole JSON string; parsing it is deferred
+ * to action time, when it's easier to present errors to user.
  */
 export const getGcpCcsCredentials = (values: FormikValues): string => {
-  const { [FieldId.GcpServiceAccount]: gcpServiceAccount } = values;
+  const {
+    [FieldId.GcpAuthType]: gcpAuthType,
+    [FieldId.GcpServiceAccount]: gcpServiceAccount,
+    [FieldId.GcpWifConfig]: gcpWifConfig,
+  } = values;
 
-  return gcpServiceAccount;
+  return gcpAuthType === GCPAuthType.ServiceAccounts ? gcpServiceAccount : gcpWifConfig.id;
 };
 
 export const getCloudProverInfo = (values: FormikValues, dispatch: Dispatch) => {
   if (values[FieldId.CloudProvider] === CloudProviderType.Gcp) {
+    const gpcAuthType = values[FieldId.GcpAuthType];
     // hard code region since we're just validating credentials
     return dispatch(
       getGCPCloudProviderVPCs(
         VALIDATE_CLOUD_PROVIDER_CREDENTIALS,
+        gpcAuthType,
         getGcpCcsCredentials(values),
         GCP_DEFAULT_REGION,
       ),

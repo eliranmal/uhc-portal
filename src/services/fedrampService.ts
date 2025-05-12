@@ -2,13 +2,14 @@ import config from '~/config';
 import apiRequest from '~/services/apiRequest';
 
 const createIncident = (
-  file: File,
   checks: {
     isUSPerson: boolean;
     authPerson: boolean;
     govContract: boolean;
+    rulesOfBehavior: boolean;
   },
   contractID?: string,
+  file?: File,
 ) =>
   apiRequest.postForm(
     '/fedramp-customer-interest/incident',

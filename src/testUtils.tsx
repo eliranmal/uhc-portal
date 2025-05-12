@@ -14,7 +14,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, renderHook, RenderOptions } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import * as featureGates from '~/hooks/useFeatureGate';
+import * as featureGates from '~/queries/featureGates/useFetchFeatureGate';
 
 import promiseRejectionMiddleware from './redux/promiseRejectionMiddleware';
 import { reduxReducers } from './redux/reducers';
@@ -221,9 +221,9 @@ export const stubbedChrome = {
   },
 };
 
-export const mockRestrictedEnv = () => {
+export const mockRestrictedEnv = (mockValue = false) => {
   const mock = jest.spyOn(restrictedEnv, 'isRestrictedEnv');
-  mock.mockReturnValue(false);
+  mock.mockReturnValue(mockValue);
   return mock;
 };
 

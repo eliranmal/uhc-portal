@@ -23,7 +23,11 @@ export const KmsKeySelect = () => {
   const { values, getFieldProps, setFieldValue, getFieldMeta } = useFormState();
   const ccsCredentials = getGcpCcsCredentials(values);
 
-  const { [FieldId.KeyLocation]: keyLocation, [FieldId.KeyRing]: keyRing } = values;
+  const {
+    [FieldId.KeyLocation]: keyLocation,
+    [FieldId.KeyRing]: keyRing,
+    [FieldId.GcpAuthType]: gcpAuthType,
+  } = values;
   const hasDependencies = !!(ccsCredentials && keyLocation && keyRing);
   const matchesDependencies =
     gcpKeys.cloudProvider === 'gcp' &&
@@ -65,7 +69,7 @@ export const KmsKeySelect = () => {
         }}
         meta={getFieldMeta(FieldId.KeyName)}
         loadData={() =>
-          hasDependencies && dispatch(getGCPKeys(ccsCredentials, keyLocation, keyRing))
+          hasDependencies && dispatch(getGCPKeys(gcpAuthType, ccsCredentials, keyLocation, keyRing))
         }
         hasDependencies={hasDependencies}
         matchesDependencies={matchesDependencies}

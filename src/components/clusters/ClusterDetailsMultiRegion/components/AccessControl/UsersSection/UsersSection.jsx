@@ -1,16 +1,16 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { useDispatch } from 'react-redux';
 
 import {
   Button,
   Card,
   CardBody,
-  CardFooter,
-  CardTitle,
   EmptyState,
   Icon,
   Popover,
   PopoverPosition,
+  Skeleton,
   Title,
 } from '@patternfly/react-core';
 import { HelpIcon } from '@patternfly/react-icons/dist/esm/icons/help-icon';
@@ -24,256 +24,242 @@ import {
   Thead,
   Tr,
 } from '@patternfly/react-table';
-import Skeleton from '@redhat-cloud-services/frontend-components/Skeleton';
+
+import { LoadingSkeletonCard } from '~/components/clusters/common/LoadingSkeletonCard/LoadingSkeletonCard';
+import shouldShowModal from '~/components/common/Modal/ModalSelectors';
+import { useAddUser } from '~/queries/ClusterDetailsQueries/AccessControlTab/UserQueries/useAddUser';
+import { useDeleteUser } from '~/queries/ClusterDetailsQueries/AccessControlTab/UserQueries/useDeleteUser';
+import {
+  refetchUsers,
+  useFetchUsers,
+} from '~/queries/ClusterDetailsQueries/AccessControlTab/UserQueries/useFetchUsers';
+import { useGlobalState } from '~/redux/hooks';
 
 import links from '../../../../../../common/installLinks.mjs';
 import ButtonWithTooltip from '../../../../../common/ButtonWithTooltip';
 import ErrorBox from '../../../../../common/ErrorBox';
 import ExternalLink from '../../../../../common/ExternalLink';
+import { modalActions } from '../../../../../common/Modal/ModalActions';
 
 import AddUserDialog from './AddUserDialog';
+import canAllowAdminHelper from './UsersHelper';
 
-class UsersSection extends React.Component {
-  state = {
-    deletedRowIndex: null,
+const UsersSection = (props) => {
+  const { cluster, clusterHibernating, isReadOnly, region } = props;
+
+  const dispatch = useDispatch();
+
+  const {
+    data: users,
+    isLoading: isUsersLoading,
+    isError: isUsersError,
+    error: usersError,
+    isSuccess: isUsersSuccess,
+    isRefetching: isUsersRefetching,
+  } = useFetchUsers(cluster.id, region);
+  const {
+    isPending: isAddUserPending,
+    isError: isAddUserError,
+    error: addUserError,
+    mutate: addUserMutate,
+    isSuccess: isAddUserSuccess,
+    reset: resetAddUserMutate,
+  } = useAddUser(cluster.id, region);
+  const {
+    isError: isDeleteUserError,
+    error: deleteUserError,
+    mutate: deleteUserMutate,
+  } = useDeleteUser(cluster.id, region);
+
+  const isAddUserModalOpen = useGlobalState((state) => shouldShowModal(state, 'add-user'));
+
+  const canAddClusterAdmin = canAllowAdminHelper(cluster);
+  const clusterGroupUsers = users;
+  const hasUsers = users?.users?.length > 0;
+  const [deletedRowIndex, setDeletedRowIndex] = React.useState(null);
+
+  React.useEffect(() => {
+    if (clusterGroupUsers.clusterID !== cluster.id || !isUsersLoading) {
+      refetchUsers();
+    }
+    // component did mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  React.useEffect(() => {
+    if (isUsersRefetching && isUsersSuccess && deletedRowIndex !== null) {
+      setDeletedRowIndex(null);
+    }
+  }, [isUsersRefetching, isUsersSuccess, deletedRowIndex]);
+
+  if (!hasUsers && isUsersError) {
+    return (
+      <EmptyState>
+        <ErrorBox message="Error getting cluster users" response={usersError.error} />
+      </EmptyState>
+    );
+  }
+
+  const showSkeleton = !hasUsers && isUsersRefetching;
+
+  const readOnlyReason = isReadOnly && 'This operation is not available during maintenance';
+  const hibernatingReason =
+    clusterHibernating && 'This operation is not available while cluster is hibernating';
+  const canNotEditReason =
+    !cluster.canEdit &&
+    'You do not have permission to add a user. Only cluster owners, cluster editors, and Organization Administrators can add users.';
+  const disableReason = readOnlyReason || hibernatingReason || canNotEditReason;
+
+  const addUserBtn = (
+    <ButtonWithTooltip
+      onClick={() => {
+        setTimeout(() => dispatch(modalActions.openModal('add-user')), 0);
+      }}
+      variant="secondary"
+      className="access-control-add"
+      disableReason={disableReason}
+    >
+      Add user
+    </ButtonWithTooltip>
+  );
+
+  const columnNames = {
+    userId: 'User ID',
+    group: 'Group',
   };
 
-  componentDidMount() {
-    const { clusterGroupUsers, cluster, getUsers } = this.props;
-    if (clusterGroupUsers.clusterID !== cluster.id || !clusterGroupUsers.pending) {
-      getUsers();
-    }
-  }
-
-  componentDidUpdate(prevProps) {
-    const { deleteUserResponse, addUserResponse, getUsers, clusterGroupUsers } = this.props;
-    const { deletedRowIndex } = this.state;
-
-    // fetch users again if we just added/deleted a user.
-    if (
-      ((deleteUserResponse.fulfilled && prevProps.deleteUserResponse.pending) ||
-        (addUserResponse.fulfilled && prevProps.addUserResponse.pending)) &&
-      !clusterGroupUsers.pending
-    ) {
-      getUsers();
-    }
-    if (
-      prevProps.clusterGroupUsers.pending &&
-      clusterGroupUsers.fulfilled &&
-      deletedRowIndex !== null
-    ) {
-      // eslint-disable-next-line react/no-did-update-set-state
-      this.setState({ deletedRowIndex: null });
-    }
-  }
-
-  componentWillUnmount() {
-    const { clearUsersResponses } = this.props;
-    clearUsersResponses();
-  }
-
-  render() {
-    const {
-      clusterGroupUsers,
-      addUserResponse,
-      deleteUserResponse,
-      cluster,
-      clusterHibernating,
-      isReadOnly,
-      deleteUser,
-      addUser,
-      isAddUserModalOpen,
-      openModal,
-      closeModal,
-      clearAddUserResponses,
-      canAddClusterAdmin,
-      hasUsers,
-    } = this.props;
-    const { deletedRowIndex } = this.state;
-
-    if (!hasUsers && clusterGroupUsers.error) {
-      return (
-        <EmptyState>
-          <ErrorBox message="Error getting cluster users" response={clusterGroupUsers} />
-        </EmptyState>
-      );
-    }
-
-    const showSkeleton = !hasUsers && clusterGroupUsers.pending;
-
-    const readOnlyReason = isReadOnly && 'This operation is not available during maintenance';
-    const hibernatingReason =
-      clusterHibernating && 'This operation is not available while cluster is hibernating';
-    const canNotEditReason =
-      !cluster.canEdit &&
-      'You do not have permission to add a user. Only cluster owners, cluster editors, and Organization Administrators can add users.';
-    const disableReason = readOnlyReason || hibernatingReason || canNotEditReason;
-
-    const addUserBtn = (
-      <ButtonWithTooltip
-        onClick={() => {
-          setTimeout(() => openModal('add-user'), 0);
-        }}
-        variant="secondary"
-        className="access-control-add"
-        disableReason={disableReason}
+  const userIdHeading = (
+    <>
+      {columnNames.userId}
+      <Popover
+        position={PopoverPosition.top}
+        aria-label="User IDs"
+        bodyContent={<p>User IDs are matched by the cluster&apos;s identity providers.</p>}
       >
-        Add user
-      </ButtonWithTooltip>
-    );
+        <Button variant="plain" isInline aria-label="Help">
+          <Icon size="md">
+            <HelpIcon />
+          </Icon>
+        </Button>
+      </Popover>
+    </>
+  );
 
-    const columnNames = {
-      userId: 'User ID',
-      group: 'Group',
-    };
-
-    const userIdHeading = (
-      <>
-        {columnNames.userId}
-        <Popover
-          position={PopoverPosition.top}
-          aria-label="User IDs"
-          bodyContent={<p>User IDs are matched by the cluster&apos;s identity providers.</p>}
-        >
-          <Button variant="plain" isInline aria-label="Help">
-            <Icon size="md">
-              <HelpIcon />
-            </Icon>
-          </Button>
-        </Popover>
-      </>
-    );
-
-    const groupHeading = (
-      <>
-        {columnNames.group}
-        <Popover
-          position={PopoverPosition.top}
-          aria-label="Groups"
-          bodyContent={
-            <p>
-              Groups are mapped to role bindings on the cluster. For more information check the{' '}
-              <ExternalLink href={links.UNDERSTANDING_AUTHENTICATION}>
-                OpenShift 4 documentation
-              </ExternalLink>
-            </p>
-          }
-        >
-          <Button variant="plain" isInline aria-label="Help">
-            <Icon size="md">
-              <HelpIcon />
-            </Icon>
-          </Button>
-        </Popover>
-      </>
-    );
-
-    const userRow = (user, index) =>
-      deletedRowIndex === index ? (
-        <Tr key={user.id}>
-          <Td dataLabel={columnNames.userId}>
-            <Skeleton size="md" />
-          </Td>
-          <Td dataLabel={columnNames.group}>
-            <Skeleton size="md" />
-          </Td>
-          <Td isActionCell />
-        </Tr>
-      ) : (
-        <Tr key={user.id}>
-          <Td dataLabel={columnNames.userId}>{user.id}</Td>
-          <Td dataLabel={columnNames.group}>{user.group}</Td>
-          <Td isActionCell>
-            <ActionsColumn
-              items={[
-                {
-                  title: 'Delete',
-                  onClick: () => {
-                    this.setState({ deletedRowIndex: index });
-                    deleteUser(cluster.id, user.group, user.id);
-                  },
-                },
-              ]}
-              isDisabled={!!disableReason}
-            />
-          </Td>
-        </Tr>
-      );
-
-    return showSkeleton ? (
-      <Card>
-        <CardTitle>
-          <Skeleton size="md" />
-        </CardTitle>
-        <CardBody>
-          <Skeleton size="lg" />
-        </CardBody>
-        <CardFooter>
-          <Skeleton size="md" />
-        </CardFooter>
-      </Card>
-    ) : (
-      <Card>
-        {clusterGroupUsers.error && (
-          <ErrorBox message="Error getting cluster users" response={clusterGroupUsers} />
-        )}
-        <CardBody>
-          <Title className="card-title" headingLevel="h3" size="lg">
-            Cluster administrative users
-          </Title>
+  const groupHeading = (
+    <>
+      {columnNames.group}
+      <Popover
+        position={PopoverPosition.top}
+        aria-label="Groups"
+        bodyContent={
           <p>
-            Grant permission to manage this cluster to users defined in your identity provider.{' '}
-            <ExternalLink href={links.OSD_DEDICATED_ADMIN_ROLE}>Learn more.</ExternalLink>
+            Groups are mapped to role bindings on the cluster. For more information check the{' '}
+            <ExternalLink href={links.UNDERSTANDING_AUTHENTICATION}>
+              OpenShift 4 documentation
+            </ExternalLink>
           </p>
-          {addUserResponse.error && (
-            <ErrorBox message="Error adding user" response={addUserResponse} />
-          )}
-          {deleteUserResponse.error && (
-            <ErrorBox message="Error deleting user" response={deleteUserResponse} />
-          )}
-          {hasUsers && (
-            <Table aria-label="Users" variant={TableVariant.compact}>
-              <Thead>
-                <Tr>
-                  <Th>{userIdHeading}</Th>
-                  <Th>{groupHeading}</Th>
-                  <Th screenReaderText="User action" />
-                </Tr>
-              </Thead>
-              <Tbody>{clusterGroupUsers.users.map(userRow)}</Tbody>
-            </Table>
-          )}
-          {addUserBtn}
-          <AddUserDialog
-            isOpen={isAddUserModalOpen}
-            closeModal={closeModal}
-            clearAddUserResponses={clearAddUserResponses}
-            addUserResponse={addUserResponse}
-            submit={addUser}
-            clusterID={cluster.id}
-            canAddClusterAdmin={canAddClusterAdmin}
+        }
+      >
+        <Button variant="plain" isInline aria-label="Help">
+          <Icon size="md">
+            <HelpIcon />
+          </Icon>
+        </Button>
+      </Popover>
+    </>
+  );
+
+  const userRow = (user, index) =>
+    deletedRowIndex === index ? (
+      <Tr key={user.id}>
+        <Td dataLabel={columnNames.userId}>
+          <Skeleton fontSize="md" screenreaderText="Loading..." />
+        </Td>
+        <Td dataLabel={columnNames.group}>
+          <Skeleton fontSize="md" screenreaderText="Loading..." />
+        </Td>
+        <Td isActionCell />
+      </Tr>
+    ) : (
+      <Tr key={user.id}>
+        <Td dataLabel={columnNames.userId} modifier="truncate">
+          {user.id}
+        </Td>
+        <Td dataLabel={columnNames.group}>{user.group}</Td>
+        <Td isActionCell>
+          <ActionsColumn
+            items={[
+              {
+                title: 'Delete',
+                onClick: () => {
+                  setDeletedRowIndex(index);
+                  deleteUserMutate(
+                    { groupID: user.group, userID: user.id },
+                    {
+                      onSuccess: () => {
+                        refetchUsers();
+                      },
+                    },
+                  );
+                },
+              },
+            ]}
+            isDisabled={!!disableReason}
           />
-        </CardBody>
-      </Card>
+        </Td>
+      </Tr>
     );
-  }
-}
+
+  return showSkeleton ? (
+    <LoadingSkeletonCard />
+  ) : (
+    <Card>
+      {isUsersError && (
+        <ErrorBox message="Error getting cluster users" response={usersError.error} />
+      )}
+      <CardBody>
+        <Title className="card-title" headingLevel="h3" size="lg">
+          Cluster administrative users
+        </Title>
+        <p>
+          Grant permission to manage this cluster to users defined in your identity provider.{' '}
+          <ExternalLink href={links.OSD_DEDICATED_ADMIN_ROLE}>Learn more.</ExternalLink>
+        </p>
+        {isDeleteUserError && (
+          <ErrorBox message="Error deleting user" response={deleteUserError.error} />
+        )}
+        {hasUsers && (
+          <Table aria-label="Users" variant={TableVariant.compact}>
+            <Thead>
+              <Tr>
+                <Th>{userIdHeading}</Th>
+                <Th>{groupHeading}</Th>
+                <Th screenReaderText="User action" />
+              </Tr>
+            </Thead>
+            <Tbody>{users?.users?.map(userRow)}</Tbody>
+          </Table>
+        )}
+        {addUserBtn}
+        <AddUserDialog
+          addUserMutate={addUserMutate}
+          resetAddUserMutate={resetAddUserMutate}
+          isAddUserSuccess={isAddUserSuccess}
+          isAddUserPending={isAddUserPending}
+          isAddUserError={isAddUserError}
+          addUserError={addUserError}
+          isOpen={isAddUserModalOpen}
+          clusterID={cluster.id}
+          canAddClusterAdmin={canAddClusterAdmin}
+        />
+      </CardBody>
+    </Card>
+  );
+};
 
 UsersSection.propTypes = {
+  region: PropTypes.string,
   cluster: PropTypes.object.isRequired,
-  isAddUserModalOpen: PropTypes.bool.isRequired,
-  addUser: PropTypes.func.isRequired,
-  addUserResponse: PropTypes.object,
-  getUsers: PropTypes.func.isRequired,
-  deleteUser: PropTypes.func.isRequired,
-  deleteUserResponse: PropTypes.object,
-  clusterGroupUsers: PropTypes.object.isRequired,
-  openModal: PropTypes.func.isRequired,
-  canAddClusterAdmin: PropTypes.bool.isRequired,
-  closeModal: PropTypes.func.isRequired,
-  clearUsersResponses: PropTypes.func.isRequired,
-  clearAddUserResponses: PropTypes.func.isRequired,
-  hasUsers: PropTypes.bool.isRequired,
   clusterHibernating: PropTypes.bool.isRequired,
   isReadOnly: PropTypes.bool.isRequired,
 };

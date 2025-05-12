@@ -20,7 +20,8 @@ import { isHibernating, isHypershiftCluster } from '~/components/clusters/common
 import { CloudProviderType } from '~/components/clusters/wizards/common';
 import { modalActions } from '~/components/common/Modal/ModalActions';
 import { isRestrictedEnv } from '~/restrictedEnv';
-import { Ingress, LoadBalancerFlavor } from '~/types/clusters_mgmt.v1';
+import { Ingress } from '~/types/clusters_mgmt.v1';
+import { LoadBalancerFlavor } from '~/types/clusters_mgmt.v1/enums';
 import { ClusterWithPermissions } from '~/types/types';
 
 import ButtonWithTooltip from '../../../../../../common/ButtonWithTooltip';
@@ -110,10 +111,10 @@ const ApplicationIngressCard: React.FC<ApplicationIngressCardProps> = ({
     isNamespaceOwnershipPolicyStrict: isDefaultRouterNamespaceOwnershipPolicyStrict,
     hostname: clusterRoutesHostname,
   } = clusterRouters.default || {};
-  const region = cluster.subscription?.xcm_id;
+  const region = cluster.subscription?.rh_region_id;
   const clusterID = cluster.id;
 
-  const isNLB = loadBalancer === LoadBalancerFlavor.NLB;
+  const isNLB = loadBalancer === LoadBalancerFlavor.nlb;
 
   const disableEditReason = resolveDisableEditReason({
     canEdit: !!canEdit,
@@ -212,8 +213,8 @@ const ApplicationIngressCard: React.FC<ApplicationIngressCardProps> = ({
           {canShowLoadBalancer && (
             <FormGroup label="Load balancer type" labelIcon={<LoadBalancerPopover />}>
               <Switch
-                label={LoadBalancerFlavorLabel[LoadBalancerFlavor.NLB]}
-                labelOff={LoadBalancerFlavorLabel[LoadBalancerFlavor.CLASSIC]}
+                label={LoadBalancerFlavorLabel[LoadBalancerFlavor.nlb]}
+                labelOff={LoadBalancerFlavorLabel[LoadBalancerFlavor.classic]}
                 isChecked={isNLB}
                 isDisabled
               />
@@ -232,18 +233,20 @@ const ApplicationIngressCard: React.FC<ApplicationIngressCardProps> = ({
           />
         </Form>
       </CardBody>
-      <CardFooter>
-        <ActionList>
-          <ButtonWithTooltip
-            variant="secondary"
-            onClick={handleEditSettings}
-            disableReason={disableEditReason}
-            isAriaDisabled={!!disableEditReason}
-          >
-            Edit application ingress
-          </ButtonWithTooltip>
-        </ActionList>
-      </CardFooter>
+      {!isRestrictedEnv() && (
+        <CardFooter>
+          <ActionList>
+            <ButtonWithTooltip
+              variant="secondary"
+              onClick={handleEditSettings}
+              disableReason={disableEditReason}
+              isAriaDisabled={!!disableEditReason}
+            >
+              Edit application ingress
+            </ButtonWithTooltip>
+          </ActionList>
+        </CardFooter>
+      )}
     </Card>
   );
 };

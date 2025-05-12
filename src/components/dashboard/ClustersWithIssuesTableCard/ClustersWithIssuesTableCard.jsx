@@ -62,7 +62,7 @@ const ClustersWithIssuesTableCard = (props) => {
     const issuesCount = <span>{getIssuesCount(subscription)}</span>;
 
     const clusterName = (
-      <Link to={`/details/s/${subscription.id}`}>{getClusterName(subscription)}</Link>
+      <Link to={`/details/s/${subscription.id}`}>{getClusterName({ subscription })}</Link>
     );
 
     return {

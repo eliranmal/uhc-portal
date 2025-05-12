@@ -1,6 +1,5 @@
 import React, { createRef, useEffect, useReducer, useState } from 'react';
-import { FormikErrors } from 'formik';
-import { WrappedFieldInputProps } from 'redux-form';
+import { FieldInputProps, FormikErrors } from 'formik';
 
 import {
   FormGroup,
@@ -107,7 +106,7 @@ type Props = {
   value?: string;
   name?: string;
   onChange?: (value: string) => void;
-  input?: WrappedFieldInputProps;
+  input?: FieldInputProps<string>;
 };
 
 export const RichInputField = ({
@@ -240,7 +239,9 @@ export const RichInputField = ({
   }, [inputValue]);
 
   useEffect(() => {
-    validateField(inputName);
+    // Formik validation doesn't trigger properly during initial render; delay to after mount completed
+    const timeoutId = setTimeout(() => validateField(inputName), 0);
+    return () => clearTimeout(timeoutId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Field } from 'redux-form';
+import { Field } from 'formik';
 
 import { FormGroup } from '@patternfly/react-core';
 
@@ -7,7 +7,7 @@ import { IMDSType } from '~/components/clusters/wizards/common';
 import { imdsOptions } from '~/components/clusters/wizards/common/ClusterSettings/MachinePool/ImdsSectionField/imdsOptions';
 import { ImdsSectionAlert } from '~/components/clusters/wizards/common/ClusterSettings/MachinePool/ImdsSectionField/ImdsSectionAlert';
 import { ImdsSectionHint } from '~/components/clusters/wizards/common/ClusterSettings/MachinePool/ImdsSectionField/ImdsSectionHint';
-import RadioButtons from '~/components/common/ReduxFormComponents/RadioButtons';
+import RadioButtons from '~/components/common/ReduxFormComponents_deprecated/RadioButtons';
 
 const ImdsSection = ({
   isDisabled,
@@ -31,6 +31,7 @@ const ImdsSection = ({
       {isDisabled ? (
         <ImdsSectionAlert />
       ) : (
+        // @ts-ignore
         <Field
           component={RadioButtons}
           name="imds"

@@ -19,15 +19,6 @@ import AdditionalInstructionsS390x from './AdditionalInstructionsS390x';
  * - additionalInstructions (optional): additional text to display in RHCOSSection
  */
 const instructionsMapping = {
-  alibaba: {
-    cloudProvider: 'Alibaba Cloud',
-    publicCloud: true,
-    customizations: links.INSTALL_ALIBABA_CUSTOMIZATIONS,
-    title: 'Install OpenShift on Alibaba Cloud with installer-provisioned infrastructure',
-    docURL: links.INSTALL_ALIBABAIPI_DOCS_LANDING,
-    installer: tools.X86INSTALLER,
-    channel: channels.STABLE,
-  },
   aws: {
     cloudProvider: 'AWS',
     publicCloud: true,

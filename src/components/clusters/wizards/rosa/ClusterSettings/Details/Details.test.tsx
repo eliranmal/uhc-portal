@@ -9,8 +9,8 @@ import { waitFor } from '@testing-library/react';
 import { fulfilledProviders, multiRegions, noProviders } from '~/common/__tests__/regions.fixtures';
 import { FieldId, initialValues } from '~/components/clusters/wizards/rosa/constants';
 import ocpLifeCycleStatuses from '~/components/releases/__mocks__/ocpLifeCycleStatuses';
-import { useFetchRegionalizedMultiRegions } from '~/queries/RosaWizardQueries/useFetchRegionalizedMultiRegions';
-import { MULTIREGION_PREVIEW_ENABLED } from '~/redux/constants/featureConstants';
+import { MULTIREGION_PREVIEW_ENABLED } from '~/queries/featureGates/featureConstants';
+import { useFetchGetMultiRegionAvailableRegions } from '~/queries/RosaWizardQueries/useFetchGetMultiRegionAvailableRegions';
 import clusterService from '~/services/clusterService';
 import getOCPLifeCycleStatus from '~/services/productLifeCycleService';
 import { mockUseFeatureGate, render, screen, withState } from '~/testUtils';
@@ -20,8 +20,8 @@ import Details from './Details';
 jest.mock('~/services/clusterService');
 jest.mock('~/services/productLifeCycleService');
 
-jest.mock('~/queries/RosaWizardQueries/useFetchRegionalizedMultiRegions', () => ({
-  useFetchRegionalizedMultiRegions: jest.fn(),
+jest.mock('~/queries/RosaWizardQueries/useFetchGetMultiRegionAvailableRegions', () => ({
+  useFetchGetMultiRegionAvailableRegions: jest.fn(),
 }));
 
 const version = { id: '4.14.0' };
@@ -82,9 +82,9 @@ describe('<Details />', () => {
 
     it('displays multi region dropdown and shows a spinner while fetching', async () => {
       mockUseFeatureGate([[MULTIREGION_PREVIEW_ENABLED, true]]);
-      const mockedUseFetchRegionalizedMultiRegions = useFetchRegionalizedMultiRegions;
+      const mockedUseFetchGetMultiRegionAvailableRegions = useFetchGetMultiRegionAvailableRegions;
 
-      (mockedUseFetchRegionalizedMultiRegions as jest.Mock).mockReturnValue({
+      (mockedUseFetchGetMultiRegionAvailableRegions as jest.Mock).mockReturnValue({
         data: undefined,
         error: undefined,
         isError: false,
@@ -106,9 +106,9 @@ describe('<Details />', () => {
 
     it('displays the available multi regions when they are fetched', async () => {
       mockUseFeatureGate([[MULTIREGION_PREVIEW_ENABLED, true]]);
-      const mockedUseFetchRegionalizedMultiRegions = useFetchRegionalizedMultiRegions;
+      const mockedUseFetchGetMultiRegionAvailableRegions = useFetchGetMultiRegionAvailableRegions;
 
-      (mockedUseFetchRegionalizedMultiRegions as jest.Mock).mockReturnValue({
+      (mockedUseFetchGetMultiRegionAvailableRegions as jest.Mock).mockReturnValue({
         data: multiRegions,
         error: false,
         isFetching: false,

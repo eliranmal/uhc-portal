@@ -1,9 +1,16 @@
 import React from 'react';
 import { To } from 'react-router-dom';
 
-import { Alert, Card, CardBody, CardTitle, PageSection, Title } from '@patternfly/react-core';
-import PageHeader, { PageHeaderTitle } from '@redhat-cloud-services/frontend-components/PageHeader';
-import { Spinner } from '@redhat-cloud-services/frontend-components/Spinner';
+import PageHeader from '@patternfly/react-component-groups/dist/dynamic/PageHeader';
+import {
+  Alert,
+  Card,
+  CardBody,
+  CardTitle,
+  PageSection,
+  Spinner,
+  Title,
+} from '@patternfly/react-core';
 
 import { defaultToOfflineTokens, hasRestrictTokensCapability } from '~/common/restrictTokensHelper';
 import { isRestrictedEnv } from '~/restrictedEnv';
@@ -18,9 +25,7 @@ import useOrganization from './useOrganization';
 
 const ErrorOrLoadingWrapper = ({ children }: { children: React.ReactElement }) => (
   <AppPage title="OpenShift Cluster Manager">
-    <PageHeader className="pf-v5-u-mb-md">
-      <PageHeaderTitle title="OpenShift Cluster Manager" />
-    </PageHeader>
+    <PageHeader title="OpenShift Cluster Manager" subtitle="" />
     <PageSection>
       <Card>
         <CardTitle>
@@ -50,7 +55,7 @@ const CLILoginPage = ({ showToken = false, showPath, isRosa = false }: CLILoginP
     if (isLoading) {
       return (
         <ErrorOrLoadingWrapper>
-          <Spinner />
+          <Spinner size="lg" aria-label="Loading..." />
         </ErrorOrLoadingWrapper>
       );
     }
@@ -82,12 +87,17 @@ const CLILoginPage = ({ showToken = false, showPath, isRosa = false }: CLILoginP
 
   return (
     <AppPage title={`${restrictTokens ? 'SSO Login' : 'API Token'} | OpenShift Cluster Manager`}>
-      <PageHeader className="pf-v5-u-mb-md">
-        {!restrictTokens && (
-          <Breadcrumbs path={[{ label: 'Downloads', path: '/downloads' }, { label: pageTitle }]} />
-        )}
-        <PageHeaderTitle title={pageTitle} />
-      </PageHeader>
+      <PageHeader
+        title={pageTitle}
+        subtitle=""
+        breadcrumbs={
+          !restrictTokens && (
+            <Breadcrumbs
+              path={[{ label: 'Downloads', path: '/downloads' }, { label: pageTitle }]}
+            />
+          )
+        }
+      />
       <PageSection>
         <Instructions
           show={showToken}

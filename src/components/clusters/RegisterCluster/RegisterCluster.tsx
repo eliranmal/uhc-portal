@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Field, Formik } from 'formik';
 import { get } from 'lodash';
 import { useDispatch } from 'react-redux';
-import { Field, reset } from 'redux-form';
 
+import PageHeader from '@patternfly/react-component-groups/dist/dynamic/PageHeader';
 import {
   Button,
   Card,
@@ -12,6 +13,7 @@ import {
   Grid,
   GridItem,
   PageSection,
+  Spinner,
   Text,
   TextContent,
   TextVariants,
@@ -19,8 +21,6 @@ import {
   Tooltip,
   TooltipPosition,
 } from '@patternfly/react-core';
-import { PageHeader, PageHeaderTitle } from '@redhat-cloud-services/frontend-components/PageHeader';
-import Spinner from '@redhat-cloud-services/frontend-components/Spinner';
 
 import { Link, Navigate } from '~/common/routing';
 import { AppPage } from '~/components/App/AppPage';
@@ -33,7 +33,11 @@ import {
 } from '~/redux/actions/clustersActions';
 import { getOrganizationAndQuota } from '~/redux/actions/userActions';
 import { useGlobalState } from '~/redux/hooks';
-import { SubscriptionCreateRequest } from '~/types/accounts_mgmt.v1';
+import {
+  SubscriptionCreateRequest,
+  SubscriptionCreateRequestPlan_id as SubscriptionCreateRequestPlanId,
+  SubscriptionCreateRequestStatus,
+} from '~/types/accounts_mgmt.v1';
 import { ErrorState } from '~/types/types';
 
 import {
@@ -43,19 +47,14 @@ import {
 } from '../../../common/validators';
 import Breadcrumbs from '../../common/Breadcrumbs';
 import ErrorModal from '../../common/ErrorModal';
-import ReduxVerticalFormGroup from '../../common/ReduxFormComponents/ReduxVerticalFormGroup';
+import ReduxVerticalFormGroup from '../../common/ReduxFormComponents_deprecated/ReduxVerticalFormGroup';
 import Unavailable from '../../common/Unavailable';
 
-import { REGISTER_CLUSTER_FORM_KEY } from './constants';
 import EditSubscriptionSettings from './EditSubscriptionSettings';
 import { hasOrgLevelsubscribeOCPCapability } from './registerClusterSelectors';
 import validateSubscriptionSettings from './validateSubscriptionSettings';
 
-type RegisterClusterProps = {
-  handleSubmit: (...params: any[]) => any;
-};
-
-const RegisterCluster = ({ handleSubmit }: RegisterClusterProps) => {
+const RegisterCluster = () => {
   const dispatch = useDispatch();
   const [settings, setSettings] = useState({});
 
@@ -70,7 +69,6 @@ const RegisterCluster = ({ handleSubmit }: RegisterClusterProps) => {
 
   const resetResponseAndForm = useCallback(() => {
     dispatch(resetCreatedClusterResponse());
-    dispatch(reset(REGISTER_CLUSTER_FORM_KEY) as any);
   }, [dispatch]);
 
   useEffect(() => {
@@ -86,7 +84,7 @@ const RegisterCluster = ({ handleSubmit }: RegisterClusterProps) => {
     }
   }, [registerClusterResponse.error, isOpen, dispatch]);
 
-  const { isValid } = useMemo(() => validateSubscriptionSettings(settings), [settings]);
+  const validation = useMemo(() => validateSubscriptionSettings(settings), [settings]);
 
   const onSubmit = (values: {
     cluster_id: string;
@@ -97,8 +95,8 @@ const RegisterCluster = ({ handleSubmit }: RegisterClusterProps) => {
     if (isValid) {
       const registrationRequest: SubscriptionCreateRequest = {
         cluster_uuid: values.cluster_id,
-        plan_id: SubscriptionCreateRequest.plan_id.OCP,
-        status: SubscriptionCreateRequest.status.DISCONNECTED,
+        plan_id: SubscriptionCreateRequestPlanId.OCP,
+        status: SubscriptionCreateRequestStatus.Disconnected,
         display_name: values.display_name,
         console_url: values.web_console_url,
       };
@@ -131,104 +129,136 @@ const RegisterCluster = ({ handleSubmit }: RegisterClusterProps) => {
 
   return (
     <AppPage>
-      <PageHeader>
-        <Breadcrumbs
-          path={[{ label: 'Cluster List' }, { label: 'Register disconnected cluster' }]}
-        />
-        <PageHeaderTitle title="Register disconnected cluster" />
-      </PageHeader>
+      <PageHeader
+        title="Register disconnected cluster"
+        subtitle=""
+        breadcrumbs={
+          <Breadcrumbs
+            path={[{ label: 'Cluster List' }, { label: 'Register disconnected cluster' }]}
+          />
+        }
+      />
       <PageSection>
         {errorModal}
-        <Card id="register-cluster">
-          <CardBody>
-            <Grid>
-              <GridItem md={8}>
-                <TextContent id="register-cluster-top-text">
-                  <Text component={TextVariants.p}>
-                    Register clusters that are not connected to OpenShift Cluster Manager. Existing
-                    cluster owners, cluster editors, or admins can edit existing cluster
-                    subscriptions from the cluster details page.
-                  </Text>
-                </TextContent>
-                {quotaResponse?.fulfilled ? (
-                  <Form onSubmit={handleSubmit(onSubmit)} className="subscription-settings form">
-                    <Field
-                      component={ReduxVerticalFormGroup}
-                      name="cluster_id"
-                      label="Cluster ID"
-                      type="text"
-                      extendedHelpText="The cluster ID may be found on the About page of the cluster web console"
-                      disabled={registerClusterResponse.pending}
-                      validate={checkClusterUUID}
-                      isRequired
-                    />
-                    <Field
-                      component={ReduxVerticalFormGroup}
-                      name="display_name"
-                      label="Display name"
-                      type="text"
-                      disabled={registerClusterResponse.pending}
-                      validate={checkClusterDisplayName}
-                    />
-                    <Field
-                      component={ReduxVerticalFormGroup}
-                      name="web_console_url"
-                      label="Web console URL"
-                      validate={checkDisconnectedConsoleURL}
-                      disabled={registerClusterResponse.pending}
-                      type="text"
-                    />
-                    <Title headingLevel="h4" size="xl">
-                      Subscription settings
-                    </Title>
-                    <TextContent>
+        <Formik
+          initialValues={{
+            cluster_id: '',
+            display_name: '',
+            web_console_url: '',
+          }}
+          onSubmit={(values) => onSubmit(values)}
+        >
+          {({ getFieldMeta, getFieldProps, submitForm, isValid }) => (
+            <Card id="register-cluster">
+              <CardBody>
+                <Grid>
+                  <GridItem md={8}>
+                    <TextContent id="register-cluster-top-text">
                       <Text component={TextVariants.p}>
-                        Editing the subscription settings will help ensure that you receive the
-                        level of support that you expect, and that your cluster is consuming the
-                        correct type of subscription.
+                        Register clusters that are not connected to OpenShift Cluster Manager.
+                        Existing cluster owners, cluster editors, or admins can edit existing
+                        cluster subscriptions from the cluster details page.
                       </Text>
                     </TextContent>
-                    {canSubscribeOCP ? (
-                      <EditSubscriptionSettings
-                        setSettings={setSettings}
-                        canSubscribeOCP={canSubscribeOCP}
-                      />
-                    ) : (
-                      <Tooltip
-                        content="You cannot edit subscription settings because your organization does not have any OpenShift subscriptions. Contact sales to purchase OpenShift."
-                        position={TooltipPosition.auto}
-                      >
-                        <div>
+                    {quotaResponse?.fulfilled ? (
+                      <Form onSubmit={submitForm} className="subscription-settings form">
+                        {/* @ts-ignore */}
+                        <Field
+                          component={ReduxVerticalFormGroup}
+                          name="cluster_id"
+                          label="Cluster ID"
+                          type="text"
+                          extendedHelpText="The cluster ID may be found on the About page of the cluster web console"
+                          disabled={registerClusterResponse.pending}
+                          input={{
+                            // name, value, onBlur, onChange
+                            ...getFieldProps('cluster_id'),
+                          }}
+                          meta={getFieldMeta('cluster_id')}
+                          validate={checkClusterUUID}
+                          isRequired
+                        />
+                        {/* @ts-ignore */}
+                        <Field
+                          component={ReduxVerticalFormGroup}
+                          name="display_name"
+                          label="Display name"
+                          type="text"
+                          disabled={registerClusterResponse.pending}
+                          input={{
+                            // name, value, onBlur, onChange
+                            ...getFieldProps('display_name'),
+                          }}
+                          meta={getFieldMeta('display_name')}
+                          validate={checkClusterDisplayName}
+                        />
+                        {/* @ts-ignore */}
+                        <Field
+                          component={ReduxVerticalFormGroup}
+                          name="web_console_url"
+                          label="Web console URL"
+                          validate={checkDisconnectedConsoleURL}
+                          disabled={registerClusterResponse.pending}
+                          input={{
+                            // name, value, onBlur, onChange
+                            ...getFieldProps('web_console_url'),
+                          }}
+                          meta={getFieldMeta('web_console_url')}
+                          type="text"
+                        />
+                        <Title headingLevel="h4" size="xl">
+                          Subscription settings
+                        </Title>
+                        <TextContent>
+                          <Text component={TextVariants.p}>
+                            Editing the subscription settings will help ensure that you receive the
+                            level of support that you expect, and that your cluster is consuming the
+                            correct type of subscription.
+                          </Text>
+                        </TextContent>
+                        {canSubscribeOCP ? (
                           <EditSubscriptionSettings
                             setSettings={setSettings}
                             canSubscribeOCP={canSubscribeOCP}
                           />
-                        </div>
-                      </Tooltip>
+                        ) : (
+                          <Tooltip
+                            content="You cannot edit subscription settings because your organization does not have any OpenShift subscriptions. Contact sales to purchase OpenShift."
+                            position={TooltipPosition.auto}
+                          >
+                            <div>
+                              <EditSubscriptionSettings
+                                setSettings={setSettings}
+                                canSubscribeOCP={canSubscribeOCP}
+                              />
+                            </div>
+                          </Tooltip>
+                        )}
+                      </Form>
+                    ) : (
+                      <Spinner size="lg" aria-label="Loading..." />
                     )}
-                  </Form>
-                ) : (
-                  <Spinner />
-                )}
-              </GridItem>
-            </Grid>
-          </CardBody>
-          <CardFooter>
-            <Button
-              variant="primary"
-              type="submit"
-              onClick={handleSubmit(onSubmit)}
-              isDisabled={registerClusterResponse.pending || !isValid}
-            >
-              Register cluster
-            </Button>
-            <Link to="/cluster-list">
-              <Button variant="secondary" isDisabled={registerClusterResponse.pending}>
-                Cancel
-              </Button>
-            </Link>
-          </CardFooter>
-        </Card>
+                  </GridItem>
+                </Grid>
+              </CardBody>
+              <CardFooter>
+                <Button
+                  variant="primary"
+                  type="submit"
+                  onClick={submitForm}
+                  isDisabled={registerClusterResponse.pending || !isValid || !validation.isValid}
+                >
+                  Register cluster
+                </Button>
+                <Link to="/cluster-list">
+                  <Button variant="secondary" isDisabled={registerClusterResponse.pending}>
+                    Cancel
+                  </Button>
+                </Link>
+              </CardFooter>
+            </Card>
+          )}
+        </Formik>
       </PageSection>
     </AppPage>
   );

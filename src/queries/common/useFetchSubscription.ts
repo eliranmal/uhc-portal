@@ -3,12 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import { normalizeSubscription } from '~/common/normalize';
 import { knownProducts } from '~/common/subscriptionTypes';
 import { accountsService } from '~/services';
-import { ClusterAuthorizationRequest } from '~/types/accounts_mgmt.v1';
-
-import { queryConstants } from '../queriesConstants';
+import { ClusterAuthorizationRequestProduct_id as ClusterAuthorizationRequestProductId } from '~/types/accounts_mgmt.v1';
 
 const ROSA_PRODUCTS = [knownProducts.ROSA, knownProducts.ROSA_HyperShift];
-const OSD_PRODUCTS = [knownProducts.OSD, knownProducts.OSDTRIAL];
+const OSD_PRODUCTS = [knownProducts.OSD, knownProducts.OSDTrial];
 
 /**
  * Query for fetching limited support reasons based on region
@@ -25,7 +23,7 @@ export const useFetchSubscription = (subscriptionID: string, mainQueryKey: strin
       const isAROCluster = subscription?.data?.plan?.type === knownProducts.ARO;
       const isROSACluster = ROSA_PRODUCTS.includes(subscription?.data?.plan?.type || '');
       const isOSDCluster = OSD_PRODUCTS.includes(
-        (subscription?.data?.plan?.type || '') as ClusterAuthorizationRequest.product_id,
+        (subscription?.data?.plan?.type || '') as ClusterAuthorizationRequestProductId,
       );
       return {
         subscription: subscription.data,
@@ -34,7 +32,6 @@ export const useFetchSubscription = (subscriptionID: string, mainQueryKey: strin
         isOSDCluster,
       };
     },
-    staleTime: queryConstants.STALE_TIME,
   });
 
   return {

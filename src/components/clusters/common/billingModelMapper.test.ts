@@ -1,6 +1,8 @@
-/* eslint-disable camelcase */
-import { RelatedResource } from '~/types/accounts_mgmt.v1';
-import { BillingModel } from '~/types/clusters_mgmt.v1';
+import {
+  RelatedResourceBilling_model as RelatedResourceBillingModel,
+  SubscriptionCommonFieldsCluster_billing_model as SubscriptionCommonFieldsClusterBillingModel,
+} from '~/types/accounts_mgmt.v1';
+import { BillingModel } from '~/types/clusters_mgmt.v1/enums';
 
 import { clusterBillingModelToRelatedResource } from './billingModelMapper';
 
@@ -9,20 +11,34 @@ describe('billingModelMapper', () => {
     it.each([
       [undefined, undefined],
       ['', undefined],
-      [BillingModel.MARKETPLACE, RelatedResource.billing_model.MARKETPLACE],
-      [BillingModel.MARKETPLACE_AWS, 'marketplace-aws'], // TODO: it should handle marketplace-* -> marketplace in future
-      [BillingModel.MARKETPLACE_AZURE, RelatedResource.billing_model.MARKETPLACE_AZURE],
-      [BillingModel.MARKETPLACE_GCP, RelatedResource.billing_model.MARKETPLACE_GCP],
-      [BillingModel.MARKETPLACE_RHM, RelatedResource.billing_model.MARKETPLACE_RHM],
-      [BillingModel.STANDARD, RelatedResource.billing_model.STANDARD],
-      ['marketplace', RelatedResource.billing_model.MARKETPLACE],
-      ['any', RelatedResource.billing_model.ANY],
-      ['whatever', 'whatever'], // TODO: it should map to undefined in the future
+      [
+        SubscriptionCommonFieldsClusterBillingModel.marketplace,
+        RelatedResourceBillingModel.marketplace,
+      ],
+      [
+        SubscriptionCommonFieldsClusterBillingModel.marketplace_aws,
+        RelatedResourceBillingModel.marketplace,
+      ],
+      [
+        SubscriptionCommonFieldsClusterBillingModel.marketplace_azure,
+        RelatedResourceBillingModel.marketplace,
+      ],
+      [
+        SubscriptionCommonFieldsClusterBillingModel.marketplace_gcp,
+        RelatedResourceBillingModel.marketplace,
+      ],
+      [
+        SubscriptionCommonFieldsClusterBillingModel.marketplace_rhm,
+        RelatedResourceBillingModel.marketplace,
+      ],
+      [SubscriptionCommonFieldsClusterBillingModel.standard, RelatedResourceBillingModel.standard],
+      ['any', RelatedResourceBillingModel.any],
+      ['whatever', undefined],
     ])(
       'when -%p- then %p',
       (
         clusterBillingModel: BillingModel | string | undefined,
-        expected: RelatedResource.billing_model | string | undefined,
+        expected: RelatedResourceBillingModel | string | undefined,
       ) => expect(clusterBillingModelToRelatedResource(clusterBillingModel)).toBe(expected),
     );
   });

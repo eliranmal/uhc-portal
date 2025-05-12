@@ -29,19 +29,37 @@ type Props = {
   children?: ReactNode | undefined;
 };
 
-const App = ({ children }: Props) => {
-  const header = document.getElementsByTagName('header')[0];
-  const [headerHeight, setHeaderHeight] = useState(header.getBoundingClientRect().height);
-
-  useResizeObserver(header, (entry) => {
-    const { contentRect } = entry;
-    if (headerHeight !== contentRect.height) {
-      setHeaderHeight(contentRect.height);
+function getHeightUpdater(
+  currentHeight: number,
+  setter: React.Dispatch<React.SetStateAction<number>>,
+) {
+  return (entry: ResizeObserverEntry) => {
+    const { target } = entry;
+    const { height } = target.getBoundingClientRect();
+    if (currentHeight !== height) {
+      setter(height);
     }
-  });
+  };
+}
+
+const App = ({ children }: Props) => {
+  const header = document.getElementsByTagName('header')?.[0];
+  const switcher = document.getElementsByClassName('chr-c-beta-switcher')?.[0];
+  const [headerHeight, setHeaderHeight] = useState(
+    header ? header.getBoundingClientRect().height : 0,
+  );
+  const [switcherHeight, setSwitcherHeight] = useState(
+    switcher ? switcher.getBoundingClientRect().height : 0,
+  );
+
+  useResizeObserver(header, getHeightUpdater(headerHeight, setHeaderHeight));
+  useResizeObserver(switcher, getHeightUpdater(switcherHeight, setSwitcherHeight));
 
   return (
-    <div id="app-outer-div" style={{ height: `calc(100vh - ${headerHeight}px` }}>
+    <div
+      id="app-outer-div"
+      style={{ height: `calc(100vh - ${headerHeight}px - ${switcherHeight}px` }}
+    >
       <QueryClientProvider client={queryClient}>
         <Router />
         <ReactQueryDevtools initialIsOpen={false} position="bottom" buttonPosition="bottom-right" />

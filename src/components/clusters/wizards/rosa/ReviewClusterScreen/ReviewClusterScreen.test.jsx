@@ -35,6 +35,7 @@ const defaultProps = {
   clearGetUserRoleResponse: () => {},
   clearGetOcmRoleResponse: () => {},
   goToStepById: () => {},
+  createClusterResponse: {},
 };
 
 describe('<ReviewClusterScreen />', () => {

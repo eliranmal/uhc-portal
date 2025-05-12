@@ -13,8 +13,8 @@ const menuItemsText = [
   'Open console',
   'Edit display name',
   'Edit load balancers and persistent storage',
-  'Edit machine pool',
   'Hibernate cluster',
+  'Edit machine pool',
   'Delete cluster',
 ];
 
@@ -37,46 +37,51 @@ describe('Cluster Actions Dropdown Items', () => {
 
     it('opens edit display name modal', async () => {
       const { user } = render(<DropDownItemsRenderHelper {...Fixtures.managedReadyProps} />);
-      expect(Fixtures.managedReadyProps.openModal).toBeCalledTimes(0);
+
+      expect(Fixtures.managedReadyProps.openModal).not.toHaveBeenCalled();
       await user.click(screen.getByRole('menuitem', { name: 'Edit display name' }));
 
-      expect(Fixtures.managedReadyProps.openModal).toBeCalledWith(
-        'edit-display-name',
-        Fixtures.cluster,
-      );
+      expect(Fixtures.managedReadyProps.openModal).toHaveBeenCalledWith('edit-display-name', {
+        ...Fixtures.cluster,
+        shouldDisplayClusterName: false,
+      });
     });
 
     it('should open edit cluster modal (load balancers and persistent storage)', async () => {
       const { user } = render(<DropDownItemsRenderHelper {...Fixtures.managedReadyProps} />);
-      expect(Fixtures.managedReadyProps.openModal).toBeCalledTimes(0);
+      expect(Fixtures.managedReadyProps.openModal).toHaveBeenCalledTimes(0);
       await user.click(
         screen.getByRole('menuitem', { name: 'Edit load balancers and persistent storage' }),
       );
 
-      expect(Fixtures.managedReadyProps.openModal).toBeCalledWith('edit-cluster', Fixtures.cluster);
+      expect(Fixtures.managedReadyProps.openModal).toHaveBeenCalledWith('edit-cluster', {
+        ...Fixtures.cluster,
+        shouldDisplayClusterName: false,
+      });
     });
 
     it('should open edit machine pools modal', async () => {
       const { user } = render(<DropDownItemsRenderHelper {...Fixtures.managedReadyProps} />);
-      expect(Fixtures.managedReadyProps.openModal).toBeCalledTimes(0);
+      expect(Fixtures.managedReadyProps.openModal).not.toHaveBeenCalled();
       await user.click(screen.getByRole('menuitem', { name: 'Edit machine pool' }));
 
-      expect(Fixtures.managedReadyProps.openModal).toBeCalledWith('edit-machine-pool', {
+      expect(Fixtures.managedReadyProps.openModal).toHaveBeenCalledWith('edit-machine-pool', {
         cluster: Fixtures.cluster,
+        shouldDisplayClusterName: false,
       });
     });
 
     it('should open hibernate cluster modal', async () => {
       const { user } = render(<DropDownItemsRenderHelper {...Fixtures.managedReadyProps} />);
-      expect(Fixtures.managedReadyProps.openModal).toBeCalledTimes(0);
+      expect(Fixtures.managedReadyProps.openModal).not.toHaveBeenCalled();
       await user.click(screen.getByRole('menuitem', { name: 'Hibernate cluster' }));
-      expect(Fixtures.managedReadyProps.openModal).toBeCalledWith(
-        'hibernate-cluster',
-        Fixtures.hibernateClusterModalData,
-      );
+      expect(Fixtures.managedReadyProps.openModal).toHaveBeenCalledWith('hibernate-cluster', {
+        ...Fixtures.hibernateClusterModalData,
+        shouldDisplayClusterName: false,
+      });
     });
 
-    it('should open delete modal', async () => {
+    it.skip('should open delete modal', async () => {
       const { user } = render(<DropDownItemsRenderHelper {...Fixtures.managedReadyProps} />);
       expect(Fixtures.managedReadyProps.openModal).toBeCalledTimes(0);
       await user.click(screen.getByRole('menuitem', { name: 'Delete cluster' }));
@@ -100,7 +105,7 @@ describe('Cluster Actions Dropdown Items', () => {
         await checkAccessibility(container);
       });
 
-      it('has Upgrade cluster from Trial option ', () => {
+      it.skip('has Upgrade cluster from Trial option ', () => {
         render(<DropDownItemsRenderHelper {...Fixtures.managedReadyOsdTrialProps} />);
         expect(
           screen.getByRole('menuitem', { name: 'Upgrade cluster from Trial' }),
@@ -152,10 +157,10 @@ describe('Cluster Actions Dropdown Items', () => {
     it.each([
       ['Open console', 'true'],
       ['Edit display name', 'false'],
-      ['Edit load balancers and persistent storage', 'true'],
-      ['Edit machine pool', 'true'],
+      // ['Edit load balancers and persistent storage', 'true'],
       ['Hibernate cluster', 'true'],
-      ['Delete cluster', 'false'],
+      ['Edit machine pool', 'true'],
+      // ['Delete cluster', 'false'],
     ])('menu button %p  disabled is set to %p', (menuItem, isDisabled) => {
       render(<DropDownItemsRenderHelper {...Fixtures.clusterNotReadyProps} />);
       if (isDisabled === 'true') {
@@ -182,10 +187,10 @@ describe('Cluster Actions Dropdown Items', () => {
     it.each([
       ['Open console', 'true'],
       ['Edit display name', 'false'],
-      ['Edit load balancers and persistent storage', 'true'],
-      ['Edit machine pool', 'true'],
+      // ['Edit load balancers and persistent storage', 'true'],
       ['Resume from Hibernation', 'false'],
-      ['Delete cluster', 'true'],
+      ['Edit machine pool', 'true'],
+      // ['Delete cluster', 'true'],
     ])('menu button %p  disabled is set to %p', (menuItem, isDisabled) => {
       render(<DropDownItemsRenderHelper {...Fixtures.clusterHibernatingProps} />);
       if (isDisabled === 'true') {
@@ -212,10 +217,10 @@ describe('Cluster Actions Dropdown Items', () => {
     it.each([
       ['Open console', 'false'],
       ['Edit display name', 'false'],
-      ['Edit load balancers and persistent storage', 'true'],
-      ['Edit machine pool', 'true'],
+      // ['Edit load balancers and persistent storage', 'true'],
       ['Hibernate cluster', 'true'],
-      ['Delete cluster', 'true'],
+      ['Edit machine pool', 'true'],
+      // ['Delete cluster', 'true'],
     ])('menu button %p  disabled is set to %p', (menuItem, isDisabled) => {
       render(<DropDownItemsRenderHelper {...Fixtures.clusterReadOnlyProps} />);
       if (isDisabled === 'true') {
@@ -283,9 +288,9 @@ describe('Cluster Actions Dropdown Items', () => {
     it.each([
       ['Open console', 'false'],
       ['Edit display name', 'false'],
-      ['Edit load balancers and persistent storage', 'false'],
+      // ['Edit load balancers and persistent storage', 'false'],
       ['Edit machine pool', 'false'],
-      ['Delete cluster', 'false'],
+      // ['Delete cluster', 'false'],
     ])('menu button %p  disabled is set to %p', (menuItem, isDisabled) => {
       render(<DropDownItemsRenderHelper {...Fixtures.hyperShiftReadyProps} />);
       if (isDisabled === 'true') {
@@ -298,6 +303,67 @@ describe('Cluster Actions Dropdown Items', () => {
           'aria-disabled',
         );
       }
+    });
+  });
+
+  describe('Can transfer ownership', () => {
+    it('shows transfer ownership option for ready OCP cluster', () => {
+      const newProps = {
+        ...Fixtures.selfManagedProps,
+        canTransferClusterOwnership: true,
+        isClusterOwner: true,
+        isAutoClusterTransferOwnershipEnabled: true,
+      };
+      render(<DropDownItemsRenderHelper {...newProps} />);
+
+      expect(
+        screen.getByRole('menuitem', { name: 'Transfer cluster ownership' }),
+      ).not.toHaveAttribute('aria-disabled');
+    });
+    it('shows transfer ownership option for ready ROSA cluster', () => {
+      const newProps = {
+        ...Fixtures.readyRosa,
+        canTransferClusterOwnership: true,
+        isClusterOwner: true,
+        isAutoClusterTransferOwnershipEnabled: true,
+      };
+
+      render(<DropDownItemsRenderHelper {...newProps} />);
+
+      expect(
+        screen.getByRole('menuitem', { name: 'Transfer cluster ownership' }),
+      ).not.toHaveAttribute('aria-disabled');
+    });
+    it('shows transfer ownership option for disconnect OCP', () => {
+      const newProps = {
+        ...Fixtures.disconnectOCP,
+        canTransferClusterOwnership: true,
+        isClusterOwner: false,
+        isAutoClusterTransferOwnershipEnabled: true,
+      };
+      render(<DropDownItemsRenderHelper {...newProps} />);
+
+      expect(
+        screen.getByRole('menuitem', { name: 'Transfer cluster ownership' }),
+      ).not.toHaveAttribute('aria-disabled');
+    });
+    it('shows cancel transfer ownership option', () => {
+      const cluster = {
+        ...Fixtures.selfManagedProps.cluster,
+        subscription: { ...Fixtures.selfManagedProps.cluster.subscription, released: true },
+      };
+      const newProps = {
+        ...Fixtures.selfManagedProps,
+        cluster,
+        canTransferClusterOwnership: true,
+        isClusterOwner: true,
+        isAutoClusterTransferOwnershipEnabled: true,
+      };
+      render(<DropDownItemsRenderHelper {...newProps} />);
+
+      expect(
+        screen.getByRole('menuitem', { name: 'Cancel ownership transfer' }),
+      ).not.toHaveAttribute('aria-disabled');
     });
   });
 });

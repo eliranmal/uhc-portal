@@ -1,1 +1,1 @@
-export type GitHubTeamsAndOrgsDataType = { id: number; teams?: string; organizations?: string };
+export type GitHubTeamsAndOrgsDataType = { teams?: string; organizations?: string };

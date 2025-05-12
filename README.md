@@ -20,7 +20,7 @@ Slack channels: `#service-development` for OCM in general, `#ocm-osd-ui` for UI.
 ## Requirements
 
 - [NodeJS](https://nodejs.org/) `>= 18.12.0`
-- [Yarn](https://classic.yarnpkg.com/lang/en/) `1.22.19`
+- [Yarn](https://classic.yarnpkg.com/lang/en/) `1.22.19` - (higher versions are not supported)
 
 ## Building
 
@@ -74,6 +74,16 @@ Use `./deploy_info.mjs` script to check which versions are now deployed.
 If you want to monitor/debug the deploy jobs, `./deploy_info.mjs --json`
 output has all the info you’ll need.
 
+## Issues/Troubleshooting
+
+If you get a timeout/network connection issue when running `yarn install`, try increasing the timeout e.g.
+`yarn install --network-timeout 600000`.
+
 ## Contributing
 
 For in depth guidance see [the contributing guidelines](docs/contributing.md).
+
+### Release
+
+A detailed explanation of how to make a release can be found on the [Release to Production page](docs/releasing.md)
+

@@ -1,8 +1,18 @@
 import React from 'react';
+import * as reactRedux from 'react-redux';
 
 import { checkAccessibility, render, screen } from '~/testUtils';
 
 import UpgradeStatus from './UpgradeStatus';
+
+jest.mock('react-redux', () => ({
+  ...jest.requireActual('react-redux'),
+  useDispatch: jest.fn(),
+}));
+
+const useDispatchMock = jest.spyOn(reactRedux, 'useDispatch');
+const mockedDispatch = jest.fn();
+useDispatchMock.mockReturnValue(mockedDispatch);
 
 const schedule = {
   version: '1.2.4',
@@ -25,8 +35,11 @@ describe('<UpgradeStatus />', () => {
     canEdit: true,
     clusterVersion: '1.2.3',
     clusterVersionRawID: '1.2.3',
-    onCancelClick,
-    openModal,
+    cluster: {
+      version: {
+        raw_id: '1.2.3',
+      },
+    },
   };
 
   afterEach(() => {
@@ -79,13 +92,18 @@ describe('<UpgradeStatus />', () => {
     });
 
     it('cancel button should be functional', async () => {
-      const { user } = render(<UpgradeStatus {...manualUpgradeScheduled} />);
+      const { user } = render(
+        <UpgradeStatus {...manualUpgradeScheduled} onCancelClick={onCancelClick} />,
+      );
       expect(onCancelClick).not.toBeCalled();
       expect(openModal).not.toBeCalled();
 
       await user.click(screen.getByRole('button', { name: cancelButtonText }));
       expect(onCancelClick).toBeCalled();
-      expect(openModal).toBeCalledWith('cancel-upgrade', { clusterID: 'myClusterId', schedule });
+      expect(mockedDispatch).toBeCalledWith({
+        type: 'OPEN_MODAL',
+        payload: { name: 'cancel-upgrade', data: { clusterID: 'myClusterId', schedule } },
+      });
     });
 
     it('should show the scheduled time', () => {

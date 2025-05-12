@@ -12,7 +12,7 @@ import { ImdsSectionAlert } from '~/components/clusters/wizards/common/ClusterSe
 import { ImdsSectionHint } from '~/components/clusters/wizards/common/ClusterSettings/MachinePool/ImdsSectionField/ImdsSectionHint';
 import { useFormState } from '~/components/clusters/wizards/hooks';
 import { FieldId } from '~/components/clusters/wizards/rosa/constants';
-import RadioButtons from '~/components/common/ReduxFormComponents/RadioButtons';
+import RadioButtons from '~/components/common/ReduxFormComponents_deprecated/RadioButtons';
 
 type ImdsSectionProps = {
   isDisabled: boolean;

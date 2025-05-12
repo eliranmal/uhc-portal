@@ -17,7 +17,7 @@ limitations under the License.
 import { produce } from 'immer';
 
 import { getErrorState } from '../../common/errors';
-import { Subscription } from '../../types/clusters_mgmt.v1/models/Subscription';
+import { Subscription } from '../../types/clusters_mgmt.v1';
 import { SubscriptionSettingsAction } from '../actions/subscriptionSettingsActions';
 import { subscriptionSettingsConstants } from '../constants';
 import {

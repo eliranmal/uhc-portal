@@ -1,8 +1,8 @@
 const filterLoadBalancerValuesByQuota = (currentValue, loadBalancerValues, remainingQuota) => {
-  const result = { ...loadBalancerValues };
-  if (!result.values) {
+  if (!loadBalancerValues) {
     return { values: [] };
   }
+  const result = { values: [...loadBalancerValues] };
   if (currentValue) {
     result.values = result.values.filter((el) => el <= remainingQuota + currentValue);
   } else {

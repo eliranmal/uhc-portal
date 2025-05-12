@@ -18,12 +18,12 @@ describe('InstallNutanix', () => {
 
     expect(screen.getByRole('link', { name: /Learn more about interactive/ })).toHaveAttribute(
       'href',
-      `https://docs.openshift.com/container-platform/${version}/installing/installing_on_prem_assisted/installing-on-prem-assisted.html`,
+      `https://docs.redhat.com/en/documentation/openshift_container_platform/${version}/html/installing_on-premise_with_assisted_installer/installing-on-prem-assisted`,
     );
 
     expect(screen.getByRole('link', { name: /Learn more about automated/ })).toHaveAttribute(
       'href',
-      `https://docs.openshift.com/container-platform/${version}/installing/installing_nutanix/preparing-to-install-on-nutanix.html`,
+      `https://docs.redhat.com/en/documentation/openshift_container_platform/${version}/html/installing_on_nutanix/preparing-to-install-on-nutanix`,
     );
   });
 });

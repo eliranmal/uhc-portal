@@ -1,6 +1,6 @@
 import { checkAccessibility, render, screen } from '~/testUtils';
 
-import ServiceMeshDrawerPanelBody from '../../components/common/DrawerPanelContents/ServiceMesh/DrawerPanelBody';
+import { ServiceMeshDrawerPanelBody } from '../../components/common/DrawerPanelContents/ServiceMesh/DrawerPanelBody';
 
 import '@testing-library/jest-dom';
 
@@ -23,6 +23,8 @@ describe('ServiceMeshDrawerPanelBody', () => {
       'href',
       'https://www.redhat.com/en/topics/microservices/what-is-istio',
     );
+    expect(istioLink).toHaveAttribute('target', '_blank');
+    expect(istioLink).toHaveAttribute('rel', 'noreferrer noopener');
 
     expect(
       screen.getByText(
@@ -33,6 +35,8 @@ describe('ServiceMeshDrawerPanelBody', () => {
     const kialiLink = screen.getByText('Kiali');
     expect(kialiLink).toBeInTheDocument();
     expect(kialiLink).toHaveAttribute('href', 'https://github.com/kiali/kiali-operator');
+    expect(kialiLink).toHaveAttribute('target', '_blank');
+    expect(kialiLink).toHaveAttribute('rel', 'noreferrer noopener');
 
     const redHatOpenShiftObservabilityLink = screen.getByText('Red Hat OpenShift Observability');
     expect(redHatOpenShiftObservabilityLink).toBeInTheDocument();
@@ -40,6 +44,8 @@ describe('ServiceMeshDrawerPanelBody', () => {
       'href',
       'https://www.redhat.com/en/technologies/cloud-computing/openshift/observability',
     );
+    expect(redHatOpenShiftObservabilityLink).toHaveAttribute('target', '_blank');
+    expect(redHatOpenShiftObservabilityLink).toHaveAttribute('rel', 'noreferrer noopener');
 
     const benefitsTitle = screen.getByTestId('drawer-panel-content-benefits-title');
     expect(benefitsTitle).toBeInTheDocument();

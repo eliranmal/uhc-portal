@@ -1,15 +1,13 @@
 import mergeWith from 'lodash/mergeWith';
 
-import { GlobalState } from '~/redux/store';
+import { ClusterWithPermissions } from '~/types/types';
 
 import {
   haveCapabilities,
   subscriptionCapabilities,
 } from '../../../../common/subscriptionCapabilities';
 
-const canSubscribeOCPListSelector = (state: GlobalState) => {
-  const clusters = state?.clusters?.clusters?.clusters ?? [];
-
+export const canSubscribeOCPListFromClusters = (clusters: ClusterWithPermissions[] = []) => {
   const subscribeStandardOCPList = haveCapabilities(
     clusters,
     subscriptionCapabilities.SUBSCRIBED_OCP,
@@ -25,5 +23,3 @@ const canSubscribeOCPListSelector = (state: GlobalState) => {
     (objVal, srcVal) => objVal || srcVal,
   );
 };
-
-export default canSubscribeOCPListSelector;

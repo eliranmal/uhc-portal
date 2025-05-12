@@ -37,8 +37,9 @@ const VPCDetailsCard = ({ cluster }) => {
   const additionalTrustBundle = cluster.additional_trust_bundle;
   const gcpVPCName = cluster.gcp_network?.vpc_name;
   const isBYOVPC = cluster.aws?.subnet_ids || cluster.gcp_network;
+  const gcpPrivateServiceConnect = cluster.gcp?.private_service_connect?.service_attachment_subnet;
 
-  const region = cluster.subscription?.xcm_id;
+  const region = cluster.subscription?.rh_region_id;
 
   const isPrivateLinkInitialized = typeof privateLink !== 'undefined';
 
@@ -64,7 +65,7 @@ const VPCDetailsCard = ({ cluster }) => {
         </Title>
       </CardTitle>
       <CardBody className="ocm-c-networking-vpc-details__card--body pf-v5-l-stack pf-m-gutter">
-        {gcpVPCName || isPrivateLinkInitialized ? (
+        {gcpVPCName || isPrivateLinkInitialized || gcpPrivateServiceConnect ? (
           <>
             <Title headingLevel="h3" className="pf-v5-l-stack__item">
               VPC Details
@@ -84,6 +85,14 @@ const VPCDetailsCard = ({ cluster }) => {
                   <DescriptionListTerm>PrivateLink</DescriptionListTerm>
                   <DescriptionListDescription>
                     {privateLink ? 'Enabled' : 'Disabled'}
+                  </DescriptionListDescription>
+                </DescriptionListGroup>
+              ) : null}
+              {gcpPrivateServiceConnect ? (
+                <DescriptionListGroup>
+                  <DescriptionListTerm>Private Service Connect Subnet</DescriptionListTerm>
+                  <DescriptionListDescription>
+                    {gcpPrivateServiceConnect}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
               ) : null}

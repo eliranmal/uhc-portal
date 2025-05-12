@@ -15,7 +15,7 @@ import { useFormState } from '~/components/clusters/wizards/hooks';
 import { FieldId } from '~/components/clusters/wizards/osd/constants';
 import { FormGroupHelperText } from '~/components/common/FormGroupHelperText';
 import { useGlobalState } from '~/redux/hooks/useGlobalState';
-import { CloudVPC } from '~/types/clusters_mgmt.v1';
+import { CloudVpc } from '~/types/clusters_mgmt.v1';
 
 interface GcpVpcSubnetSelectFieldProps {
   input: FieldInputProps<FormSelectProps>;
@@ -51,7 +51,7 @@ export const GcpVpcSubnetSelectField = ({
     vpcs.region === region;
   const showOptions = matchesDependencies && vpcs.fulfilled;
   const items = React.useMemo(() => {
-    const selectedVPC = vpcs?.data?.items?.find((item: CloudVPC) => item.name === vpcName);
+    const selectedVPC = vpcs?.data?.items?.find((item: CloudVpc) => item.name === vpcName);
     return selectedVPC?.subnets || [];
   }, [vpcName, vpcs?.data?.items]);
 

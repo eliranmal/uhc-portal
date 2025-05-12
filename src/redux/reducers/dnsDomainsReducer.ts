@@ -17,7 +17,7 @@ import sortBy from 'lodash/sortBy';
 
 import { getErrorState } from '~/common/errors';
 import { DnsDomainsAction } from '~/redux/actions/dnsDomainsActions';
-import { DNSDomain } from '~/types/clusters_mgmt.v1';
+import { DnsDomain } from '~/types/clusters_mgmt.v1';
 
 import { dnsDomainsConstants } from '../constants';
 import {
@@ -29,7 +29,7 @@ import {
 import { PromiseActionType, PromiseReducerState } from '../types';
 
 export type State = PromiseReducerState<{
-  items: DNSDomain[];
+  items: DnsDomain[];
   createdDnsId: string;
   deletedDnsId?: string;
   isUpdatingDomains: boolean;
@@ -88,7 +88,7 @@ function dnsDomainsReducer(
       };
 
     case FULFILLED_ACTION(dnsDomainsConstants.CREATE_DNS_DOMAIN): {
-      const newDomainItem = action.payload.data as Required<DNSDomain>;
+      const newDomainItem = action.payload.data as Required<DnsDomain>;
 
       const combinedItems = (state.items || []).concat([newDomainItem]);
       return {

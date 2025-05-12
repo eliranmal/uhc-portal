@@ -6,6 +6,9 @@ import { viewPaginationConstants } from '../constants';
 const onSetTotalClusters = (totalCount: number | undefined, viewType: string) =>
   action(viewPaginationConstants.SET_TOTAL_ITEMS, { viewType, totalCount: totalCount || 0 });
 
+const onSetTotal = (totalCount: number | undefined, viewType: string) =>
+  action(viewPaginationConstants.SET_TOTAL_ITEMS, { viewType, totalCount: totalCount || 0 });
+
 const onFirstPage = (viewType: string) =>
   action(viewPaginationConstants.VIEW_FIRST_PAGE, { viewType });
 
@@ -33,6 +36,9 @@ const onListFlagsSet = (key: string, value: ViewFlags, viewType: string) =>
 const onClearFiltersAndFlags = (viewType: string) =>
   action(viewPaginationConstants.VIEW_CLEAR_FILTERS_AND_FLAGS, { viewType });
 
+const onResetFiltersAndFlags = (viewType: string) =>
+  action(viewPaginationConstants.VIEW_RESET_FILTERS_AND_FLAGS, { viewType });
+
 const onListSortBy = (sorting: ViewSorting, viewType: string) =>
   action(viewPaginationConstants.VIEW_CHANGE_SORT, { viewType, sorting });
 
@@ -47,6 +53,7 @@ const viewActions = {
   onListFlagsSet,
   onListSortBy,
   onClearFiltersAndFlags,
+  onResetFiltersAndFlags,
   onSetTotalClusters,
 };
 
@@ -64,6 +71,8 @@ export {
   onListFlagsSet,
   onListSortBy,
   onClearFiltersAndFlags,
+  onResetFiltersAndFlags,
   ViewOptionsAction,
   onSetTotalClusters,
+  onSetTotal,
 };

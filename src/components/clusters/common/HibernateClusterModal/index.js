@@ -1,39 +1,9 @@
 import { connect } from 'react-redux';
 
-import {
-  clearHibernateClusterResponse,
-  hibernateCluster,
-} from '../../../../redux/actions/clustersActions';
-import { closeModal } from '../../../common/Modal/ModalActions';
-import {
-  clearPostedUpgradeScheduleResponse,
-  getSchedules,
-} from '../Upgrades/clusterUpgradeActions';
-
 import HibernateClusterModal from './HibernateClusterModal';
 
-const mapStateToProps = (state) => {
-  const modalData = state.modal.data;
-  return {
-    hibernateClusterResponse: state.clusters.hibernatingCluster,
-    clusterID: modalData.clusterID ? modalData.clusterID : '',
-    clusterName: modalData.clusterName ? modalData.clusterName : '',
-    clusterUpgrades: state.clusterUpgrades.schedules,
-    subscriptionID: modalData.subscriptionID ? modalData.subscriptionID : '',
-    shouldDisplayClusterName: modalData.shouldDisplayClusterName || false,
-  };
-};
+const mapStateToProps = () => ({});
 
-const mapDispatchToProps = (dispatch) => ({
-  submit: (clusterID) => {
-    dispatch(hibernateCluster(clusterID));
-  },
-  resetResponses: () => {
-    dispatch(clearHibernateClusterResponse());
-    dispatch(clearPostedUpgradeScheduleResponse());
-  },
-  getSchedules: (clusterID) => dispatch(getSchedules(clusterID)),
-  closeModal: () => dispatch(closeModal()),
-});
+const mapDispatchToProps = () => ({});
 
 export default connect(mapStateToProps, mapDispatchToProps)(HibernateClusterModal);

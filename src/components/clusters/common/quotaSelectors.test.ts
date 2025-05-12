@@ -1,8 +1,12 @@
-import { QuotaCost, QuotaCostList } from '~/types/accounts_mgmt.v1';
-import { BillingModel } from '~/types/clusters_mgmt.v1';
+import {
+  QuotaCost,
+  QuotaCostList,
+  RelatedResourceBilling_model as RelatedResourceBillingModel,
+} from '~/types/accounts_mgmt.v1';
+import { BillingModel } from '~/types/clusters_mgmt.v1/enums';
 import { ClusterFromSubscription } from '~/types/types';
 
-import { billingModels, normalizedProducts } from '../../../common/subscriptionTypes';
+import { normalizedProducts } from '../../../common/subscriptionTypes';
 
 import { defaultClusterFromSubscription } from './__tests__/defaultClusterFromSubscription.fixtures';
 import {
@@ -42,16 +46,13 @@ import {
   simpleQuery,
   TrialQuotaList,
 } from './__tests__/quotaSelectors.fixtures';
-import { QuotaParams, QuotaQuery } from './quotaModel';
+import { QuotaParams, QuotaQuery, QuotaTypes } from './quotaModel';
 import {
   addOnBillingQuota,
-  availableClustersFromQuota,
   availableFromQuotaCostItem,
-  availableNodesFromQuota,
   availableQuota,
   getAwsBillingAccountsFromQuota,
   getBillingQuotaModel,
-  hasManagedQuotaSelector,
   hasPotentialQuota,
   queryFromCluster,
 } from './quotaSelectors';
@@ -69,11 +70,11 @@ describe('quotaSelectors', () => {
 
   describe('getBillingQuotaModel', () => {
     it.each([
-      [BillingModel.MARKETPLACE_AWS, billingModels.MARKETPLACE],
-      [BillingModel.MARKETPLACE, BillingModel.MARKETPLACE],
-      [BillingModel.MARKETPLACE_AZURE, BillingModel.MARKETPLACE_AZURE],
-      [BillingModel.MARKETPLACE_GCP, BillingModel.MARKETPLACE_GCP],
-      [BillingModel.MARKETPLACE_RHM, BillingModel.MARKETPLACE_RHM],
+      [BillingModel.marketplace_aws, BillingModel.marketplace],
+      [BillingModel.marketplace, BillingModel.marketplace],
+      [BillingModel.marketplace_azure, BillingModel.marketplace_azure],
+      [BillingModel.marketplace_gcp, BillingModel.marketplace_gcp],
+      [BillingModel.marketplace_rhm, BillingModel.marketplace_rhm],
     ])('model %p is %p', (model: BillingModel, expected: string) => {
       expect(getBillingQuotaModel(model)).toBe(expected);
     });
@@ -82,7 +83,7 @@ describe('quotaSelectors', () => {
   describe('availableQuota', () => {
     it.each([
       ['RH Infra should be 0', emptyQuotaCostList, paramsRhInfra, 0],
-      ['GCP should be Infinity', emptyQuotaCostList, paramsGCP, Infinity],
+      ['GCP should be 0', emptyQuotaCostList, paramsGCP as any as QuotaParams, 0],
     ])(
       '%p',
       (title: string, quotaList: QuotaCostList, quotaParams: QuotaParams, expected: number) => {
@@ -91,16 +92,35 @@ describe('quotaSelectors', () => {
     );
   });
 
-  describe('hasManagedQuotaSelector', () => {
+  describe('has quota', () => {
     it.each([
-      [emptyQuotaCostList, normalizedProducts.OSD, false],
-      [ROSAQuotaList, normalizedProducts.OSD, false],
-      [CCSQuotaList, normalizedProducts.OSD, true],
-      [rhQuotaList, normalizedProducts.OSD, true],
-      [mockQuotaList, normalizedProducts.OSD, true],
-      [negativeQuotaList, normalizedProducts.OSD, true],
-    ])('%p', (quotaList: QuotaCostList, product: string, exptected: boolean) =>
-      expect(hasManagedQuotaSelector(quotaList, product)).toBe(exptected),
+      [emptyQuotaCostList, normalizedProducts.OSD, RelatedResourceBillingModel.marketplace, false],
+      [emptyQuotaCostList, normalizedProducts.OSD, RelatedResourceBillingModel.standard, false],
+      [ROSAQuotaList, normalizedProducts.OSD, RelatedResourceBillingModel.marketplace, false],
+      [ROSAQuotaList, normalizedProducts.OSD, RelatedResourceBillingModel.standard, false],
+      [CCSQuotaList, normalizedProducts.OSD, RelatedResourceBillingModel.marketplace, false],
+      [CCSQuotaList, normalizedProducts.OSD, RelatedResourceBillingModel.standard, true],
+      [rhQuotaList, normalizedProducts.OSD, RelatedResourceBillingModel.marketplace, false],
+      [rhQuotaList, normalizedProducts.OSD, RelatedResourceBillingModel.standard, true],
+      [mockQuotaList, normalizedProducts.OSD, RelatedResourceBillingModel.standard, true],
+      [mockQuotaList, normalizedProducts.OSD, RelatedResourceBillingModel.marketplace, true],
+      [negativeQuotaList, normalizedProducts.OSD, RelatedResourceBillingModel.standard, true],
+      [negativeQuotaList, normalizedProducts.OSD, RelatedResourceBillingModel.marketplace, false],
+    ])(
+      '%p',
+      (
+        quotaList: QuotaCostList,
+        product: string,
+        billingModel: RelatedResourceBillingModel,
+        exptected: boolean,
+      ) =>
+        expect(
+          availableQuota(quotaList, {
+            product,
+            resourceType: QuotaTypes.CLUSTER,
+            billingModel,
+          }) >= 1,
+        ).toBe(exptected),
     );
   });
 
@@ -118,7 +138,7 @@ describe('quotaSelectors', () => {
     );
   });
 
-  describe('availableClustersFromQuota', () => {
+  describe('availableQuota resource type CLUSTER', () => {
     it.each([
       ['empty quota with RH Infra params should be 0', emptyQuotaCostList, paramsRhInfra, 0],
       ['CCS quota with RH Infra params should be 0', CCSQuotaList, paramsRhInfra, 0],
@@ -150,12 +170,14 @@ describe('quotaSelectors', () => {
     ])(
       '%p',
       (title: string, quotaList: QuotaCostList, quotaParams: QuotaParams, expected: number) => {
-        expect(availableClustersFromQuota(quotaList, quotaParams)).toBe(expected);
+        expect(
+          availableQuota(quotaList, { ...quotaParams, resourceType: QuotaTypes.CLUSTER }),
+        ).toBe(expected);
       },
     );
   });
 
-  describe('availableNodesFromQuota', () => {
+  describe('availableQuota resource type NODE', () => {
     it.each([
       ['empty quota with RH Infra params should be 0', emptyQuotaCostList, paramsRhInfra, 0],
       ['CCS quota with RH Infra params should be 0', CCSQuotaList, paramsRhInfra, 0],
@@ -187,7 +209,9 @@ describe('quotaSelectors', () => {
     ])(
       '%p',
       (title: string, quotaList: QuotaCostList, quotaParams: QuotaParams, expected: number) => {
-        expect(availableNodesFromQuota(quotaList, quotaParams)).toBe(expected);
+        expect(availableQuota(quotaList, { ...quotaParams, resourceType: QuotaTypes.NODE })).toBe(
+          expected,
+        );
       },
     );
   });

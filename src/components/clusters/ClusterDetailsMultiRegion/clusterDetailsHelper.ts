@@ -3,8 +3,11 @@ import clusterStates, {
   isHibernating,
   isHypershiftCluster,
 } from '~/components/clusters/common/clusterStates';
-import { ClusterResource, Subscription, SubscriptionCommonFields } from '~/types/accounts_mgmt.v1';
-import { Cluster } from '~/types/clusters_mgmt.v1';
+import {
+  ClusterResource,
+  Subscription,
+  SubscriptionCommonFieldsStatus,
+} from '~/types/accounts_mgmt.v1';
 import { ClusterFromSubscription } from '~/types/types';
 
 const hasCpuAndMemory = (cpu: ClusterResource | undefined, memory: ClusterResource | undefined) =>
@@ -22,10 +25,10 @@ const getSubscriptionLastReconciledDate = (subscription: Subscription) =>
     ? new Date(subscription.last_reconcile_date).toLocaleString()
     : false;
 
-const isMultiAZ = (cluster: Cluster): boolean =>
+const isMultiAZ = (cluster: ClusterFromSubscription): boolean =>
   !isHypershiftCluster(cluster) && cluster.multi_az === true;
 
-const isMPoolAz = (cluster: Cluster, mpAvailZones: number | undefined): boolean => {
+const isMPoolAz = (cluster: ClusterFromSubscription, mpAvailZones: number | undefined): boolean => {
   // Checks if it is multizone cluster and multi zone machinepool
   if (
     (isMultiAZ(cluster) && mpAvailZones && mpAvailZones > 1) ||
@@ -42,8 +45,8 @@ const isMPoolAz = (cluster: Cluster, mpAvailZones: number | undefined): boolean 
  * @returns whether subscription is archived or not
  */
 const isArchivedSubscription = <E extends ClusterFromSubscription>(cluster: E): boolean =>
-  cluster.subscription?.status === SubscriptionCommonFields.status.ARCHIVED ||
-  cluster.subscription?.status === SubscriptionCommonFields.status.DEPROVISIONED;
+  cluster.subscription?.status === SubscriptionCommonFieldsStatus.Archived ||
+  cluster.subscription?.status === SubscriptionCommonFieldsStatus.Deprovisioned;
 
 /**
  *
@@ -56,7 +59,7 @@ const hasValidStatusForActions = <E extends ClusterFromSubscription>(
 ): boolean =>
   cluster.managed === true &&
   (!needsConsoleUrl || !['', undefined].includes(cluster.console?.url)) &&
-  (cluster.state === clusterStates.READY || isHibernating(cluster)) &&
+  (cluster.state === clusterStates.ready || isHibernating(cluster)) &&
   !isArchivedSubscription(cluster);
 
 /**
@@ -82,6 +85,12 @@ const isReadyForAwsAccessActions = <E extends ClusterFromSubscription>(cluster: 
 const isReadyForIdpActions = <E extends ClusterFromSubscription>(cluster: E): boolean =>
   hasValidStatusForActions(cluster, !isHypershiftCluster(cluster));
 
+const isReadyForExternalActions = <E extends ClusterFromSubscription>(cluster: E): boolean =>
+  hasValidStatusForActions(cluster, false);
+
+const isExtenalAuthenicationActive = <E extends ClusterFromSubscription>(cluster: E): boolean =>
+  (cluster?.external_auth_config?.enabled ?? false) && isHypershiftCluster(cluster);
+
 const eventTypes = {
   CLICKED: 'clicked',
   AUTO: 'auto',
@@ -93,10 +102,12 @@ export {
   getSubscriptionLastReconciledDate,
   hasCpuAndMemory,
   isArchivedSubscription,
+  isExtenalAuthenicationActive,
   isHypershiftCluster,
   isMPoolAz,
   isMultiAZ,
   isReadyForAwsAccessActions,
+  isReadyForExternalActions,
   isReadyForIdpActions,
   isReadyForRoleAccessActions,
 };

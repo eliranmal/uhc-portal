@@ -46,12 +46,12 @@ function HibernatingClusterCard({ cluster }) {
     'You do not have permission to resume from hibernation. Only cluster owners, cluster editors, and Organization Administrators can change hibernation state.';
 
   switch (cluster.state) {
-    case clusterStates.RESUMING:
+    case clusterStates.resuming:
       title = 'Cluster is resuming from hibernation';
       body = 'This might take a few minutes!';
       icon = InProgressIcon;
       break;
-    case clusterStates.POWERING_DOWN:
+    case clusterStates.powering_down:
       title = 'Cluster is powering down and moving to a hibernating state';
       body =
         'The cluster will not utilize any infrastructure and all operations will not be available';
@@ -68,7 +68,7 @@ function HibernatingClusterCard({ cluster }) {
   }
 
   return (
-    <Card>
+    <Card isFlat>
       <CardBody>
         <EmptyState variant={EmptyStateVariant.sm}>
           <EmptyStateHeader

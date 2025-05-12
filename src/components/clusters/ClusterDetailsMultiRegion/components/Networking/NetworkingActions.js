@@ -3,9 +3,11 @@ import isEqual from 'lodash/isEqual';
 
 import { stringToArrayTrimmed, strToKeyValueObject } from '~/common/helpers';
 import { invalidateClusterDetailsQueries } from '~/queries/ClusterDetailsQueries/useFetchClusterDetails';
-import { LoadBalancerFlavor } from '~/types/clusters_mgmt.v1';
-import { NamespaceOwnershipPolicy } from '~/types/clusters_mgmt.v1/models/NamespaceOwnershipPolicy';
-import { WildcardPolicy } from '~/types/clusters_mgmt.v1/models/WildcardPolicy';
+import {
+  LoadBalancerFlavor,
+  NamespaceOwnershipPolicy,
+  WildcardPolicy,
+} from '~/types/clusters_mgmt.v1/enums';
 
 import { clusterService } from '../../../../../services';
 
@@ -75,8 +77,8 @@ const createDefaultRouterRequest = (newData, currentData) => {
   ) {
     requestDefaultRouter.route_namespace_ownership_policy =
       newData.isDefaultRouterNamespaceOwnershipPolicyStrict
-        ? NamespaceOwnershipPolicy.STRICT
-        : NamespaceOwnershipPolicy.INTER_NAMESPACE_ALLOWED;
+        ? NamespaceOwnershipPolicy.Strict
+        : NamespaceOwnershipPolicy.InterNamespaceAllowed;
   }
 
   if (
@@ -84,17 +86,17 @@ const createDefaultRouterRequest = (newData, currentData) => {
     newData.isDefaultRouterWildcardPolicyAllowed !== currentData.default.isWildcardPolicyAllowed
   ) {
     requestDefaultRouter.route_wildcard_policy = newData.isDefaultRouterWildcardPolicyAllowed
-      ? WildcardPolicy.WILDCARDS_ALLOWED
-      : WildcardPolicy.WILDCARDS_DISALLOWED;
+      ? WildcardPolicy.WildcardsAllowed
+      : WildcardPolicy.WildcardsDisallowed;
   }
 
   if (
     newData.is_nlb_load_balancer !== undefined &&
-    newData.is_nlb_load_balancer !== (currentData.default.loadBalancer === LoadBalancerFlavor.NLB)
+    newData.is_nlb_load_balancer !== (currentData.default.loadBalancer === LoadBalancerFlavor.nlb)
   ) {
     requestDefaultRouter.load_balancer_type = newData.is_nlb_load_balancer
-      ? LoadBalancerFlavor.NLB
-      : LoadBalancerFlavor.CLASSIC;
+      ? LoadBalancerFlavor.nlb
+      : LoadBalancerFlavor.classic;
   }
 
   if (
@@ -217,12 +219,12 @@ const networkingActions = {
 };
 
 export {
-  networkingActions,
-  getClusterRouters,
+  createDefaultRouterRequest,
   editClusterRouters,
-  saveNetworkingConfiguration,
+  getClusterRouters,
+  networkingActions,
   resetClusterRouters,
   resetEditRoutersResponse,
-  createDefaultRouterRequest,
+  saveNetworkingConfiguration,
   sendNetworkConfigRequests,
 };

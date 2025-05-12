@@ -3,6 +3,7 @@ import RedHatOpenShiftAILogo from '~/styles/images/RedHatOpenShiftAILogo.svg';
 import RedHatOpenShiftGitOpsLogo from '~/styles/images/RedHatOpenShiftGitOpsLogo.svg';
 import RedHatOpenShiftPipelinesLogo from '~/styles/images/RedHatOpenShiftPipelinesLogo.svg';
 import RedHatOpenShiftServiceMeshLogo from '~/styles/images/RedHatOpenShiftServiceMeshLogo.svg';
+import RedHatOpenShiftVirtualization from '~/styles/images/RedHatOpenShiftVirtualizationLogo.svg';
 
 const PRODUCT_CARD_LOGOS = {
   gitops: {
@@ -24,6 +25,10 @@ const PRODUCT_CARD_LOGOS = {
   openshiftAi: {
     title: 'Red Hat OpenShift AI',
     logo: RedHatOpenShiftAILogo,
+  },
+  openshiftVirtualization: {
+    title: 'OpenShift Virtualization',
+    logo: RedHatOpenShiftVirtualization,
   },
 };
 

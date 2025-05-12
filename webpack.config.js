@@ -25,6 +25,8 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 const FederationPlugin = require('@redhat-cloud-services/frontend-components-config-utilities/federated-modules');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
+const { Agent } = require('https');
 const { insights } = require('./package.json');
 
 const name = insights.appname;
@@ -38,32 +40,16 @@ module.exports = async (_env, argv) => {
   const { outputPath } = argv;
   const devMode = argv.mode !== 'production';
   process.env.DEV_MODE = devMode;
-  // the `BETA` env-var is exported during deployment builds by the frontend-build-container's universal-installer
-  // @see https://gitlab.cee.redhat.com/insights-platform/frontend-build-container/-/blob/508d19983a7f78bbe1a66ead1585ffe9f4ba44a0/universal_build.sh#L122
-  const envBetaMode = process.env.BETA === 'true';
-  // the `beta` arg' is used locally in this repo', to serve fakamai/netstorage (i.e. non-containerized) pipelines
-  // @see https://gitlab.cee.redhat.com/service/uhc-portal/-/blob/1a76f8fad8918a302da89ba3f65b6c37b64a6779/push_to_insights.sh#L181
-  const argBetaMode = argv.env.beta === 'true';
-  const betaMode = envBetaMode || argBetaMode;
 
   const sentryReleaseVersion = process.env.SENTRY_VERSION || argv.env['sentry-version'];
+
   const isDevServer = process.argv.includes('serve');
 
   const outDir = outputPath
     ? path.resolve(__dirname, outputPath)
     : path.resolve(__dirname, 'dist', insights.appname);
 
-  // Select default API env based on argument if specified.
-  // Otherwise, default to 'development' for backend-proxy users when running in dev server,
-  // or 'production' when it's a real build.
-  const apiEnv = argv.env['api-env'] || (isDevServer ? 'development' : 'production');
-  // eslint-disable-next-line no-console
-  console.log(`Building with apiEnv=${apiEnv}, beta=${betaMode}, isDevServer=${isDevServer}`);
-
-  // On "beta" name: user-visible URLs moved /beta/openshift -> /preview/openshift,
-  // however the compiled assets remained at /beta/apps/openshift.
-  const appDeployment = betaMode ? 'beta/apps' : 'apps';
-  const publicPath = `/${appDeployment}/${insights.appname}/`;
+  const publicPath = `/apps/${insights.appname}/`;
 
   let bundleAnalyzer = null;
   if (process.env.BUNDLE_ANALYZER) {
@@ -82,9 +68,7 @@ module.exports = async (_env, argv) => {
   // Variable to run assisted-ui in standalone mode. You need to take a look to README to see instructions when ai_standalone=true
   const runAIinStandalone = !!argv.env.ai_standalone;
 
-  const chromeTemplateUrl = `https://console.redhat.com/${
-    betaMode ? 'preview/' : ''
-  }apps/chrome/index.html`;
+  const chromeTemplateUrl = `https://console.redhat.com/apps/chrome/index.html`;
   const getChromeTemplate = async () => {
     const result = await axios.get(chromeTemplateUrl);
     return result.data;
@@ -98,6 +82,14 @@ module.exports = async (_env, argv) => {
       window.onbeforeunload = null;
     });
   }
+
+  const keepAliveAgent = new Agent({
+    maxSockets: 100,
+    keepAlive: true,
+    maxFreeSockets: 10,
+    keepAliveMsecs: 1000,
+    timeout: 60000,
+  });
 
   return {
     mode: argv.mode || 'development',
@@ -115,7 +107,7 @@ module.exports = async (_env, argv) => {
       hashFunction: 'xxhash64', // default md4 not allowed on recent NodeJS/OpenSSL
       publicPath,
     },
-    devtool: 'source-map',
+    devtool: devMode ? 'cheap-module-source-map' : 'source-map',
 
     plugins: [
       new ForkTsCheckerWebpackPlugin(),
@@ -127,11 +119,9 @@ module.exports = async (_env, argv) => {
         templateContent: chromeTemplate,
       }),
       new webpack.DefinePlugin({
-        APP_BETA: betaMode,
         APP_DEVMODE: devMode,
         APP_DEV_SERVER: isDevServer,
         APP_SENTRY_RELEASE_VERSION: JSON.stringify(sentryReleaseVersion),
-        APP_API_ENV: JSON.stringify(apiEnv),
         process: { env: {} },
       }),
       new CopyWebpackPlugin({
@@ -156,6 +146,19 @@ module.exports = async (_env, argv) => {
         ],
       }),
       bundleAnalyzer,
+      new MonacoWebpackPlugin({
+        languages: ['yaml'],
+        customLanguages: [
+          {
+            label: 'yaml',
+            entry: 'monaco-yaml',
+            worker: {
+              id: 'monaco-yaml/yamlWorker',
+              entry: 'monaco-yaml/yaml.worker',
+            },
+          },
+        ],
+      }),
     ].filter(Boolean),
 
     module: {
@@ -230,6 +233,11 @@ module.exports = async (_env, argv) => {
             },
           ],
         },
+        {
+          // Monaco editor uses .ttf icons.
+          test: /\.(svg|ttf)$/,
+          type: 'asset/resource',
+        },
       ],
     },
 
@@ -256,6 +264,7 @@ module.exports = async (_env, argv) => {
         rewrites: [
           { from: /^\/src\/.*\.[a-zA-Z0-9]+$/, to: (context) => context.parsedUrl.pathname },
           // Add other rewrites or leave existing rewrites here
+          { from: /^\/assisted-installer(.*)$/, to: '/assisted-installer-app$1' },
         ],
       },
       setupMiddlewares: (middlewares, devServer) => {
@@ -315,48 +324,43 @@ module.exports = async (_env, argv) => {
       },
       proxy: noInsightsProxy
         ? [
-            {
-              context: ['/mockdata'],
-              pathRewrite: { '^/mockdata': '' },
-              target: 'http://127.0.0.1:8010',
-            },
-            runAIinStandalone
-              ? {
-                  context: [
-                    '/beta/apps/assisted-installer-app/**',
-                    '/apps/assisted-installer-app/**',
-                  ],
-                  pathRewrite: { '^/beta/': '' },
-                  target: 'http://127.0.0.1:8003',
-                  logLevel: 'debug',
-                  secure: false,
-                  changeOrigin: true,
-                }
-              : {},
-            {
-              // docs: https://github.com/chimurai/http-proxy-middleware#http-proxy-options
-              // proxy everything except our own app, mimicking insights-proxy behaviour
-              context: [
-                '**',
-                '!/mockdata/**',
-                '!/src/**',
-                `!/apps/${insights.appname}/**`,
-                `!/beta/apps/${insights.appname}/**`,
-                `!/preview/apps/${insights.appname}/**`, // not expected to be used
-              ],
-              target: 'https://console.redhat.com',
-              // replace the "host" header's URL origin with the origin from the target URL
+          {
+            context: ['/mockdata'],
+            pathRewrite: { '^/mockdata': '' },
+            target: 'http://[::1]:8010',
+          },
+          runAIinStandalone
+            ? {
+              context: ['/apps/assisted-installer-app/**'],
+              target: 'http://[::1]:8003',
+              logLevel: 'debug',
+              secure: false,
               changeOrigin: true,
-              // change the "origin" header of the proxied request to avoid CORS
-              // many APIs do not allow the requests from the foreign origin
-              onProxyReq(request) {
-                request.setHeader('origin', 'https://console.redhat.com');
-                if (verboseLogging) {
-                  console.log('  proxying console.redhat.com:', request.path);
-                }
-              },
+            }
+            : {},
+          {
+            // docs: https://github.com/chimurai/http-proxy-middleware#http-proxy-options
+            // proxy everything except our own app, mimicking insights-proxy behaviour
+            context: ['**', '!/mockdata/**', '!/src/**', `!/apps/${insights.appname}/**`],
+            target: 'https://console.redhat.com',
+            agent: keepAliveAgent,
+            headers: {
+              Connection: 'keep-alive',
             },
-          ]
+            proxyTimeout: 17000,
+            // replace the "host" header's URL origin with the origin from the target URL
+            changeOrigin: true,
+            // change the "origin" header of the proxied request to avoid CORS
+            // many APIs do not allow the requests from the foreign origin
+            onProxyReq(proxyRequest) {
+              proxyRequest.setHeader('origin', 'https://console.redhat.com');
+              proxyRequest.setHeader('Connection', 'keep-alive');
+              if (verboseLogging) {
+                console.log('  proxying console.redhat.com:', proxyRequest.path);
+              }
+            },
+          },
+        ]
         : undefined,
       hot: false,
       port: noInsightsProxy ? 1337 : 8001,

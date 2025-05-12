@@ -2,49 +2,38 @@ import React from 'react';
 
 import { checkAccessibility, render, screen } from '~/testUtils';
 
-import GeneralDrawerPanelHead from '../../components/common/DrawerPanelContents/GeneralDrawerPanelHead';
-import {
-  GENERAL_DRAWER_PANEL_HEAD_BASIC,
-  GENERAL_DRAWER_PANEL_HEAD_WITH_LINK,
-} from '../../components/fixtures';
+import { GeneralDrawerPanelHead } from '../../components/common/DrawerPanelContents/GeneralDrawerPanelHead';
+import PRODUCT_CARD_LOGOS from '../../components/common/ProductCardLogos';
 
 import '@testing-library/jest-dom';
 
-describe('<GitopsDrawerPanelHead />', () => {
-  it('renders basic elements', async () => {
-    // Arrange
-    const { container } = render(<GeneralDrawerPanelHead {...GENERAL_DRAWER_PANEL_HEAD_BASIC} />);
+const SAMPLE_WITH_LINK = {
+  title: PRODUCT_CARD_LOGOS.openshiftAi.title,
+  logo: PRODUCT_CARD_LOGOS.openshiftAi.logo,
+  trialButtonLink:
+    'https://www.redhat.com/en/technologies/cloud-computing/openshift/openshift-ai/trial',
+};
 
-    const { title, logo } = GENERAL_DRAWER_PANEL_HEAD_BASIC;
+const SAMPLE_WITHOUT_LINK = {
+  title: PRODUCT_CARD_LOGOS.gitops.title,
+  logo: PRODUCT_CARD_LOGOS.gitops.logo,
+};
 
-    // Assert
-    const titleElement = screen.getByTestId('drawer-panel-content__title');
-    expect(titleElement).toBeInTheDocument();
-    expect(titleElement).toHaveTextContent(title);
-
-    const logoElement = screen.getByTestId(`${title}-drawer-panel-content__logo`);
-    expect(logoElement).toBeInTheDocument();
-    expect(logoElement).toHaveAttribute('src', logo);
-    expect(logoElement).toHaveAttribute('alt', `${title} logo`);
-
-    expect(screen.getByText(/by Red Hat/i)).toBeInTheDocument();
-
-    await checkAccessibility(container);
+describe('<GeneralDrawerPanelHead />', () => {
+  it('renders element with trial button', async () => {
+    render(<GeneralDrawerPanelHead {...SAMPLE_WITH_LINK} />);
+    expect(screen.getByText(SAMPLE_WITH_LINK.title)).toBeInTheDocument();
+    expect(screen.getByText('Start free trial')).toBeInTheDocument();
   });
 
-  it('renders link', async () => {
-    // Arrange
-    const { container } = render(
-      <GeneralDrawerPanelHead {...GENERAL_DRAWER_PANEL_HEAD_WITH_LINK} />,
-    );
+  it('renders element without trial button', async () => {
+    render(<GeneralDrawerPanelHead {...SAMPLE_WITHOUT_LINK} />);
+    expect(screen.getByText(SAMPLE_WITHOUT_LINK.title)).toBeInTheDocument();
+    expect(screen.queryByText('Start free trial')).not.toBeInTheDocument();
+  });
 
-    const { trialButtonLink } = GENERAL_DRAWER_PANEL_HEAD_WITH_LINK;
-
-    // Assert
-    const button = screen.getByText('Start free trial');
-    expect(button).toBeInTheDocument();
-    expect(button).toHaveAttribute('href', trialButtonLink);
-
+  it('checks if the component is accessible', async () => {
+    const { container } = render(<GeneralDrawerPanelHead {...SAMPLE_WITH_LINK} />);
     await checkAccessibility(container);
   });
 });

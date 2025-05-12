@@ -128,8 +128,8 @@ class ClusterMachinePoolDetails extends Page {
       .click({ force: true });
   }
 
-  clickMachinePoolExpandableCollapsible(index = 0) {
-    let machinePoolIndex = index + 2;
+  clickMachinePoolExpandableCollapsible(index = 0, rowIndex = 1) {
+    let machinePoolIndex = index + rowIndex;
     cy.get(`td button[id="expandable-toggle${machinePoolIndex}"]`).click();
   }
 

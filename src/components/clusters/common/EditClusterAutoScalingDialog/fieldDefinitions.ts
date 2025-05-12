@@ -81,12 +81,6 @@ const resourceLimitsFields: FieldDefinition[] = [
     type: 'min-max',
     defaultValue: get(defaultValues, 'resource_limits.memory.max', 0),
   },
-  {
-    label: 'max-nodes-total',
-    name: 'resource_limits.max_nodes_total',
-    type: 'number',
-    defaultValue: get(defaultValues, 'resource_limits.max_nodes_total', 0),
-  },
 ];
 
 const scaleDownFields: FieldDefinition[] = [

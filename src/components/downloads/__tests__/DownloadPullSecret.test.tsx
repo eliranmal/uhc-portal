@@ -37,7 +37,7 @@ describe('DownloadPullSecret', () => {
   });
 
   it('check properties for no token error and no text', () => {
-    render(<DownloadPullSecret pendoID="pendoID" token={{ auths: '' }} />);
+    render(<DownloadPullSecret pendoID="pendoID" token={{ auths: {} }} />);
     const button = screen.getByTestId('download-pull-secret') as any;
     expect(button).toHaveTextContent('Download pull secret');
     expect(button.getAttribute('disabled')).toBe(null);
@@ -46,7 +46,7 @@ describe('DownloadPullSecret', () => {
   it('onclick', async () => {
     const fileSaverMock = jest.spyOn(FileSaver, 'saveAs');
 
-    const { user } = render(<DownloadPullSecret pendoID="pendoID" token={{ auths: '' }} />);
+    const { user } = render(<DownloadPullSecret pendoID="pendoID" token={{ auths: {} }} />);
     const button = screen.getByTestId('download-pull-secret') as any;
 
     await user.click(button);

@@ -1,28 +1,71 @@
 import React from 'react';
-import { reduxForm } from 'redux-form';
+import { Formik } from 'formik';
 
-import { render, screen, userEvent } from '~/testUtils';
+import { useFormState } from '~/components/clusters/wizards/hooks';
+import { render, screen } from '~/testUtils';
+
+import { FieldId } from '../../constants';
 
 import HTPasswdForm from './HTPasswdForm';
 
+jest.mock('~/components/clusters/wizards/hooks/useFormState');
+
+const initialValues = {
+  [FieldId.USERS]: [
+    {
+      username: '',
+      password: '',
+      'password-confirm': '',
+    },
+  ],
+};
+
+const buildTestComponent = (children, formValues = {}) => (
+  <Formik
+    initialValues={{
+      ...initialValues,
+      ...formValues,
+    }}
+    onSubmit={() => {}}
+  >
+    {children}
+  </Formik>
+);
+
 describe('HTPasswdForm', () => {
-  const wizardConnector = (component) => reduxForm({ form: 'HTPasswdForm' })(component);
-  const ConnectedHTPasswdBasicFields = wizardConnector(HTPasswdForm);
+  const mockedUseFormState = useFormState;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
   it('shows disabled Add user while fields are empty', async () => {
-    const HTPasswdErrors = [
-      {
-        password: {
-          emptyPassword: true,
-          baseRequirements: false,
-          uppercase: false,
-          lowercase: false,
-          numbersOrSymbols: false,
-        },
-        'password-confirm': 'Field is required',
+    mockedUseFormState.mockReturnValue({
+      values: { ...initialValues },
+      errors: {
+        [FieldId.USERS]: [
+          {
+            username: 'ERROR1',
+            password: {
+              emptyPassword: true,
+              baseRequirements: false,
+              uppercase: false,
+              lowercase: false,
+              numbersOrSymbols: false,
+            },
+          },
+        ],
       },
-    ];
-    render(<ConnectedHTPasswdBasicFields HTPasswdErrors={HTPasswdErrors} />);
+      setFieldValue: jest.fn(),
+      getFieldProps: jest.fn(),
+      getFieldMeta: jest.fn().mockReturnValue({ error: 'ERROR' }),
+    });
+
+    render(buildTestComponent(<HTPasswdForm />));
 
     expect(await screen.findByPlaceholderText('Unique username 1')).toBeInTheDocument();
 
@@ -30,27 +73,28 @@ describe('HTPasswdForm', () => {
   });
 
   it('shows disabled Add user while fields have errors', async () => {
-    const HTPasswdErrors = [
-      {
-        password: {
-          emptyPassword: false,
-          baseRequirements: true,
-          uppercase: false,
-          lowercase: true,
-          numbersOrSymbols: false,
-        },
-        'password-confirm': 'The passwords do not match',
+    mockedUseFormState.mockReturnValue({
+      values: { ...initialValues },
+      errors: {
+        [FieldId.USERS]: [
+          {
+            password: {
+              emptyPassword: false,
+              baseRequirements: true,
+              uppercase: false,
+              lowercase: true,
+              numbersOrSymbols: false,
+            },
+            'password-confirm': 'The passwords do not match',
+          },
+        ],
       },
-    ];
-    render(<ConnectedHTPasswdBasicFields HTPasswdErrors={HTPasswdErrors} />);
+      setFieldValue: jest.fn(),
+      getFieldProps: jest.fn(),
+      getFieldMeta: jest.fn().mockReturnValue({ error: 'ERROR' }),
+    });
+
+    render(buildTestComponent(<HTPasswdForm />));
     expect(screen.getByText('Add user')).toBeDisabled();
   });
-
-  it('shows enabled Add user while fields are populated and error free', async () => {
-    render(<ConnectedHTPasswdBasicFields />);
-    await userEvent.type(screen.getByLabelText('Username *'), 'test-user');
-    await userEvent.type(screen.getByLabelText('Password *'), '1234faewd%Dadsfvaerwv');
-    await userEvent.type(screen.getByLabelText('Confirm password *'), '1234faewd%Dadsfvaerwv');
-    expect(screen.getByText('Add user').getAttribute('disabled')).toBe(null);
-  }, 20_000);
 });

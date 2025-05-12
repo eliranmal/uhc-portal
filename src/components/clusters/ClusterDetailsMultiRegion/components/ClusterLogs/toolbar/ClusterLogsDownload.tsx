@@ -13,6 +13,7 @@ type ClusterLogsDownloadProps = {
   clusterID: Cluster['id'];
   viewOptions: ViewOptions;
   logs: number;
+  region?: string | undefined;
 };
 
 const ClusterLogsDownload = ({
@@ -20,6 +21,7 @@ const ClusterLogsDownload = ({
   clusterID,
   viewOptions,
   logs,
+  region,
 }: ClusterLogsDownloadProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [format, setFormat] = React.useState<'json' | 'csv'>('json');
@@ -44,11 +46,24 @@ const ClusterLogsDownload = ({
     try {
       setIsDownloading(true);
       setError(false);
-      const { data } = await serviceLogService.getClusterHistory(
-        externalClusterID,
-        clusterID,
-        query,
-      );
+      let data;
+
+      if (region) {
+        const { data: regionalLogsData } = await serviceLogService.getClusterHistoryForRegion(
+          externalClusterID,
+          clusterID,
+          query,
+          region,
+        );
+        data = regionalLogsData;
+      } else {
+        const { data: logsData } = await serviceLogService.getClusterHistory(
+          externalClusterID,
+          clusterID,
+          query,
+        );
+        data = logsData;
+      }
 
       const timestamp = dayjs().format('YYYY-MM-DD HHmm');
 

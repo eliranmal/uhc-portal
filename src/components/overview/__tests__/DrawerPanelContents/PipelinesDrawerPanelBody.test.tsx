@@ -1,6 +1,6 @@
 import { checkAccessibility, render, screen } from '~/testUtils';
 
-import PipelinesDrawerPanelBody from '../../components/common/DrawerPanelContents/Pipelines/DrawerPanelBody';
+import { PipelinesDrawerPanelBody } from '../../components/common/DrawerPanelContents/Pipelines/DrawerPanelBody';
 
 import '@testing-library/jest-dom';
 

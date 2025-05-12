@@ -38,6 +38,7 @@ export const regularTabsInfoAllShow: TabsRowInfoType = {
     show: true,
     tooltip: <Tooltip content="whatever" />,
   },
+  accessRequest: { ref: { current: 'accessRequestRef' }, hasIssues: false, show: true },
 };
 
 export const regularTabsInfoAllHidden: TabsRowInfoType = {
@@ -51,6 +52,7 @@ export const regularTabsInfoAllHidden: TabsRowInfoType = {
   support: { ref: { current: 'supportRef' }, hasIssues: false, show: false },
   upgradeSettings: { ref: { current: 'upgradeSettingsRef' }, hasIssues: false, show: false },
   addAssisted: { ref: { current: 'addAssistedRef' }, hasIssues: false, show: false },
+  accessRequest: { ref: { current: 'accessRequestRef' }, hasIssues: false, show: false },
 };
 
 export const regularTabsInfoMonitoringUndefined: TabsRowInfoType = {
@@ -64,6 +66,7 @@ export const regularTabsInfoMonitoringUndefined: TabsRowInfoType = {
   support: { ref: { current: 'supportRef' }, hasIssues: false, show: false },
   upgradeSettings: { ref: { current: 'upgradeSettingsRef' }, hasIssues: false, show: false },
   addAssisted: { ref: { current: 'addAssistedRef' }, hasIssues: false, show: false },
+  accessRequest: { ref: { current: 'accessRequestRef' }, hasIssues: false, show: false },
 };
 
 export const regularTabsInfoMonitoringHasIssues: TabsRowInfoType = {
@@ -77,4 +80,5 @@ export const regularTabsInfoMonitoringHasIssues: TabsRowInfoType = {
   support: { ref: { current: 'supportRef' }, hasIssues: false, show: false },
   upgradeSettings: { ref: { current: 'upgradeSettingsRef' }, hasIssues: false, show: false },
   addAssisted: { ref: { current: 'addAssistedRef' }, hasIssues: false, show: false },
+  accessRequest: { ref: { current: 'accessRequestRef' }, hasIssues: false, show: false },
 };

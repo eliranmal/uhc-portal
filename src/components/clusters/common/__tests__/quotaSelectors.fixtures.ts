@@ -2,7 +2,12 @@ import { AxiosHeaders } from 'axios';
 
 import { ANY } from '~/common/matchUtils';
 import { userActions } from '~/redux/actions';
-import { QuotaCost, QuotaCostList, RelatedResource } from '~/types/accounts_mgmt.v1';
+import {
+  QuotaCost,
+  QuotaCostList,
+  RelatedResourceBilling_model as RelatedResourceBillingModel,
+  SubscriptionCommonFieldsCluster_billing_model as SubscriptionCommonFieldsClusterBillingModel,
+} from '~/types/accounts_mgmt.v1';
 import { ClusterFromSubscription } from '~/types/types';
 
 import * as mockQuotaCost from '../../../../../mockdata/api/accounts_mgmt/v1/organizations/1HAXGgCYqHpednsRDiwWsZBmDlA/quota_cost.json';
@@ -36,7 +41,7 @@ export const quota1: QuotaCost = {
       byoc: ANY,
       availability_zone_type: ANY,
       product: ANY,
-      billing_model: RelatedResource.billing_model.STANDARD,
+      billing_model: RelatedResourceBillingModel.standard,
       cost: 1,
     },
   ],
@@ -47,7 +52,7 @@ export const quotaBillingModel: QuotaCost = {
     {
       ...quotaCostFixtures.odhAddon[0].related_resources[0],
       resource_name: 'standard-resource-name',
-      billing_model: RelatedResource.billing_model.STANDARD,
+      billing_model: RelatedResourceBillingModel.standard,
     },
   ],
 };
@@ -209,7 +214,7 @@ export const queryBillingModel: QuotaQuery = {
   ...defaultQuotaQuery,
   resource_name: 'standard-resource-name',
   resource_type: 'add-on',
-  billing_model: RelatedResource.billing_model.STANDARD,
+  billing_model: RelatedResourceBillingModel.standard,
   byoc: 'byoc',
 };
 
@@ -241,7 +246,7 @@ export const cluster: ClusterFromSubscription = {
     plan: {
       type: 'OCP',
     },
-    cluster_billing_model: RelatedResource.billing_model.MARKETPLACE,
+    cluster_billing_model: SubscriptionCommonFieldsClusterBillingModel.marketplace,
   },
   cloud_provider: {
     id: 'cloud_provider_id',
@@ -255,7 +260,7 @@ export const clusterNonExistingBillingModel: ClusterFromSubscription = {
   ...defaultClusterFromSubscription,
   subscription: {
     ...defaultSubscription,
-    cluster_billing_model: 'cluster_billing_model',
+    cluster_billing_model: 'cluster_billing_model' as SubscriptionCommonFieldsClusterBillingModel,
   },
   ccs: {
     enabled: false,
@@ -264,7 +269,7 @@ export const clusterNonExistingBillingModel: ClusterFromSubscription = {
 
 export const expectedDefault: QuotaParams = {
   product: undefined,
-  billingModel: RelatedResource.billing_model.STANDARD,
+  billingModel: RelatedResourceBillingModel.standard,
   cloudProviderID: ANY,
   isBYOC: false,
   isMultiAz: false,
@@ -272,7 +277,7 @@ export const expectedDefault: QuotaParams = {
 
 export const expectedNonDefault: QuotaParams = {
   product: 'OCP',
-  billingModel: RelatedResource.billing_model.MARKETPLACE,
+  billingModel: RelatedResourceBillingModel.marketplace,
   cloudProviderID: 'cloud_provider_id',
   isBYOC: true,
   isMultiAz: false,
@@ -280,7 +285,7 @@ export const expectedNonDefault: QuotaParams = {
 
 export const expectedNonExistingBillingModel: QuotaParams = {
   product: undefined,
-  billingModel: 'cluster_billing_model' as any,
+  billingModel: RelatedResourceBillingModel.standard,
   cloudProviderID: ANY,
   isBYOC: false,
   isMultiAz: false,

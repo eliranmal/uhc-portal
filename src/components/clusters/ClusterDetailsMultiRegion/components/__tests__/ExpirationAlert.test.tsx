@@ -6,7 +6,7 @@ import { modalActions } from '~/components/common/Modal/ModalActions';
 import { render, screen } from '~/testUtils';
 
 import modals from '../../../../common/Modal/modals';
-import ExpirationAlert from '../ExpirationAlert';
+import ExpirationAlert from '../ClusterDetailsTop/components/ExpirationAlert';
 
 jest.mock('react-redux', () => ({
   ...jest.requireActual('react-redux'),

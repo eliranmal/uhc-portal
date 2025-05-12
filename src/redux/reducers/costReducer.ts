@@ -16,10 +16,13 @@ limitations under the License.
 
 import { produce } from 'immer';
 
+import {
+  SchemaReportCost,
+  SchemaSourcePagination,
+  SchemaUserAccessListPagination,
+} from '~/types/cost-management.v1';
+
 import { getErrorState } from '../../common/errors';
-import type { ReportCost } from '../../types/cost-management.v1/models/ReportCost';
-import type { SourcePagination } from '../../types/cost-management.v1/models/SourcePagination';
-import type { UserAccessListPagination } from '../../types/cost-management.v1/models/UserAccessListPagination';
 import type { CostAction } from '../actions/costActions';
 import { costConstants } from '../constants';
 import {
@@ -31,9 +34,9 @@ import {
 import type { PromiseActionType, PromiseReducerState } from '../types';
 
 type State = {
-  report: PromiseReducerState<ReportCost>;
-  sources: PromiseReducerState<SourcePagination>;
-  userAccess: PromiseReducerState<UserAccessListPagination>;
+  report: PromiseReducerState<SchemaReportCost>;
+  sources: PromiseReducerState<SchemaSourcePagination>;
+  userAccess: PromiseReducerState<SchemaUserAccessListPagination>;
 };
 
 const initialState: State = {
@@ -111,6 +114,6 @@ function costReducer(state = initialState, action: PromiseActionType<CostAction>
 }
 costReducer.initialState = initialState;
 
-export { initialState, costReducer };
+export { costReducer, initialState };
 
 export default costReducer;

@@ -14,7 +14,7 @@ export const refetchAddOns = () => {
 
 export const useFetchAddOns = (clusterID: string, region?: string) => {
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['addOns'],
+    queryKey: [queryConstants.FETCH_CLUSTER_DETAILS_QUERY_KEY, 'addOns'],
     queryFn: async () => {
       if (region) {
         const clusterService = getClusterServiceForRegion(region);
@@ -40,7 +40,6 @@ export const useFetchAddOns = (clusterID: string, region?: string) => {
       return response;
     },
     enabled: !!clusterID,
-    staleTime: queryConstants.STALE_TIME,
   });
 
   if (isError) {

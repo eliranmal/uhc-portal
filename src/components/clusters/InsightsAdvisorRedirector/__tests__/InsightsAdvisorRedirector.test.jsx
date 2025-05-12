@@ -1,7 +1,7 @@
 import React from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
-import { render, screen, within } from '~/testUtils';
+import { render, screen } from '~/testUtils';
 
 import InsightsAdvisorRedirector, { composeRuleId } from '../InsightsAdvisorRedirector';
 
@@ -95,7 +95,8 @@ describe('<InsightsAdvisorRedirector />', () => {
     it('should render spinner and call fetchClusterDetails', () => {
       render(<TestComponent {...defaultProps} {...routerParams} />, { withRouter: false });
 
-      expect(within(screen.getByRole('status')).getByText('Loading...')).toBeInTheDocument();
+      expect(screen.getByRole('progressbar')).toBeInTheDocument();
+      expect(screen.getByLabelText('Loading...')).toBeInTheDocument();
     });
 
     it('should call fetchClusterDetails', () => {
@@ -145,7 +146,8 @@ describe('<InsightsAdvisorRedirector />', () => {
         withRouter: false,
       });
 
-      expect(within(screen.getByRole('status')).getByText('Loading...')).toBeInTheDocument();
+      expect(screen.getByRole('progressbar')).toBeInTheDocument();
+      expect(screen.getByLabelText('Loading...')).toBeInTheDocument();
     });
 
     it('should call fetchClusterDetails', () => {

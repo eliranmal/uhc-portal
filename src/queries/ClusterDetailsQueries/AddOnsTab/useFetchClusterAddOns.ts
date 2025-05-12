@@ -9,12 +9,14 @@ import clusterService, { getClusterServiceForRegion } from '~/services/clusterSe
 import { AddOn } from '~/types/clusters_mgmt.v1';
 
 export const refetchClusterAddOns = () => {
-  queryClient.invalidateQueries({ queryKey: ['clusterAddOns'] });
+  queryClient.invalidateQueries({
+    queryKey: [queryConstants.FETCH_CLUSTER_DETAILS_QUERY_KEY, 'clusterAddOns'],
+  });
 };
 
 export const useFetchClusterAddOns = (clusterID: string, region?: string) => {
   const { data, isError, error, isLoading } = useQuery({
-    queryKey: ['clusterAddOns'],
+    queryKey: [queryConstants.FETCH_CLUSTER_DETAILS_QUERY_KEY, 'clusterAddOns', clusterID],
     queryFn: async () => {
       if (region) {
         const clusterService = getClusterServiceForRegion(region);
@@ -38,7 +40,6 @@ export const useFetchClusterAddOns = (clusterID: string, region?: string) => {
       return response;
     },
     enabled: !!clusterID,
-    staleTime: queryConstants.STALE_TIME,
   });
 
   if (isError) {

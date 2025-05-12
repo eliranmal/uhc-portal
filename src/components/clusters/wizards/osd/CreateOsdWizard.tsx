@@ -6,18 +6,19 @@ import { useDispatch } from 'react-redux';
 import {
   Banner,
   PageSection,
+  Spinner,
   Wizard,
   WizardStep,
   WizardStepChangeScope,
   WizardStepType,
 } from '@patternfly/react-core';
-import { Spinner } from '@redhat-cloud-services/frontend-components';
+import { WizardContextProps } from '@patternfly/react-core/dist/esm/components/Wizard/WizardContext';
 
 import { ocmResourceTypeByProduct, TrackEvent, trackEvents } from '~/common/analytics';
 import { shouldRefetchQuota } from '~/common/helpers';
 import { Navigate, useNavigate } from '~/common/routing';
 import { AppPage } from '~/components/App/AppPage';
-import { availableClustersFromQuota } from '~/components/clusters/common/quotaSelectors';
+import { availableQuota } from '~/components/clusters/common/quotaSelectors';
 import {
   ClusterSettingsMachinePool,
   ClusterUpdates,
@@ -39,6 +40,9 @@ import { getOrganizationAndQuota } from '~/redux/actions/userActions';
 import { useGlobalState } from '~/redux/hooks/useGlobalState';
 import { QuotaCostList } from '~/types/accounts_mgmt.v1';
 import { ErrorState } from '~/types/types';
+
+import { QuotaTypes } from '../../common/quotaModel';
+import { useClusterWizardResetStepsHook } from '../hooks/useClusterWizardResetStepsHook';
 
 import { CloudProviderType } from './ClusterSettings/CloudProvider/types';
 import { BillingModel } from './BillingModel';
@@ -83,14 +87,29 @@ const CreateOsdWizardInternal = () => {
       [FieldId.ConfigureProxy]: configureProxy,
     },
   } = useFormState();
+  const { values } = useFormState();
+
   const organization = useGlobalState((state) => state.userProfile.organization);
   const loadBalancerValues = useGlobalState((state) => state.loadBalancerValues);
   const persistentStorageValues = useGlobalState((state) => state.persistentStorageValues);
   const createClusterResponse = useGlobalState((state) => state.clusters.createdCluster);
 
+  const [currentStep, setCurrentStep] = React.useState<WizardStepType>();
+
+  const wizardContextRef = React.useRef<Partial<WizardContextProps>>();
+  const onWizardContextChange = ({ steps, setStep, goToStepById }: Partial<WizardContextProps>) => {
+    wizardContextRef.current = {
+      steps,
+      setStep,
+      goToStepById,
+    };
+  };
+  useClusterWizardResetStepsHook({ currentStep, wizardContextRef, values });
+
   const hasProductQuota =
-    availableClustersFromQuota(organization.quotaList as QuotaCostList, {
+    availableQuota(organization.quotaList as QuotaCostList, {
       product,
+      resourceType: QuotaTypes.CLUSTER,
     }) >= 1;
 
   const requestErrors = [
@@ -130,12 +149,13 @@ const CreateOsdWizardInternal = () => {
   const onClose = () => navigate(UrlPath.CreateCloud);
 
   const onStepChange = (
-    _event: React.MouseEvent<HTMLButtonElement>,
-    { name }: WizardStepType,
-    _prevStep: WizardStepType,
+    event: React.MouseEvent<HTMLButtonElement>,
+    currentStep: WizardStepType,
+    prevStep: WizardStepType,
     scope: WizardStepChangeScope,
   ) => {
     let trackEvent: TrackEvent;
+    setCurrentStep(currentStep);
 
     switch (scope) {
       case WizardStepChangeScope.Next:
@@ -148,7 +168,7 @@ const CreateOsdWizardInternal = () => {
         trackEvent = trackEvents.WizardLinkNav;
     }
 
-    trackStepChange(trackEvent, name?.toString());
+    trackStepChange(trackEvent, currentStep?.name?.toString());
   };
 
   if (
@@ -159,7 +179,9 @@ const CreateOsdWizardInternal = () => {
   ) {
     return (
       <PageSection>
-        <Spinner centered />
+        <div className="pf-v5-u-text-align-center">
+          <Spinner size="lg" arial-label="Loading..." />
+        </div>
       </PageSection>
     );
   }
@@ -185,7 +207,12 @@ const CreateOsdWizardInternal = () => {
       id="osd-wizard"
       onClose={onClose}
       onStepChange={onStepChange}
-      footer={<CreateOsdWizardFooter track={() => trackStepChange(trackEvents.WizardSubmit)} />}
+      footer={
+        <CreateOsdWizardFooter
+          track={() => trackStepChange(trackEvents.WizardSubmit)}
+          onWizardContextChange={onWizardContextChange}
+        />
+      }
       nav={{ 'aria-label': `${ariaLabel} steps` }}
       isVisitRequired
     >
@@ -200,7 +227,7 @@ const CreateOsdWizardInternal = () => {
           <WizardStep
             name={StepName.CloudProvider}
             id={StepId.ClusterSettingsCloudProvider}
-            footer={<CloudProviderStepFooter />}
+            footer={<CloudProviderStepFooter onWizardContextChange={onWizardContextChange} />}
           >
             <ClusterSettingsCloudProvider />
           </WizardStep>,
@@ -262,9 +289,14 @@ export const CreateOsdWizard = ({ product }: CreateOsdWizardProps) => {
   usePreventBrowserNav();
 
   React.useEffect(() => {
-    if (shouldRefetchQuota(organization)) {
+    if (shouldRefetchQuota(organization, false)) {
       dispatch(getOrganizationAndQuota() as any);
     }
+    // just on getting into the component
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  React.useEffect(() => {
     if (!persistentStorageValues.fulfilled && !persistentStorageValues.pending) {
       dispatch(getPersistentStorageValues());
     }
@@ -278,7 +310,6 @@ export const CreateOsdWizard = ({ product }: CreateOsdWizardProps) => {
     dispatch,
     loadBalancerValues.fulfilled,
     loadBalancerValues.pending,
-    organization,
     persistentStorageValues.fulfilled,
     persistentStorageValues.pending,
   ]);

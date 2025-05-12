@@ -5,7 +5,7 @@ import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
 import { getTrackEvent, TrackEvent, TrackEventOptions } from '~/common/analytics';
 
 /** a convenience function that composes the track event parsing and the actual tracking. */
-interface Track {
+export interface Track {
   (event: TrackEvent, properties?: TrackEventOptions): void;
   (event: string, properties?: Record<string, any> | string): void;
 }

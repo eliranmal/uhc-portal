@@ -3,8 +3,8 @@ import axios from 'axios';
 import { waitFor } from '@testing-library/react';
 
 import apiRequest from '~/services/apiRequest';
-import { GetClusterHistoryParams } from '~/services/serviceLogService';
 import { renderHook } from '~/testUtils';
+import { ViewOptions } from '~/types/types';
 
 import { mockedClusterLogs } from '../__mocks__/queryMockedData';
 
@@ -18,9 +18,28 @@ describe('useFetchClusterLogs hook', () => {
     jest.clearAllMocks();
   });
 
-  const mockedClusterLogsViewOptions: GetClusterHistoryParams = {
-    page: 1,
-    page_size: 20,
+  const mockedClusterLogsViewOptions: ViewOptions = {
+    currentPage: 2,
+    pageSize: 20,
+    totalCount: 0,
+    totalPages: 0,
+    filter: {
+      description: '',
+      loggedBy: '',
+      timestampFrom: ">= '2024-05-01T00:00:00.000Z'",
+      timestampTo: "<= '2024-09-17T23:59:59.999Z'",
+    },
+    sorting: {
+      isAscending: false,
+      sortField: 'timestamp',
+      sortIndex: 5,
+    },
+    flags: {
+      conditionalFilterFlags: {
+        severityTypes: [],
+        logTypes: [],
+      },
+    },
   };
 
   it('Get useFetchClusterLogs valid response', async () => {

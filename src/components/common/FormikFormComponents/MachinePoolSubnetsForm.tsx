@@ -6,17 +6,18 @@ import { MinusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/minus-ci
 import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 
 import { scrollToFirstField } from '~/common/helpers';
-import { FormSubnet, validateMultipleMachinePoolsSubnets } from '~/common/validators';
+import { validateMultipleMachinePoolsSubnets } from '~/common/validators';
 import { SubnetSelectField } from '~/components/clusters/common/SubnetSelectField';
 import { emptyAWSSubnet, FieldId } from '~/components/clusters/wizards/common/constants';
+import { FormSubnet } from '~/components/clusters/wizards/common/FormSubnet';
 import { getScrollErrorIds } from '~/components/clusters/wizards/form/utils';
 import { useFormState } from '~/components/clusters/wizards/hooks';
-import { CloudVPC } from '~/types/clusters_mgmt.v1';
+import { CloudVpc } from '~/types/clusters_mgmt.v1';
 
 import './MachinePoolSubnetsForm.scss';
 
 type MachinePoolSubnetsFormProps = {
-  selectedVPC?: CloudVPC;
+  selectedVPC?: CloudVpc;
   warning?: string;
 };
 
@@ -83,12 +84,12 @@ const MachinePoolSubnetsForm = ({ selectedVPC, warning }: MachinePoolSubnetsForm
       </GridItem>
       <GridItem span={6} />
 
-      {(machinePoolsSubnets as FormSubnet[])?.map((_, index) => {
+      {(machinePoolsSubnets as FormSubnet[])?.map((subnet, index) => {
         const isRemoveDisabled = machinePoolsSubnets.length === 1;
         const fieldNameSubnetId = `${FieldId.MachinePoolsSubnets}[${index}].privateSubnetId`;
         return selectedVPC ? (
           // eslint-disable-next-line react/no-array-index-key
-          <React.Fragment key={`${machinePoolsSubnets.indexOf(index).privateSubnetId}_${index}`}>
+          <React.Fragment key={`${subnet.privateSubnetId}_${index}`}>
             <GridItem span={2}>Machine pool {index + 1}</GridItem>
             <GridItem span={4}>
               <Field

@@ -8,18 +8,15 @@ import { OutlinedCircleIcon } from '@patternfly/react-icons/dist/esm/icons/outli
 import { ResourcesAlmostEmptyIcon } from '@patternfly/react-icons/dist/esm/icons/resources-almost-empty-icon';
 import { ResourcesAlmostFullIcon } from '@patternfly/react-icons/dist/esm/icons/resources-almost-full-icon';
 import { ResourcesFullIcon } from '@patternfly/react-icons/dist/esm/icons/resources-full-icon';
-import { IRowCell } from '@patternfly/react-table';
 
 import { Link } from '~/common/routing';
 import type { GlobalState } from '~/redux/store';
+import { RelatedResourceBilling_model as RelatedResourceBillingModel } from '~/types/accounts_mgmt.v1';
 
-import { billingModels } from '../../../common/subscriptionTypes';
 import ExternalLink from '../../common/ExternalLink';
 import SubscriptionNotFulfilled from '../SubscriptionNotFulfilled';
 
 import OSDSubscriptionTable from './OSDSubscriptionTable';
-
-const { MARKETPLACE } = billingModels;
 
 type Props = {
   organizationID: string;
@@ -78,11 +75,13 @@ const OSDSubscriptionCard = ({ quotaCost, marketplace, organizationID, fetchQuot
   }, []);
 
   let content: React.ReactNode;
-  const rows: (React.ReactNode | IRowCell)[][] = [];
+  const rows: React.ReactNode[][] = [];
 
-  let subscriptionLink = <Link to="/quota/resource-limits">Dedicated (On-Demand Limits)</Link>;
+  let subscriptionLink = <Link to="/subscriptions/usage/openshift">OpenShift Usage</Link>;
+  let subscriptionSubtitle = 'Annual Subscriptions';
   let subscriptionsDescription =
-    'The summary of all annual subscriptions for OpenShift Dedicated purchased by your organization or granted by Red Hat. For On-Demand resources, see';
+    'The summary of all annual subscriptions for OpenShift Dedicated and select add-ons purchased by your organization or granted by Red Hat. For subscription information on OpenShift Container Platform or Red Hat OpenShift Service on AWS (ROSA), see';
+
   if (marketplace) {
     // add link
     subscriptionLink = (
@@ -90,6 +89,8 @@ const OSDSubscriptionCard = ({ quotaCost, marketplace, organizationID, fetchQuot
         Dedicated (On-Demand)
       </ExternalLink>
     );
+    subscriptionSubtitle = 'OpenShift Dedicated';
+
     subscriptionsDescription =
       'Active subscriptions allow your organization to use up to a certain number of OpenShift Dedicated clusters. Overall OSD subscription capacity and usage can be viewed in';
   }
@@ -114,14 +115,15 @@ const OSDSubscriptionCard = ({ quotaCost, marketplace, organizationID, fetchQuot
       // and explicitly allow addon-open-data-hub on the marketplace quota page
       const billingModel = get(relatedResources[0], 'billing_model');
       let resourceName = get(relatedResources[0], 'resource_name');
-      if (marketplace && billingModel !== MARKETPLACE) {
+      if (marketplace && billingModel !== RelatedResourceBillingModel.marketplace) {
         if (resourceName !== 'addon-open-data-hub') {
           return;
         }
       }
       if (
         !marketplace &&
-        (billingModel === MARKETPLACE || resourceName === 'addon-open-data-hub')
+        (billingModel === RelatedResourceBillingModel.marketplace ||
+          resourceName === 'addon-open-data-hub')
       ) {
         return;
       }
@@ -137,11 +139,11 @@ const OSDSubscriptionCard = ({ quotaCost, marketplace, organizationID, fetchQuot
       rows.push([
         get(relatedResources[0], 'resource_type'),
         resourceName,
-        { title: getZoneType(get(relatedResources[0], 'availability_zone_type')) },
+        getZoneType(get(relatedResources[0], 'availability_zone_type')),
         getPlanType(get(relatedResources[0], 'byoc')),
         startCase(get(relatedResources[0], 'product')),
         `${quotaItem.consumed} of ${quotaItem.allowed}`,
-        { title: getCapacityIcon(quotaItem.consumed, quotaItem.allowed) },
+        getCapacityIcon(quotaItem.consumed, quotaItem.allowed),
       ]);
     });
   }
@@ -173,7 +175,7 @@ const OSDSubscriptionCard = ({ quotaCost, marketplace, organizationID, fetchQuot
 
   return (
     <Card>
-      <CardTitle>OpenShift Dedicated</CardTitle>
+      <CardTitle>{subscriptionSubtitle}</CardTitle>
       <CardBody>
         <Stack hasGutter>
           <StackItem>

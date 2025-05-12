@@ -3,8 +3,8 @@ import React from 'react';
 import { Button, useWizardContext } from '@patternfly/react-core';
 
 import { getAccountAndRolesStepId } from '~/components/clusters/wizards/rosa/rosaWizardConstants';
-import { useFeatureGate } from '~/hooks/useFeatureGate';
-import { HYPERSHIFT_WIZARD_FEATURE } from '~/redux/constants/featureConstants';
+import { HYPERSHIFT_WIZARD_FEATURE } from '~/queries/featureGates/featureConstants';
+import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 
 export const BackToAssociateAwsAccountLink = () => {
   const { goToStepById } = useWizardContext();

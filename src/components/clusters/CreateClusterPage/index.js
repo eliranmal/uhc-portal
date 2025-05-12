@@ -1,28 +1,27 @@
 import { connect } from 'react-redux';
 
-import { featureGateSelector } from '~/hooks/useFeatureGate';
-
 import { normalizedProducts } from '../../../common/subscriptionTypes';
 import { tollboothActions } from '../../../redux/actions';
 import { getOrganizationAndQuota } from '../../../redux/actions/userActions';
-import { ASSISTED_INSTALLER_FEATURE } from '../../../redux/constants/featureConstants';
 import { modalActions } from '../../common/Modal/ModalActions';
-import { hasManagedQuotaSelector } from '../common/quotaSelectors';
+import { QuotaTypes } from '../common/quotaModel';
+import { availableQuota } from '../common/quotaSelectors';
 
 import CreateClusterPage from './CreateClusterPage';
 
 const mapStateToProps = (state) => ({
-  hasOSDQuota: hasManagedQuotaSelector(
-    state.userProfile.organization.quotaList,
-    normalizedProducts.OSD,
-  ),
-  hasOSDTrialQuota: hasManagedQuotaSelector(
-    state.userProfile.organization.quotaList,
-    normalizedProducts.OSDTRIAL,
-  ),
+  hasOSDQuota:
+    availableQuota(state.userProfile.organization.quotaList, {
+      product: normalizedProducts.OSD,
+      resourceType: QuotaTypes.CLUSTER,
+    }) >= 1,
+  hasOSDTrialQuota:
+    availableQuota(state.userProfile.organization.quotaList, {
+      product: normalizedProducts.OSDTrial,
+      resourceType: QuotaTypes.CLUSTER,
+    }) >= 1,
   organization: state.userProfile.organization,
   token: state.tollbooth.token,
-  assistedInstallerFeature: featureGateSelector(state, ASSISTED_INSTALLER_FEATURE),
 });
 
 const mapDispatchToProps = () => (dispatch) => ({

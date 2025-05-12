@@ -11,11 +11,7 @@
         "Consist of lower-case alphanumeric characters, or hyphen (-)",
         "Start with a lower-case alphabetic character"
       ],
-      "InvalidDomainPrefixValues": [
-        "domainprefixrosalonger",
-        "domainPREFix",
-        "32423432domain"
-      ],
+      "InvalidDomainPrefixValues": ["domainprefixrosalonger", "domainPREFix", "32423432domain"],
       "InvalidDomainPrefixErrors": [
         "1 - 15 characters",
         "Consist of lower-case alphanumeric characters, or hyphen (-)",
@@ -36,12 +32,12 @@
       "NodeCount": {
         "SingleZone": {
           "LowerLimitError": "Input cannot be less than 2",
-          "UpperLimitError": "Input cannot be more than 180",
+          "UpperLimitError": "Input cannot be more than 249",
           "MinAndMaxLimitDependencyError": "Max nodes cannot be less than min nodes"
         },
         "MultiZone": {
           "LowerLimitError": "Input cannot be less than 1",
-          "UpperLimitError": "Input cannot be more than 60",
+          "UpperLimitError": "Input cannot be more than 83",
           "MinAndMaxLimitDependencyError": "Max nodes cannot be less than min nodes"
         }
       },
@@ -53,7 +49,11 @@
         "EmptyLabelValueError": "Empty labels are not allowed",
         "MinMaxLimitError": "The minimum cannot be above the maximum value",
         "InvalidGPUValueError": "Invalid params",
-        "RequiredFieldError": "Field is required"
+        "RequiredFieldError": "Field is required",
+        "MaxNodesValueMultizoneLimitError": "Value must not be greater than 255",
+        "MaxNodesValueSinglezoneLimitError": "Value must not be greater than 254",
+        "MaxNodesValueOcpLower41414MultizoneLimitError": "Value must not be greater than 186",
+        "MaxNodesValueOcpLower41414SinglezoneLimitError": "Value must not be greater than 185"
       },
       "RootDiskSize": {
         "LimitError": "The worker root disk size must be between 128 GiB and 16384 GiB.",

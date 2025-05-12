@@ -1,64 +1,107 @@
-import React, { Component } from 'react';
+import React from 'react';
 import get from 'lodash/get';
 import PropTypes from 'prop-types';
+import { useDispatch } from 'react-redux';
 
 import { Alert, Button, Form } from '@patternfly/react-core';
 
 import { Link } from '~/common/routing';
+import { useFetchMachineTypes } from '~/queries/ClusterDetailsQueries/MachinePoolTab/MachineTypes/useFetchMachineTypes';
+import { refreshClusterDetails } from '~/queries/refreshEntireCache';
+import { useGlobalState } from '~/redux/hooks/useGlobalState';
+import { SubscriptionCommonFieldsCluster_billing_model as SubscriptionCommonFieldsClusterBillingModel } from '~/types/accounts_mgmt.v1';
 
+import getClusterName from '../../../../common/getClusterName';
 import links from '../../../../common/installLinks.mjs';
-import { billingModels, normalizedProducts } from '../../../../common/subscriptionTypes';
+import { normalizedProducts } from '../../../../common/subscriptionTypes';
+import { useUpgradeClusterFromTrial } from '../../../../queries/ClusterActionsQueries/useUpgradeClusterFromTrial';
+import { useFetchMachineOrNodePools } from '../../../../queries/ClusterDetailsQueries/MachinePoolTab/useFetchMachineOrNodePools';
+import { getOrganizationAndQuota } from '../../../../redux/actions/userActions';
 import MechTraining from '../../../../styles/images/RH_BRAND_7764_01_MECH_Training.svg';
 import ErrorBox from '../../../common/ErrorBox';
 import ExternalLink from '../../../common/ExternalLink';
 import Modal from '../../../common/Modal/Modal';
+import { closeModal } from '../../../common/Modal/ModalActions';
 import modals from '../../../common/Modal/modals';
-import { availableClustersFromQuota, availableNodesFromQuota } from '../quotaSelectors';
+import { isHypershiftCluster } from '../clusterStates';
+import { QuotaTypes } from '../quotaModel';
+import { availableQuota } from '../quotaSelectors';
 
 import './UpgradeTrialClusterDialog.scss';
 
-class UpgradeTrialClusterDialog extends Component {
-  componentDidMount() {
-    const { organization, getOrganizationAndQuota } = this.props;
+const UpgradeTrialClusterDialog = ({ onClose }) => {
+  const dispatch = useDispatch();
 
+  const modalData = useGlobalState((state) => state.modal.data);
+  const organization = useGlobalState((state) => state.userProfile.organization);
+  const clusterID = modalData.clusterID ? modalData.clusterID : '';
+  const cluster = modalData.cluster ? modalData.cluster : '';
+  const clusterDisplayName = getClusterName(modalData.cluster);
+  const { shouldDisplayClusterName } = modalData;
+
+  const isHypershift = isHypershiftCluster(cluster);
+  const clusterVersionID = cluster?.version?.id;
+  const region = cluster?.subscription?.rh_region_id;
+
+  const { data: machinePools } = useFetchMachineOrNodePools(
+    clusterID,
+    isHypershift,
+    clusterVersionID,
+    region,
+  );
+
+  const { data } = useFetchMachineTypes(region);
+  const machineTypesByID = data.typesByID;
+
+  const {
+    isPending: isUpgradeFromTrialPending,
+    isError: isUpgradeFromTrialError,
+    error: upgradeFromTrialError,
+    mutate: upgradeClusterFromTrial,
+  } = useUpgradeClusterFromTrial();
+
+  React.useEffect(() => {
     if (!organization.pending) {
-      getOrganizationAndQuota();
+      dispatch(getOrganizationAndQuota());
     }
-  }
+    // ComponentDidMount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  componentDidUpdate() {
-    const { upgradeTrialClusterResponse, resetResponse, closeModal, onClose } = this.props;
-    if (upgradeTrialClusterResponse.fulfilled) {
-      resetResponse();
-      closeModal();
-      onClose();
-    }
-  }
+  const submitUpgrade = (clusterID, billingModel) => {
+    const params = {
+      billing_model: billingModel,
+      product: {
+        id: 'osd',
+      },
+    };
+    upgradeClusterFromTrial(
+      { clusterID, params, region },
+      {
+        onSuccess: () => {
+          dispatch(closeModal());
+          onClose();
+          refreshClusterDetails();
+        },
+      },
+    );
+  };
 
-  static buttonLinkClick = (link) => {
+  const buttonLinkClick = (link) => {
     window.open(link, '_blank');
   };
 
-  upgradeModalQuota() {
-    const {
-      cluster,
-      machineTypesByID,
-      organization: { quotaList },
-      machinePools,
-    } = this.props;
+  const upgradeModalQuota = () => {
     const { OSD } = normalizedProducts;
-    const { STANDARD, MARKETPLACE } = billingModels;
-
+    const { quotaList } = organization;
     // OSD Trial is always CCS
     const isBYOC = true;
     const isMultiAz = get(cluster, 'multi_az');
 
     const cloudProviderID = get(cluster, 'cloud_provider.id');
-
-    const machinePoolTypes = machinePools.reduce((acc, mp) => {
+    const machinePoolTypes = machinePools?.reduce((acc, mp) => {
       const instanceTypeID = mp.instance_type;
-      const resourceName = machineTypesByID[instanceTypeID].generic_name;
-
+      const resourceName = machineTypesByID[instanceTypeID]?.generic_name;
       const numOfMachines = mp.autoscaling ? mp.autoscaling.max_replicas : mp.replicas;
 
       if (acc[resourceName]) {
@@ -70,65 +113,73 @@ class UpgradeTrialClusterDialog extends Component {
     }, {});
 
     const quota = { MARKETPLACE: true, STANDARD: true };
-
-    Object.keys(machinePoolTypes).forEach((key) => {
+    Object.keys(machinePoolTypes || {}).forEach((key) => {
       const quotaParams = {
         product: OSD,
         cloudProviderID,
         resourceName: key,
         isBYOC,
         isMultiAz,
-        billingModel: STANDARD,
       };
 
-      const standardClusters = availableClustersFromQuota(quotaList, quotaParams);
-      const standardNodes = availableNodesFromQuota(quotaList, quotaParams);
+      const standardClusters = availableQuota(quotaList, {
+        ...quotaParams,
+        billingModel: SubscriptionCommonFieldsClusterBillingModel.standard,
+        resourceType: QuotaTypes.CLUSTER,
+      });
+      const standardNodes = availableQuota(quotaList, {
+        ...quotaParams,
+        billingModel: SubscriptionCommonFieldsClusterBillingModel.standard,
+        resourceType: QuotaTypes.NODE,
+      });
 
       quota.STANDARD =
         quota.STANDARD && standardNodes >= machinePoolTypes[key] && standardClusters > 0;
 
-      quotaParams.billingModel = MARKETPLACE;
-      const marketClusters = availableClustersFromQuota(quotaList, quotaParams);
-      const marketNodes = availableNodesFromQuota(quotaList, quotaParams);
+      const marketClusters = availableQuota(quotaList, {
+        ...quotaParams,
+        billingModel: SubscriptionCommonFieldsClusterBillingModel.marketplace,
+        resourceType: QuotaTypes.CLUSTER,
+      });
+      const marketNodes = availableQuota(quotaList, {
+        ...quotaParams,
+        billingModel: SubscriptionCommonFieldsClusterBillingModel.marketplace,
+        resourceType: QuotaTypes.NODE,
+      });
+
       quota.MARKETPLACE =
         quota.MARKETPLACE && marketNodes >= machinePoolTypes[key] && marketClusters > 0;
     });
-
     return quota;
-  }
+  };
 
-  primaryButton(availableQuota) {
-    const { submit, clusterID } = this.props;
-    const { STANDARD, MARKETPLACE } = billingModels;
-    const marketplaceQuotaEnabled = availableQuota.MARKETPLACE;
+  const getPrimaryButtonProps = (availableQuotaValue) => {
+    const marketplaceQuotaEnabled = availableQuotaValue.MARKETPLACE;
     const button = {
       primaryText: 'Contact sales',
-      onPrimaryClick: () =>
-        UpgradeTrialClusterDialog.buttonLinkClick(
-          'https://cloud.redhat.com/products/dedicated/contact/',
-        ),
+      onPrimaryClick: () => buttonLinkClick('https://cloud.redhat.com/products/dedicated/contact/'),
     };
 
-    if (availableQuota.STANDARD && !availableQuota.MARKETPLACE) {
+    if (availableQuotaValue.STANDARD && !availableQuotaValue.MARKETPLACE) {
       button.primaryText = 'Upgrade using quota';
       button.primaryLink = null;
-      button.onPrimaryClick = () => submit(clusterID, STANDARD);
+      button.onPrimaryClick = () =>
+        submitUpgrade(clusterID, SubscriptionCommonFieldsClusterBillingModel.standard);
       return button;
     }
 
     if (marketplaceQuotaEnabled) {
       button.primaryText = 'Upgrade using Marketplace billing';
       button.primaryLink = null;
-      button.onPrimaryClick = () => submit(clusterID, MARKETPLACE);
+      button.onPrimaryClick = () =>
+        submitUpgrade(clusterID, SubscriptionCommonFieldsClusterBillingModel.marketplace);
       return button;
     }
 
     return button;
-  }
+  };
 
-  secondaryButton(availableQuota) {
-    const { submit, clusterID } = this.props;
-    const { STANDARD } = billingModels;
+  const getSecondaryButtonProps = (availableQuotaValue) => {
     const button = {
       showSecondary: false,
     };
@@ -136,28 +187,26 @@ class UpgradeTrialClusterDialog extends Component {
     button.secondaryText = 'Enable Marketplace billing';
     button.showSecondary = true;
     button.onSecondaryClick = () =>
-      UpgradeTrialClusterDialog.buttonLinkClick(
-        'https://marketplace.redhat.com/en-us/products/red-hat-openshift-dedicated',
-      );
+      buttonLinkClick('https://marketplace.redhat.com/en-us/products/red-hat-openshift-dedicated');
 
-    if (availableQuota.MARKETPLACE && availableQuota.STANDARD) {
+    if (availableQuotaValue.MARKETPLACE && availableQuotaValue.STANDARD) {
       button.secondaryText = 'Upgrade using quota';
-      button.onSecondaryClick = () => submit(clusterID, STANDARD);
+      button.onSecondaryClick = () =>
+        submitUpgrade(clusterID, SubscriptionCommonFieldsClusterBillingModel.standard);
     }
 
-    if (availableQuota.MARKETPLACE && !availableQuota.STANDARD) {
+    if (availableQuotaValue.MARKETPLACE && !availableQuotaValue.STANDARD) {
       button.showSecondary = false;
       button.secondaryLink = null;
     }
 
     return button;
-  }
+  };
 
-  tertiaryButton() {
-    const { closeModal, resetResponse } = this.props;
+  const getTertiaryButtonProps = () => {
     const cancelEdit = () => {
-      resetResponse();
-      closeModal();
+      dispatch(closeModal());
+      refreshClusterDetails();
     };
     return {
       tertiaryText: 'Cancel',
@@ -165,91 +214,63 @@ class UpgradeTrialClusterDialog extends Component {
       showTertiary: true,
       onClose: cancelEdit,
     };
-  }
+  };
 
-  render() {
-    const {
-      submit,
-      upgradeTrialClusterResponse,
-      clusterID,
-      shouldDisplayClusterName,
-      clusterDisplayName,
-    } = this.props;
+  const error = isUpgradeFromTrialError ? (
+    <ErrorBox message="Error upgrading cluster" response={upgradeFromTrialError} />
+  ) : null;
 
-    const error = upgradeTrialClusterResponse.error ? (
-      <ErrorBox message="Error upgrading cluster" response={upgradeTrialClusterResponse} />
-    ) : null;
+  const availableQuotaValue = upgradeModalQuota();
+  const primaryButton = getPrimaryButtonProps(availableQuotaValue);
+  const secondaryButton = getSecondaryButtonProps(availableQuotaValue);
+  const tertiaryButton = getTertiaryButtonProps();
+  const noQuota = !(availableQuotaValue.STANDARD || availableQuotaValue.MARKETPLACE);
+  const modalSize = noQuota ? 'small' : 'medium';
 
-    const availableQuota = this.upgradeModalQuota();
-
-    const primaryButton = this.primaryButton(availableQuota);
-    const secondaryButton = this.secondaryButton(availableQuota);
-    const tertiaryButton = this.tertiaryButton();
-
-    const noQuota = !(availableQuota.STANDARD || availableQuota.MARKETPLACE);
-    const modalSize = noQuota ? 'small' : 'medium';
-
-    return (
-      <Modal
-        title="Upgrade cluster from Trial"
-        secondaryTitle={shouldDisplayClusterName ? clusterDisplayName : undefined}
-        data-testid="upgrade-trial-cluster-dialog"
-        modalSize={modalSize}
-        isSmall={false}
-        {...primaryButton}
-        className="upgrade-trial-cluster-dialog"
-        {...secondaryButton}
-        {...tertiaryButton}
-        isPending={upgradeTrialClusterResponse.pending}
-      >
-        {error}
-        <Form onSubmit={() => submit(clusterID)}>
-          <div>
-            {!noQuota && <img className="upgrade-trial-logo" src={MechTraining} alt="Red Hat" />}
-            Convert this trial cluster to a fully supported OpenShift Dedicated cluster.
-            <br />
-            <br />
-            <ExternalLink href={links.OCM_DOCS_UPGRADING_OSD_TRIAL}>Learn more</ExternalLink>
-            {noQuota && (
-              <Alert
-                variant="warning"
-                isInline
-                title="Your organization doesn't have enough quota to upgrade this cluster."
-                className="upgrade-trial-no-quota"
-                data-testid="no-quota-alert"
-              >
-                <Link to="/quota">
-                  <Button id="subscriptions" variant="link">
-                    View your available quota
-                  </Button>
-                </Link>
-              </Alert>
-            )}
-          </div>
-        </Form>
-      </Modal>
-    );
-  }
-}
-
-UpgradeTrialClusterDialog.propTypes = {
-  closeModal: PropTypes.func.isRequired,
-  onClose: PropTypes.func.isRequired,
-  submit: PropTypes.func.isRequired,
-  resetResponse: PropTypes.func.isRequired,
-  clusterID: PropTypes.string.isRequired,
-  organization: PropTypes.object.isRequired,
-  cluster: PropTypes.object.isRequired,
-  getOrganizationAndQuota: PropTypes.func.isRequired,
-  upgradeTrialClusterResponse: PropTypes.object,
-  machineTypesByID: PropTypes.object,
-  clusterDisplayName: PropTypes.string,
-  shouldDisplayClusterName: PropTypes.bool,
-  machinePools: PropTypes.array.isRequired,
+  return (
+    <Modal
+      title="Upgrade cluster from Trial"
+      secondaryTitle={shouldDisplayClusterName ? clusterDisplayName : undefined}
+      data-testid="upgrade-trial-cluster-dialog"
+      modalSize={modalSize}
+      isSmall={false}
+      {...primaryButton}
+      className="upgrade-trial-cluster-dialog"
+      {...secondaryButton}
+      {...tertiaryButton}
+      isPending={isUpgradeFromTrialPending}
+    >
+      {error}
+      <Form onSubmit={() => submitUpgrade(clusterID)}>
+        <div>
+          {!noQuota && <img className="upgrade-trial-logo" src={MechTraining} alt="Red Hat" />}
+          Convert this trial cluster to a fully supported OpenShift Dedicated cluster.
+          <br />
+          <br />
+          <ExternalLink href={links.OCM_DOCS_UPGRADING_OSD_TRIAL}>Learn more</ExternalLink>
+          {noQuota && (
+            <Alert
+              variant="warning"
+              isInline
+              title="Your organization doesn't have enough quota to upgrade this cluster."
+              className="upgrade-trial-no-quota"
+              data-testid="no-quota-alert"
+            >
+              <Link to="/quota">
+                <Button id="subscriptions" variant="link">
+                  View your available quota
+                </Button>
+              </Link>
+            </Alert>
+          )}
+        </div>
+      </Form>
+    </Modal>
+  );
 };
 
-UpgradeTrialClusterDialog.defaultProps = {
-  upgradeTrialClusterResponse: {},
+UpgradeTrialClusterDialog.propTypes = {
+  onClose: PropTypes.func.isRequired,
 };
 
 UpgradeTrialClusterDialog.modalName = modals.UPGRADE_TRIAL_CLUSTER;

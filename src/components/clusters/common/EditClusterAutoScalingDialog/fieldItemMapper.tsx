@@ -1,10 +1,10 @@
 import React from 'react';
-import { Field } from 'redux-form';
+import { Field } from 'formik';
 
 import { clusterAutoScalingValidators } from '~/common/validators';
 import { FieldDefinition } from '~/components/clusters/common/EditClusterAutoScalingDialog/fieldDefinitions';
-import ReduxBooleanField from '~/components/common/ReduxFormComponents/ReduxBooleanField';
-import ReduxVerticalFormGroup from '~/components/common/ReduxFormComponents/ReduxVerticalFormGroup';
+import ReduxBooleanField from '~/components/common/ReduxFormComponents_deprecated/ReduxBooleanField';
+import ReduxVerticalFormGroup from '~/components/common/ReduxFormComponents_deprecated/ReduxVerticalFormGroup';
 
 const numberParser = (defaultValue: number) => (val: string) =>
   Number.isNaN(val) ? defaultValue : Number(val);
@@ -25,6 +25,7 @@ interface Props {
         name: string,
       ) => string | undefined);
   parse: undefined | ((val: string) => number);
+  extendedHelpText?: React.ReactNode;
 }
 
 const getFieldProps = (field: FieldDefinition) => {
@@ -32,6 +33,7 @@ const getFieldProps = (field: FieldDefinition) => {
     type: 'text',
     validate: undefined,
     parse: undefined,
+    extendedHelpText: undefined,
   };
 
   switch (field.type) {
@@ -46,6 +48,8 @@ const getFieldProps = (field: FieldDefinition) => {
         validate = clusterAutoScalingValidators.k8sLogVerbosityParameter;
       } else if (field.name === 'pod_priority_threshold') {
         validate = undefined;
+      } else if (field.name === 'resource_limits.max_nodes_total') {
+        validate = clusterAutoScalingValidators.validateMaxNodes;
       } else {
         validate = clusterAutoScalingValidators.k8sNumberParameter;
       }
@@ -53,6 +57,7 @@ const getFieldProps = (field: FieldDefinition) => {
       props = {
         type: 'number',
         parse: numberParser(field.defaultValue as number),
+        // @ts-ignore
         validate,
       };
       break;
@@ -87,6 +92,7 @@ export const fieldItemMapper = (field: FieldDefinition, isDisabled?: boolean) =>
   }
 
   return (
+    // @ts-ignore
     <Field
       component={ReduxVerticalFormGroup}
       name={`cluster_autoscaling.${field.name}`}

@@ -3,7 +3,7 @@ import React from 'react';
 import { checkAccessibility, render, screen } from '~/testUtils';
 
 import { subscriptionSettings } from '../../../../common/subscriptionTypes';
-import { SubscriptionCommonFields } from '../../../../types/accounts_mgmt.v1';
+import { SubscriptionCommonFieldsSupport_level as SubscriptionCommonFieldsSupportLevel } from '../../../../types/accounts_mgmt.v1';
 
 import ClusterCreatedIndicator from './ClusterCreatedIndicator';
 
@@ -29,7 +29,7 @@ describe('<ClusterCreatedIndicator />', () => {
     const cluster = {
       managed: true,
       subscription: {
-        [SUPPORT_LEVEL]: SubscriptionCommonFields.support_level.SELF_SUPPORT,
+        [SUPPORT_LEVEL]: SubscriptionCommonFieldsSupportLevel.Self_Support,
       },
       creation_timestamp: creationTimeStamp,
     };
@@ -43,7 +43,7 @@ describe('<ClusterCreatedIndicator />', () => {
     const cluster = {
       managed: false,
       subscription: {
-        [SUPPORT_LEVEL]: SubscriptionCommonFields.support_level.PREMIUM,
+        [SUPPORT_LEVEL]: SubscriptionCommonFieldsSupportLevel.Premium,
       },
       creation_timestamp: creationTimeStamp,
     };
@@ -57,7 +57,7 @@ describe('<ClusterCreatedIndicator />', () => {
     const cluster = {
       managed: false,
       subscription: {
-        [SUPPORT_LEVEL]: SubscriptionCommonFields.support_level.EVAL,
+        [SUPPORT_LEVEL]: SubscriptionCommonFieldsSupportLevel.Eval,
       },
       creation_timestamp: creationTimeStamp,
     };
@@ -76,7 +76,7 @@ describe('<ClusterCreatedIndicator />', () => {
     const cluster = {
       managed: false,
       subscription: {
-        [SUPPORT_LEVEL]: SubscriptionCommonFields.support_level.NONE,
+        [SUPPORT_LEVEL]: SubscriptionCommonFieldsSupportLevel.None,
       },
       creation_timestamp: creationTimeStamp,
     };

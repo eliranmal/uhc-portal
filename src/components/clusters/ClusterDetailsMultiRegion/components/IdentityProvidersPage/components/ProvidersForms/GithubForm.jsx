@@ -1,141 +1,145 @@
 import React from 'react';
+import { Field } from 'formik';
 import PropTypes from 'prop-types';
-import { Field } from 'redux-form';
 
 import { Divider, GridItem, Title } from '@patternfly/react-core';
 
+import { useFormState } from '~/components/clusters/wizards/hooks';
+import { FormikFieldArray } from '~/components/common/FormikFormComponents/FormikFieldArray/FormikFieldArray';
+
 import { noop } from '../../../../../../../common/helpers';
-import {
-  atLeastOneRequired,
-  checkGithubTeams,
-  required,
-} from '../../../../../../../common/validators';
-import RadioButtons from '../../../../../../common/ReduxFormComponents/RadioButtons';
-import ReduxFieldArray from '../../../../../../common/ReduxFormComponents/ReduxFieldArray';
-import ReduxVerticalFormGroup from '../../../../../../common/ReduxFormComponents/ReduxVerticalFormGroup';
+import { required } from '../../../../../../../common/validators';
+import RadioButtons from '../../../../../../common/ReduxFormComponents_deprecated/RadioButtons';
+import ReduxVerticalFormGroup from '../../../../../../common/ReduxFormComponents_deprecated/ReduxVerticalFormGroup';
+import { FieldId } from '../../constants';
 import CAUpload from '../CAUpload';
 
 import IDPBasicFields from './IDPBasicFields';
 
 import './GithubForm.scss';
 
-class GithubFormRequired extends React.Component {
-  state = {
-    authMode: '',
-    hostnameRequired: false,
-  };
+const GithubFormRequired = ({ isEditForm, idpEdited, isPending }) => {
+  const [authMode, setAuthMode] = React.useState('organizations');
+  const [hostnameRequired, setHostnameRequired] = React.useState(false);
 
-  componentDidMount() {
-    const { isEditForm, idpEdited } = this.props;
+  const { setFieldValue, getFieldProps, getFieldMeta, setFieldTouched } = useFormState();
+
+  React.useEffect(() => {
     if (isEditForm) {
       if (idpEdited.github.ca) {
-        this.setState({ hostnameRequired: true });
+        setHostnameRequired(true);
       }
-      this.setState({ authMode: idpEdited.github.organizations ? 'organizations' : 'teams' });
+      setAuthMode(idpEdited.github.organizations ? 'organizations' : 'teams');
     } else {
-      this.setState({ authMode: 'organizations' });
+      setAuthMode('organizations');
     }
-  }
+    // Should run only once on mount and once on unmount
+    // eslint-disable-next-line  react-hooks/exhaustive-deps
+  }, []);
 
-  toggleHostnameRequired = (e, value) => {
+  const toggleHostnameRequired = (e, value) => {
     if (value && value.trim() !== '') {
-      this.setState({ hostnameRequired: true });
+      setHostnameRequired(true);
     } else {
-      this.setState({ hostnameRequired: false });
+      setHostnameRequired(false);
     }
   };
 
-  onAuthModeChange = (_, mode) => {
-    this.setState({ authMode: mode });
-  };
+  return (
+    <>
+      <IDPBasicFields />
+      <GridItem span={8}>
+        <Field
+          component={ReduxVerticalFormGroup}
+          name={FieldId.HOSTNAME}
+          label="Hostname"
+          type="text"
+          disabled={isPending}
+          input={{
+            ...getFieldProps(FieldId.HOSTNAME),
+            onChange: (_, value) => setFieldValue(FieldId.HOSTNAME, value),
+          }}
+          meta={getFieldMeta(FieldId.HOSTNAME)}
+          validate={hostnameRequired ? required : noop}
+          isRequired={hostnameRequired}
+          extendedHelpText="You can use the GitHub integration to connect to either GitHub or GitHub Enterprise. For
+          GitHub Enterprise, you must provide the hostname of your instance and, optionally,
+          provide a CA certificate bundle to use in requests to the server."
+          helpText="Optional domain to use with a hosted instance of GitHub Enterprise."
+        />
+      </GridItem>
+      <GridItem span={8}>
+        <Field
+          component={CAUpload}
+          name={FieldId.GITHUB_CA}
+          label="CA file"
+          type="text"
+          input={{
+            // name, value, onBlur, onChange
+            ...getFieldProps(FieldId.GITHUB_CA),
+            onChange: (value) => {
+              setFieldValue(FieldId.GITHUB_CA, value);
+              setFieldTouched(FieldId.GITHUB_CA, true);
+            },
+          }}
+          fieldName="github_ca"
+          meta={getFieldMeta(FieldId.GITHUB_CA)}
+          helpText="PEM encoded certificate bundle to use to validate server certificates for the configured GitHub Enterprise URL."
+          isDisabled={isPending}
+          onChange={(e, value) => toggleHostnameRequired(e, value)}
+          certValue={isEditForm ? idpEdited.github.ca : ''}
+        />
+      </GridItem>
 
-  render() {
-    const { isPending, idpEdited, isEditForm } = this.props;
-    const { authMode, hostnameRequired } = this.state;
-
-    return (
-      <>
-        <IDPBasicFields />
-        <GridItem span={8}>
-          <Field
-            component={ReduxVerticalFormGroup}
-            name="hostname"
-            label="Hostname"
-            type="text"
-            disabled={isPending}
-            validate={hostnameRequired ? required : noop}
-            isRequired={hostnameRequired}
-            extendedHelpText="You can use the GitHub integration to connect to either GitHub or GitHub Enterprise. For
-              GitHub Enterprise, you must provide the hostname of your instance and, optionally,
-              provide a CA certificate bundle to use in requests to the server."
-            helpText="Optional domain to use with a hosted instance of GitHub Enterprise."
-          />
-        </GridItem>
-        <GridItem span={8}>
-          <Field
-            component={CAUpload}
-            name="github_ca"
-            label="CA file"
-            type="text"
-            helpText="PEM encoded certificate bundle to use to validate server certificates for the configured GitHub Enterprise URL."
-            isDisabled={isPending}
-            onChange={(e, value) => this.toggleHostnameRequired(e, value)}
-            certValue={isEditForm ? idpEdited.github.ca : ''}
-          />
-        </GridItem>
-
-        <GridItem span={8}>
-          <Divider />
-          <Title headingLevel="h3" size="xl" className="pf-v5-u-mt-lg">
-            Organizations or teams
-          </Title>
-          <p>
-            Github authentication lets you use either GitHub organizations or GitHub teams to
-            restrict access.
-          </p>
-          <p className="idp-github-auth-mode-selection-question">
-            Do you want to use GitHub organizations, or GitHub teams?
-          </p>
-          <Field
-            component={RadioButtons}
-            name="github_auth_mode"
-            defaultValue={authMode}
-            options={[
-              { value: 'organizations', label: 'Use organizations' },
-              { value: 'teams', label: 'Use teams' },
-            ]}
-            onChange={this.onAuthModeChange}
-          />
-        </GridItem>
-        {authMode === 'organizations' ? (
-          <ReduxFieldArray
-            fieldName="organizations"
-            label="Organizations"
-            type="text"
-            isRequired
-            placeholderText="e.g. org"
-            disabled={isPending}
-            helpText="Only users that are members of at least one of the listed organizations will be allowed to log in."
-            validate={atLeastOneRequired('organizations')}
-          />
-        ) : (
-          <ReduxFieldArray
-            fieldName="teams"
-            label="Teams"
-            type="text"
-            isRequired
-            placeholderText="e.g. org/team"
-            disabled={isPending}
-            helpText="Only users that are members of at least one of the listed teams will be allowed to log in. The format is <org>/<team>."
-            validateField={checkGithubTeams}
-            key="teams"
-            validate={atLeastOneRequired('teams')}
-          />
-        )}
-      </>
-    );
-  }
-}
+      <GridItem span={8}>
+        <Divider />
+        <Title headingLevel="h3" size="xl" className="pf-v5-u-mt-lg">
+          Organizations or teams
+        </Title>
+        <p>
+          Github authentication lets you use either GitHub organizations or GitHub teams to restrict
+          access.
+        </p>
+        <p className="idp-github-auth-mode-selection-question">
+          Do you want to use GitHub organizations, or GitHub teams?
+        </p>
+        <Field
+          component={RadioButtons}
+          name={FieldId.GITHUB_AUTH_MODE}
+          defaultValue={authMode}
+          input={{
+            // name, value, onBlur, onChange
+            ...getFieldProps(FieldId.GITHUB_AUTH_MODE),
+            onChange: (value) => {
+              setAuthMode(value);
+              setFieldValue(FieldId.GITHUB_AUTH_MODE, value);
+            },
+          }}
+          meta={getFieldMeta(FieldId.GITHUB_AUTH_MODE)}
+          options={[
+            { value: 'organizations', label: 'Use organizations' },
+            { value: 'teams', label: 'Use teams' },
+          ]}
+        />
+      </GridItem>
+      {authMode === 'organizations' ? (
+        <FormikFieldArray
+          fieldID={FieldId.ORGANIZATIONS}
+          label="Organizations"
+          helpText="Only users that are members of at least one of the listed organizations will be allowed to log in."
+          placeHolderText="e.g. org "
+        />
+      ) : (
+        <FormikFieldArray
+          fieldID={FieldId.TEAMS}
+          label="Teams"
+          helpText="Only users that are members of at least one of the listed teams will be allowed to log in. The format is <org>/<team>."
+          placeHolderText="e.g. org/team "
+        />
+      )}
+    </>
+  );
+};
 
 GithubFormRequired.propTypes = {
   isPending: PropTypes.bool,

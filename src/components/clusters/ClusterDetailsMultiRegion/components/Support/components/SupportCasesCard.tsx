@@ -1,12 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
 
 import { Button, EmptyState, EmptyStateBody, EmptyStateVariant } from '@patternfly/react-core';
-import { TableVariant } from '@patternfly/react-table';
-import {
-  Table as TableDeprecated,
-  TableBody as TableBodyDeprecated,
-  TableHeader as TableHeaderDeprecated,
-} from '@patternfly/react-table/deprecated';
+import { Table, TableVariant, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 
 import { useFetchSupportCases } from '~/queries/ClusterDetailsQueries/ClusterSupportTab/useFetchSupportCases';
 import { isRestrictedEnv } from '~/restrictedEnv';
@@ -14,7 +9,7 @@ import { AugmentedCluster } from '~/types/types';
 
 import { normalizedProducts } from '../../../../../../common/subscriptionTypes';
 
-import { COLUMNS, getSupportCaseURL, supportCaseRow } from './SupportCasesCardHelper';
+import { getSupportCaseURL, supportCaseRow } from './SupportCasesCardHelper';
 
 type SupportCasesCardProps = {
   subscriptionID: string;
@@ -42,7 +37,7 @@ const SupportCasesCard = ({
 
   const rows = useMemo(() => supportCases.cases?.map(supportCaseRow), [supportCases.cases]);
   const hasRows = useMemo(() => rows && rows.length > 0, [rows]);
-  const showOpenSupportCaseButton = product !== normalizedProducts.OSDTRIAL && !isDisabled;
+  const showOpenSupportCaseButton = product !== normalizedProducts.OSDTrial && !isDisabled;
 
   return (
     <>
@@ -58,16 +53,34 @@ const SupportCasesCard = ({
       )}
       {!isRestrictedEnv() && (
         <>
-          <TableDeprecated
-            aria-label="Support Cases"
+          <Table
             variant={TableVariant.compact}
-            cells={COLUMNS}
-            rows={rows}
+            aria-label="Support Cases"
             data-testid="support-cases-table"
           >
-            <TableHeaderDeprecated />
-            <TableBodyDeprecated />
-          </TableDeprecated>
+            <Thead>
+              <Tr>
+                <Th>Case ID</Th>
+                <Th>Issue summary</Th>
+                <Th>Owner</Th>
+                <Th>Modified by</Th>
+                <Th>Severity</Th>
+                <Th>Status</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {rows?.map((row: { cells: (string | React.JSX.Element)[] }) => (
+                <Tr>
+                  <Td>{row.cells[0]}</Td>
+                  <Td>{row.cells[1]}</Td>
+                  <Td>{row.cells[2]}</Td>
+                  <Td>{row.cells[3]}</Td>
+                  <Td>{row.cells[4]}</Td>
+                  <Td>{row.cells[5]}</Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
           {!hasRows && (
             <EmptyState variant={EmptyStateVariant.sm}>
               <EmptyStateBody>You have no open support cases</EmptyStateBody>

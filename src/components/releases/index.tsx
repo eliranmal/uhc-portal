@@ -1,6 +1,7 @@
 import React from 'react';
 import semver from 'semver';
 
+import PageHeader from '@patternfly/react-component-groups/dist/dynamic/PageHeader';
 import {
   Button,
   Card,
@@ -15,7 +16,6 @@ import {
   StackItem,
 } from '@patternfly/react-core';
 import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons/dist/esm/icons/outlined-question-circle-icon';
-import { PageHeader, PageHeaderTitle } from '@redhat-cloud-services/frontend-components/PageHeader';
 
 import { Link } from '~/common/routing';
 import { isRestrictedEnv } from '~/restrictedEnv';
@@ -52,9 +52,7 @@ const Releases = () => {
 
   return (
     <AppPage title="Releases | Red Hat OpenShift Cluster Manager">
-      <PageHeader>
-        <PageHeaderTitle title="Releases" className="page-title" />
-      </PageHeader>
+      <PageHeader title="Releases" subtitle="" />
       <PageSection className="ocm-p-releases">
         <Stack hasGutter>
           <StackItem className="ocm-l-ocp-releases__section">
@@ -168,7 +166,7 @@ const Releases = () => {
                   </StackItem>
                   <StackItem>
                     <ExternalLink
-                      href={`https://docs.openshift.com/container-platform/${latestVersion}/updating/understanding_updates/understanding-update-channels-release.html`}
+                      href={`https://docs.redhat.com/en/documentation/openshift_container_platform/${latestVersion}/html/updating_clusters/understanding-openshift-updates-1#understanding-update-channels-releases`}
                       noIcon
                     >
                       Learn more about updating channels

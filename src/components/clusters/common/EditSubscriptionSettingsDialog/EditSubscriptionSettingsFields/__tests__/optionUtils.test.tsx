@@ -1,7 +1,14 @@
-import { billingModels, subscriptionSettings } from '~/common/subscriptionTypes';
-import { Subscription, SubscriptionCommonFields } from '~/types/accounts_mgmt.v1';
+import { subscriptionSettings } from '~/common/subscriptionTypes';
+import { defaultSubscription } from '~/components/clusters/common/__tests__/defaultClusterFromSubscription.fixtures';
+import {
+  Subscription,
+  SubscriptionCommonFieldsCluster_billing_model as SubscriptionCommonFieldsClusterBillingModel,
+  SubscriptionCommonFieldsService_level as SubscriptionCommonFieldsServiceLevel,
+  SubscriptionCommonFieldsSupport_level as SubscriptionCommonFieldsSupportLevel,
+  SubscriptionCommonFieldsSystem_units as SubscriptionCommonFieldsSystemUnits,
+  SubscriptionCommonFieldsUsage,
+} from '~/types/accounts_mgmt.v1';
 
-import { defaultSubscription } from '../../../__tests__/defaultClusterFromSubscription.fixtures';
 import { getOptions, resetOptions } from '../optionUtils';
 
 describe('getOptions', () => {
@@ -9,18 +16,18 @@ describe('getOptions', () => {
     const expectedOptions = [
       {
         label: 'Premium',
-        value: SubscriptionCommonFields.support_level.PREMIUM,
+        value: SubscriptionCommonFieldsSupportLevel.Premium,
         isChecked: true,
       },
-      { label: 'Standard', value: SubscriptionCommonFields.support_level.STANDARD },
-      { label: 'Self-Support', value: SubscriptionCommonFields.support_level.SELF_SUPPORT },
+      { label: 'Standard', value: SubscriptionCommonFieldsSupportLevel.Standard },
+      { label: 'Self-Support', value: SubscriptionCommonFieldsSupportLevel.Self_Support },
     ];
 
     it('should return correct options for whatever the support_level field', () => {
       const subscription: Subscription = {
         ...defaultSubscription,
         id: '123',
-        support_level: SubscriptionCommonFields.support_level.PREMIUM,
+        support_level: SubscriptionCommonFieldsSupportLevel.Premium,
       };
       const options = getOptions(subscription, subscriptionSettings.SUPPORT_LEVEL);
 
@@ -30,7 +37,7 @@ describe('getOptions', () => {
     it('should return correct options for whatever the support_level field and no subscription id', () => {
       const subscription: Subscription = {
         ...defaultSubscription,
-        support_level: SubscriptionCommonFields.support_level.PREMIUM,
+        support_level: SubscriptionCommonFieldsSupportLevel.Premium,
       };
       const options = getOptions(subscription, subscriptionSettings.SUPPORT_LEVEL);
 
@@ -38,7 +45,7 @@ describe('getOptions', () => {
         ...expectedOptions,
         {
           label: 'Self-Support 60-day evaluation',
-          value: SubscriptionCommonFields.support_level.EVAL,
+          value: SubscriptionCommonFieldsSupportLevel.Eval,
         },
       ]);
     });
@@ -46,21 +53,21 @@ describe('getOptions', () => {
     it('should return correct options for EVAL support_level field value', () => {
       const subscription: Subscription = {
         ...defaultSubscription,
-        support_level: SubscriptionCommonFields.support_level.EVAL,
+        support_level: SubscriptionCommonFieldsSupportLevel.Eval,
       };
       const options = getOptions(subscription, subscriptionSettings.SUPPORT_LEVEL);
 
       expect(options).toEqual([
         {
           label: 'Premium',
-          value: SubscriptionCommonFields.support_level.PREMIUM,
+          value: SubscriptionCommonFieldsSupportLevel.Premium,
         },
-        { label: 'Standard', value: SubscriptionCommonFields.support_level.STANDARD },
-        { label: 'Self-Support', value: SubscriptionCommonFields.support_level.SELF_SUPPORT },
+        { label: 'Standard', value: SubscriptionCommonFieldsSupportLevel.Standard },
+        { label: 'Self-Support', value: SubscriptionCommonFieldsSupportLevel.Self_Support },
         {
           isChecked: true,
           label: 'Self-Support 60-day evaluation',
-          value: SubscriptionCommonFields.support_level.EVAL,
+          value: SubscriptionCommonFieldsSupportLevel.Eval,
         },
       ]);
     });
@@ -70,19 +77,19 @@ describe('getOptions', () => {
     const subscription: Subscription = {
       ...defaultSubscription,
       id: '123',
-      usage: SubscriptionCommonFields.usage.PRODUCTION,
+      usage: SubscriptionCommonFieldsUsage.Production,
     };
     const options = getOptions(subscription, subscriptionSettings.USAGE);
 
     expect(options).toEqual([
       {
         label: 'Production',
-        value: SubscriptionCommonFields.usage.PRODUCTION,
+        value: SubscriptionCommonFieldsUsage.Production,
         isDefault: true,
         isChecked: true,
       },
-      { label: 'Development/Test', value: SubscriptionCommonFields.usage.DEVELOPMENT_TEST },
-      { label: 'Disaster Recovery', value: SubscriptionCommonFields.usage.DISASTER_RECOVERY },
+      { label: 'Development/Test', value: SubscriptionCommonFieldsUsage.Development_Test },
+      { label: 'Disaster Recovery', value: SubscriptionCommonFieldsUsage.Disaster_Recovery },
     ]);
   });
 
@@ -97,10 +104,10 @@ describe('getOptions', () => {
       {
         isChecked: true,
         label: 'Red Hat support (L1-L3)',
-        value: SubscriptionCommonFields.service_level.L1_L3,
+        value: SubscriptionCommonFieldsServiceLevel.L1_L3,
         isDefault: true,
       },
-      { label: 'Partner support (L3)', value: SubscriptionCommonFields.service_level.L3_ONLY },
+      { label: 'Partner support (L3)', value: SubscriptionCommonFieldsServiceLevel.L3_only },
     ]);
   });
 
@@ -115,10 +122,10 @@ describe('getOptions', () => {
       {
         isChecked: true,
         label: 'Cores or vCPUs',
-        value: SubscriptionCommonFields.system_units.CORES_V_CPU,
+        value: SubscriptionCommonFieldsSystemUnits.Cores_vCPU,
         isDefault: true,
       },
-      { label: 'Sockets', value: SubscriptionCommonFields.system_units.SOCKETS },
+      { label: 'Sockets', value: SubscriptionCommonFieldsSystemUnits.Sockets },
     ]);
   });
 
@@ -127,18 +134,18 @@ describe('getOptions', () => {
       const subscription: Subscription = {
         ...defaultSubscription,
         id: '123',
-        cluster_billing_model: billingModels.MARKETPLACE,
+        cluster_billing_model: SubscriptionCommonFieldsClusterBillingModel.marketplace,
       };
       const options = getOptions(subscription, subscriptionSettings.CLUSTER_BILLING_MODEL, true);
 
       expect(options).toEqual([
         {
           label: 'Annual: Fixed capacity subscription from Red Hat',
-          value: billingModels.STANDARD,
+          value: SubscriptionCommonFieldsClusterBillingModel.standard,
         },
         {
           label: 'On-Demand (Hourly): Flexible usage billed through Red Hat Marketplace',
-          value: billingModels.MARKETPLACE,
+          value: SubscriptionCommonFieldsClusterBillingModel.marketplace,
           isDefault: true,
           isChecked: true,
         },
@@ -148,20 +155,20 @@ describe('getOptions', () => {
       const subscription: Subscription = {
         ...defaultSubscription,
         id: '123',
-        cluster_billing_model: billingModels.STANDARD,
+        cluster_billing_model: SubscriptionCommonFieldsClusterBillingModel.standard,
       };
       const options = getOptions(subscription, subscriptionSettings.CLUSTER_BILLING_MODEL);
 
       expect(options).toEqual([
         {
           label: 'Annual: Fixed capacity subscription from Red Hat',
-          value: billingModels.STANDARD,
+          value: SubscriptionCommonFieldsClusterBillingModel.standard,
           isDefault: true,
           isChecked: true,
         },
         {
           label: 'On-Demand (Hourly): Flexible usage billed through Red Hat Marketplace',
-          value: billingModels.MARKETPLACE,
+          value: SubscriptionCommonFieldsClusterBillingModel.marketplace,
         },
       ]);
     });
@@ -173,10 +180,10 @@ describe('resetOptions', () => {
     const subscription: Subscription = {
       ...defaultSubscription,
       id: '123',
-      support_level: SubscriptionCommonFields.support_level.PREMIUM,
-      usage: SubscriptionCommonFields.usage.PRODUCTION,
-      cluster_billing_model: billingModels.STANDARD,
-      system_units: SubscriptionCommonFields.system_units.CORES_V_CPU,
+      support_level: SubscriptionCommonFieldsSupportLevel.Premium,
+      usage: SubscriptionCommonFieldsUsage.Production,
+      cluster_billing_model: SubscriptionCommonFieldsClusterBillingModel.standard,
+      system_units: SubscriptionCommonFieldsSystemUnits.Cores_vCPU,
     };
 
     const reset = resetOptions(subscription);
@@ -186,50 +193,50 @@ describe('resetOptions', () => {
         {
           isChecked: true,
           label: 'Red Hat support (L1-L3)',
-          value: SubscriptionCommonFields.service_level.L1_L3,
+          value: SubscriptionCommonFieldsServiceLevel.L1_L3,
           isDefault: true,
         },
-        { label: 'Partner support (L3)', value: SubscriptionCommonFields.service_level.L3_ONLY },
+        { label: 'Partner support (L3)', value: SubscriptionCommonFieldsServiceLevel.L3_only },
       ],
       support_level: [
         {
           label: 'Premium',
-          value: SubscriptionCommonFields.support_level.PREMIUM,
+          value: SubscriptionCommonFieldsSupportLevel.Premium,
           isChecked: true,
         },
-        { label: 'Standard', value: SubscriptionCommonFields.support_level.STANDARD },
-        { label: 'Self-Support', value: SubscriptionCommonFields.support_level.SELF_SUPPORT },
+        { label: 'Standard', value: SubscriptionCommonFieldsSupportLevel.Standard },
+        { label: 'Self-Support', value: SubscriptionCommonFieldsSupportLevel.Self_Support },
       ],
       usage: [
         {
           label: 'Production',
-          value: SubscriptionCommonFields.usage.PRODUCTION,
+          value: SubscriptionCommonFieldsUsage.Production,
           isDefault: true,
           isChecked: true,
         },
-        { label: 'Development/Test', value: SubscriptionCommonFields.usage.DEVELOPMENT_TEST },
-        { label: 'Disaster Recovery', value: SubscriptionCommonFields.usage.DISASTER_RECOVERY },
+        { label: 'Development/Test', value: SubscriptionCommonFieldsUsage.Development_Test },
+        { label: 'Disaster Recovery', value: SubscriptionCommonFieldsUsage.Disaster_Recovery },
       ],
       cluster_billing_model: [
         {
           label: 'Annual: Fixed capacity subscription from Red Hat',
-          value: billingModels.STANDARD,
+          value: SubscriptionCommonFieldsClusterBillingModel.standard,
           isDefault: true,
           isChecked: true,
         },
         {
           label: 'On-Demand (Hourly): Flexible usage billed through Red Hat Marketplace',
-          value: billingModels.MARKETPLACE,
+          value: SubscriptionCommonFieldsClusterBillingModel.marketplace,
         },
       ],
       system_units: [
         {
           label: 'Cores or vCPUs',
-          value: SubscriptionCommonFields.system_units.CORES_V_CPU,
+          value: SubscriptionCommonFieldsSystemUnits.Cores_vCPU,
           isDefault: true,
           isChecked: true,
         },
-        { label: 'Sockets', value: SubscriptionCommonFields.system_units.SOCKETS },
+        { label: 'Sockets', value: SubscriptionCommonFieldsSystemUnits.Sockets },
       ],
     });
   });

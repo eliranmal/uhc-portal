@@ -18,7 +18,6 @@ import {
 import { SupportedFeature } from '~/common/featureCompatibility';
 import { noQuotaTooltip } from '~/common/helpers';
 import links from '~/common/installLinks.mjs';
-import { billingModels } from '~/common/subscriptionTypes';
 import {
   asyncValidateClusterName,
   asyncValidateDomainPrefix,
@@ -35,6 +34,7 @@ import { constants } from '~/components/clusters/common/CreateOSDFormConstants';
 import LoadBalancersDropdown from '~/components/clusters/common/LoadBalancersDropdown';
 import PersistentStorageDropdown from '~/components/clusters/common/PersistentStorageDropdown';
 import { QuotaParams } from '~/components/clusters/common/quotaModel';
+import { availableQuota } from '~/components/clusters/common/quotaSelectors';
 import {
   getMinReplicasCount,
   getNodesCount,
@@ -42,8 +42,12 @@ import {
 import { ClassicEtcdFipsSection } from '~/components/clusters/wizards/common/ClusterSettings/Details/ClassicEtcdFipsSection';
 import CloudRegionSelectField from '~/components/clusters/wizards/common/ClusterSettings/Details/CloudRegionSelectField';
 import { VersionSelectField } from '~/components/clusters/wizards/common/ClusterSettings/Details/VersionSelectField';
-import { CloudProviderType, emptyAWSSubnet } from '~/components/clusters/wizards/common/constants';
-import { hasAvailableQuota, quotaParams } from '~/components/clusters/wizards/common/utils/quotas';
+import {
+  canConfigureDayOnePrivateServiceConnect,
+  CloudProviderType,
+  emptyAWSSubnet,
+} from '~/components/clusters/wizards/common/constants';
+import { quotaParams } from '~/components/clusters/wizards/common/utils/quotas';
 import {
   CheckboxField,
   RadioGroupField,
@@ -58,8 +62,13 @@ import ExternalLink from '~/components/common/ExternalLink';
 import PopoverHint from '~/components/common/PopoverHint';
 import { getCloudProviders } from '~/redux/actions/cloudProviderActions';
 import { useGlobalState } from '~/redux/hooks/useGlobalState';
-import { QuotaCostList } from '~/types/accounts_mgmt.v1';
+import {
+  QuotaCostList,
+  SubscriptionCommonFieldsCluster_billing_model as SubscriptionCommonFieldsClusterBillingModel,
+} from '~/types/accounts_mgmt.v1';
 import { Version } from '~/types/clusters_mgmt.v1';
+
+import { ClusterPrivacyType } from '../../Networking/constants';
 
 function Details() {
   const dispatch = useDispatch();
@@ -71,6 +80,7 @@ function Details() {
       [FieldId.BillingModel]: billingModel,
       [FieldId.Region]: region,
       [FieldId.CloudProvider]: cloudProvider,
+      [FieldId.ClusterPrivacy]: clusterPrivacy,
       [FieldId.CustomerManagedKey]: hasCustomerManagedKey,
       [FieldId.KmsKeyArn]: kmsKeyArn,
       [FieldId.ClusterVersion]: selectedVersion,
@@ -142,15 +152,23 @@ function Details() {
     cloudProviderID: cloudProvider,
   } as QuotaParams;
 
-  const hasSingleAzResources = hasAvailableQuota(quotaList as QuotaCostList, {
-    ...quotaParams.singleAzResources,
-    ...azQuotaParams,
-  });
+  const hasSingleAzResources =
+    availableQuota(quotaList as QuotaCostList, {
+      ...quotaParams.singleAzResources,
+      ...azQuotaParams,
+    }) > 0;
 
-  const hasMultiAzResources = hasAvailableQuota(quotaList as QuotaCostList, {
-    ...quotaParams.multiAzResources,
-    ...azQuotaParams,
-  });
+  const hasMultiAzResources =
+    availableQuota(quotaList as QuotaCostList, {
+      ...quotaParams.multiAzResources,
+      ...azQuotaParams,
+    }) > 0;
+
+  React.useEffect(() => {
+    if (!hasSingleAzResources && hasMultiAzResources) {
+      setFieldValue(FieldId.MultiAz, 'true');
+    }
+  }, [hasSingleAzResources, hasMultiAzResources, setFieldValue]);
 
   const handleCloudRegionChange = useCallback(() => {
     // Clears fields related to the region: VPC and machinePoolsSubnets
@@ -182,11 +200,11 @@ function Details() {
     setFieldValue(FieldId.MachinePoolsSubnets, mpSubnetsReset);
   };
 
-  const handleVersionChange = (clusterVersion: Version) => {
+  const handleVersionChange = (clusterVersion?: Version) => {
     // If features become incompatible with the new version, clear their settings
     const canDefineSecurityGroups = !getIncompatibleVersionReason(
       SupportedFeature.SECURITY_GROUPS,
-      clusterVersion.raw_id,
+      clusterVersion?.raw_id,
       { day1: true },
     );
     if (!canDefineSecurityGroups) {
@@ -196,6 +214,12 @@ function Details() {
         infra: [],
         worker: [],
       });
+    }
+    if (!canConfigureDayOnePrivateServiceConnect(clusterVersion?.raw_id || '')) {
+      setFieldValue(FieldId.PrivateServiceConnect, false);
+    } else if (clusterPrivacy === ClusterPrivacyType.Internal) {
+      setFieldValue(FieldId.PrivateServiceConnect, true);
+      setFieldValue(FieldId.InstallToVpc, true);
     }
   };
 
@@ -312,7 +336,7 @@ function Details() {
             <VersionSelectField
               name={FieldId.ClusterVersion}
               label={
-                billingModel === billingModels.MARKETPLACE_GCP
+                billingModel === SubscriptionCommonFieldsClusterBillingModel.marketplace_gcp
                   ? 'Version (Google Cloud Marketplace enabled)'
                   : 'Version'
               }

@@ -10,13 +10,17 @@ export const invalidateNotificationContacts = () => {
 
 export const useFetchNotificationContacts = (subscriptionID: string) => {
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['fetchNotificationContacts', 'accountService', subscriptionID],
+    queryKey: [
+      queryConstants.FETCH_CLUSTER_DETAILS_QUERY_KEY,
+      'fetchNotificationContacts',
+      'accountService',
+      subscriptionID,
+    ],
     queryFn: async () => {
       const response = await accountsService.getNotificationContacts(subscriptionID);
 
       return response;
     },
-    staleTime: queryConstants.STALE_TIME,
     enabled: !!subscriptionID,
   });
   return {

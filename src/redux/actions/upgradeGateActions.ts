@@ -1,10 +1,7 @@
-import type { AxiosError } from 'axios';
 import { action, ActionType } from 'typesafe-actions';
 
-import { POST_UPGRADE_SCHEDULE } from '../../components/clusters/common/Upgrades/clusterUpgradeActions';
 import { clusterService } from '../../services';
 import { clustersConstants } from '../constants';
-import { REJECTED_ACTION } from '../reduxHelpers';
 
 const fetchUpgradeGateFromAPI = () =>
   clusterService.getUpgradeGates().then((result) => result.data.items);
@@ -15,24 +12,11 @@ const fetchUpgradeGates = () =>
 const setClusterUpgradeGate = (upgradeGateId: string) =>
   action(clustersConstants.SET_CLUSTER_UPGRADE_GATE, upgradeGateId);
 
-const rejectGateAction = (error: AxiosError) => ({
-  type: REJECTED_ACTION(POST_UPGRADE_SCHEDULE),
-  error,
-  payload: error,
-});
-
 const upgradeGateActions = {
   fetchUpgradeGates,
   setClusterUpgradeGate,
-  rejectGateAction,
 };
 
 type UpgradeGateAction = ActionType<typeof upgradeGateActions>;
 
-export {
-  upgradeGateActions,
-  fetchUpgradeGates,
-  setClusterUpgradeGate,
-  rejectGateAction,
-  UpgradeGateAction,
-};
+export { upgradeGateActions, fetchUpgradeGates, setClusterUpgradeGate, UpgradeGateAction };

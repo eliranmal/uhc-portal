@@ -6,13 +6,13 @@ import { FormSelect, FormSelectOption } from '@patternfly/react-core';
 class KMSKeyLocationComboBox extends React.Component {
   componentDidMount() {
     const { selectedRegion, input } = this.props;
-    input.onChange(selectedRegion);
+    input.onChange(input.value || selectedRegion);
   }
 
   componentDidUpdate(prevProps) {
     const { selectedRegion, input } = this.props;
     if (prevProps.selectedRegion !== selectedRegion) {
-      input.onChange(selectedRegion);
+      input.onChange(input.value || selectedRegion);
     }
   }
 

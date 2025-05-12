@@ -4,7 +4,6 @@ import classNames from 'classnames';
 import { Tile, Tooltip } from '@patternfly/react-core';
 
 import { noQuotaTooltip } from '~/common/helpers';
-import { billingModels } from '~/common/subscriptionTypes';
 import {
   AWS_DEFAULT_REGION,
   CloudProviderType,
@@ -15,6 +14,7 @@ import { useGetBillingQuotas } from '~/components/clusters/wizards/osd/BillingMo
 import { FieldId } from '~/components/clusters/wizards/osd/constants';
 import AWSLogo from '~/styles/images/AWSLogo';
 import GCPLogo from '~/styles/images/GCPLogo';
+import { SubscriptionCommonFieldsCluster_billing_model as SubscriptionCommonFieldsClusterBillingModel } from '~/types/accounts_mgmt.v1';
 
 import './cloudProviderTileField.scss';
 
@@ -34,12 +34,14 @@ export const CloudProviderTileField = () => {
     isBYOC,
   });
   const hasGcpResources = quotas.gcpResources;
-  const hasAwsResources =
-    billingModel === billingModels.MARKETPLACE_GCP ? false : quotas.awsResources;
+  const shouldShowAwsTile = !(
+    billingModel === SubscriptionCommonFieldsClusterBillingModel.marketplace_gcp
+  );
+  const hasAwsResources = shouldShowAwsTile ? quotas.awsResources : false;
   const notAvailableTooltip =
-    billingModel === billingModels.MARKETPLACE_GCP
-      ? 'OpenShift Dedicated purchased through the Google Cloud marketplace can only be provisioned on GCP.'
-      : noQuotaTooltip;
+    billingModel === shouldShowAwsTile
+      ? noQuotaTooltip
+      : 'OpenShift Dedicated purchased through the Google Cloud marketplace can only be provisioned on GCP.';
 
   const handleChange = (value: string) => {
     // Silently reset some user choices that are now meaningless.
@@ -97,8 +99,9 @@ export const CloudProviderTileField = () => {
 
   return (
     <div role="listbox" aria-label="Providers options">
-      {hasAwsResources ? awsTile : <Tooltip content={notAvailableTooltip}>{awsTile}</Tooltip>}
       {hasGcpResources ? gcpTile : <Tooltip content={noQuotaTooltip}>{gcpTile}</Tooltip>}
+      {shouldShowAwsTile &&
+        (hasAwsResources ? awsTile : <Tooltip content={notAvailableTooltip}>{awsTile}</Tooltip>)}
     </div>
   );
 };

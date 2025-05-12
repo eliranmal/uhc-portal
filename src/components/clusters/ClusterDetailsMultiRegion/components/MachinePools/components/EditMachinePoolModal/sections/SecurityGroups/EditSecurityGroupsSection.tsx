@@ -4,12 +4,12 @@ import { ExpandableSection } from '@patternfly/react-core';
 
 import { isCompatibleFeature, SupportedFeature } from '~/common/featureCompatibility';
 import WithTooltip from '~/components/common/WithTooltip';
-import { Cluster } from '~/types/clusters_mgmt.v1';
+import { ClusterFromSubscription } from '~/types/types';
 
 import EditSecurityGroupsField from './EditSecurityGroupsField';
 
 export interface EditSecurityGroupsSectionProps {
-  cluster: Cluster;
+  cluster: ClusterFromSubscription;
   isReadOnly: boolean;
 }
 

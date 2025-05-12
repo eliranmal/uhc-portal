@@ -5,7 +5,6 @@ import { Text, TextContent } from '@patternfly/react-core';
 import links, { channels, tools } from '~/common/installLinks.mjs';
 import { Link } from '~/common/routing';
 import ExternalLink from '~/components/common/ExternalLink';
-import TechnologyPreview from '~/components/common/TechnologyPreview';
 
 import { DownloadsPageRowsType } from './DownloadsPageRowsType';
 import ToolAndDescriptionRows from './ToolAndDescriptionRows';
@@ -119,12 +118,7 @@ const InstallationRows = ({
         {...commonProps}
         tool={tools.MULTIINSTALLER}
         channel={channels.STABLE}
-        name={
-          <>
-            OpenShift Installer with multi-architecture compute machines{' '}
-            <TechnologyPreview className="pf-v5-u-ml-md pf-v5-u-display-inline" />
-          </>
-        }
+        name="OpenShift Installer with multi-architecture compute machines"
         description={
           <TextContent>
             <Text>

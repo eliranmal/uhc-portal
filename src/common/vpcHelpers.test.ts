@@ -1,5 +1,5 @@
 import { vpcList } from '~/components/clusters/common/__tests__/vpcs.fixtures';
-import { CloudVPC, Subnetwork } from '~/types/clusters_mgmt.v1';
+import { CloudVpc, Subnetwork } from '~/types/clusters_mgmt.v1';
 
 import {
   filterOutRedHatManagedVPCs,
@@ -30,7 +30,7 @@ describe('vpcHasRequiredSubnets', () => {
   const publicSubnetId = 'subnet-071863ea8dfeb4786';
 
   const getVpcWithSelectedSubnets = (subnetIds: string[]) => {
-    const testVpc = vpcList.find((vpc) => vpc.name === 'caa-e2e-test-vpc') as CloudVPC;
+    const testVpc = vpcList.find((vpc) => vpc.name === 'caa-e2e-test-vpc') as CloudVpc;
 
     return {
       ...testVpc,
@@ -105,7 +105,7 @@ describe('getMatchingAvailabilityZones', () => {
           { subnet_id: '4', availability_zone: 'myRegionc', public: true },
           { subnet_id: '5', availability_zone: 'myRegionb', public: false },
         ],
-      } as CloudVPC;
+      } as CloudVpc;
       expect(getMatchingAvailabilityZones(testRegion, vpc, [privatePrivacy])).toEqual([
         'myRegionb',
         'myRegione',
@@ -123,7 +123,7 @@ describe('getMatchingAvailabilityZones', () => {
           { subnet_id: '4', availability_zone: 'myRegionc', public: true },
           { subnet_id: '5', availability_zone: 'myRegionb', public: false },
         ],
-      } as CloudVPC;
+      } as CloudVpc;
 
       // Tests also that there's not duplicates for Region C
       expect(getMatchingAvailabilityZones(testRegion, vpc, [publicPrivacy])).toEqual([
@@ -147,7 +147,7 @@ describe('getMatchingAvailabilityZones', () => {
           { subnet_id: '7', availability_zone: 'myRegionc', public: true },
           { subnet_id: '8', availability_zone: 'myRegionc', public: false },
         ],
-      } as CloudVPC;
+      } as CloudVpc;
       expect(
         getMatchingAvailabilityZones(testRegion, vpc, [publicPrivacy, privatePrivacy]),
       ).toEqual(['myRegionc']);
@@ -157,7 +157,7 @@ describe('getMatchingAvailabilityZones', () => {
 
 describe('getSelectedAvailabilityZones', () => {
   it('obtains the availability zones from the VPC details', () => {
-    const vpc = vpcList.find((vpc) => vpc.id === 'vpc-0cbe6c1d5f216cdb9') as CloudVPC;
+    const vpc = vpcList.find((vpc) => vpc.id === 'vpc-0cbe6c1d5f216cdb9') as CloudVpc;
     expect(vpc.name).toEqual('caa-e2e-test-vpc');
 
     const formSubnets = [
@@ -168,7 +168,7 @@ describe('getSelectedAvailabilityZones', () => {
   });
 
   it('returns empty if the VPC details does not contain the specified subnets', () => {
-    const vpc = vpcList.find((vpc) => vpc.id === 'vpc-046c3e3efea64c91e') as CloudVPC;
+    const vpc = vpcList.find((vpc) => vpc.id === 'vpc-046c3e3efea64c91e') as CloudVpc;
     expect(vpc.name).toEqual('jaosorior-8vns4-vpc');
 
     const formSubnets = [

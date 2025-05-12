@@ -1,4 +1,4 @@
-import { LDAPAttributes, OpenIDClaims } from '~/types/clusters_mgmt.v1';
+import { LdapAttributes, OpenIdClaims } from '~/types/clusters_mgmt.v1';
 
 import {
   generateIDPName,
@@ -236,7 +236,7 @@ describe('getOpenIdClaims', () => {
     ['none', {}, 'none', []],
     ['undefined', undefined, 'none', []],
   ])('%p', (title, claims, type, expected) =>
-    expect(getOpenIdClaims(claims, type as keyof OpenIDClaims)).toStrictEqual(expected),
+    expect(getOpenIdClaims(claims, type as keyof OpenIdClaims)).toStrictEqual(expected),
   );
 });
 
@@ -248,7 +248,7 @@ describe('getldapAttributes', () => {
     ['not existing one', 'whatever', []],
     ['none', 'none', []],
   ])('%p', (title, type, expected) =>
-    expect(getldapAttributes(claims, type as keyof LDAPAttributes)).toStrictEqual(expected),
+    expect(getldapAttributes(claims, type as keyof LdapAttributes)).toStrictEqual(expected),
   );
 });
 

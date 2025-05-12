@@ -3,8 +3,7 @@ import PropTypes from 'prop-types';
 import { matchPath, useLocation, useParams } from 'react-router-dom';
 import { validate as isUuid } from 'uuid';
 
-import { Bullseye } from '@patternfly/react-core';
-import { Spinner } from '@redhat-cloud-services/frontend-components/Spinner';
+import { Bullseye, Spinner } from '@patternfly/react-core';
 
 import { advisorBaseName, Navigate, ocmBaseName } from '~/common/routing';
 
@@ -83,7 +82,9 @@ const InsightsAdvisorRedirector = (props) => {
 
   return (
     <Bullseye>
-      <Spinner size="lg" centered />
+      <div className="pf-v5-u-text-align-center">
+        <Spinner size="lg" aria-label="Loading..." />
+      </div>
     </Bullseye>
   );
 };

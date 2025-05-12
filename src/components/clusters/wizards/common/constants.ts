@@ -2,6 +2,8 @@ import { FormikValues } from 'formik';
 
 import { isMajorMinorEqualOrGreater, splitVersion } from '~/common/versionHelpers';
 
+import { FormSubnet } from './FormSubnet';
+
 // Fields that are used in both OSD and ROSA wizards.
 export enum FieldId {
   AccessKeyId = 'access_key_id',
@@ -23,6 +25,8 @@ export enum FieldId {
   ClusterVersion = 'cluster_version',
   ComputeSubnet = 'compute_subnet',
   ConfigureProxy = 'configure_proxy',
+  PrivateServiceConnect = 'private_service_connect',
+  PSCSubnet = 'psc_subnet',
   ControlPlaneSubnet = 'control_plane_subnet',
   CustomerManagedKey = 'customer_managed_key',
   CustomOperatorRolesPrefix = 'custom_operator_roles_prefix',
@@ -97,7 +101,7 @@ export enum IMDSType {
 export const AWS_DEFAULT_REGION = 'us-east-1';
 export const GCP_DEFAULT_REGION = 'us-east1';
 
-export const emptyAWSSubnet = () => ({
+export const emptyAWSSubnet: () => FormSubnet = () => ({
   availabilityZone: '',
   privateSubnetId: '',
   publicSubnetId: '',
@@ -110,3 +114,6 @@ export const canSelectImds = (clusterVersionRawId: string): boolean => {
 
 export const canConfigureDayOneManagedIngress = (clusterVersionRawId: string): boolean =>
   isMajorMinorEqualOrGreater(clusterVersionRawId, 4, 14);
+
+export const canConfigureDayOnePrivateServiceConnect = (clusterVersionRawId: string): boolean =>
+  isMajorMinorEqualOrGreater(clusterVersionRawId, 4, 17);

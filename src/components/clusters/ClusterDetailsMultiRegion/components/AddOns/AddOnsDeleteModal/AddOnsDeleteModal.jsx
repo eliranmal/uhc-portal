@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux';
 
 import { Form, TextInput } from '@patternfly/react-core';
 
+import { refetchClusterAddOns } from '~/queries/ClusterDetailsQueries/AddOnsTab/useFetchClusterAddOns';
 import { getOrganizationAndQuota } from '~/redux/actions/userActions';
 import { useGlobalState } from '~/redux/hooks';
 
@@ -49,6 +50,7 @@ const AddOnsDeleteModal = ({
       {
         onSuccess: () => {
           dispatch(getOrganizationAndQuota());
+          refetchClusterAddOns();
           handleClose();
           dispatch(
             setAddonsDrawer({

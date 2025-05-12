@@ -9,16 +9,19 @@ type DynamicSelectProps = React.ComponentProps<typeof DynamicSelect>;
 describe('<DynamicSelect>', () => {
   const loadData = jest.fn();
   const onChange = jest.fn();
+  const onBlur = jest.fn();
 
   const baseProps = {
     loadData,
     input: {
       onChange,
+      onBlur,
       value: '',
+      name: 'myName',
     },
     meta: {
       invalid: false,
-      error: null,
+      error: '',
       touched: false,
     },
     label: 'Label',
@@ -127,7 +130,7 @@ describe('<DynamicSelect>', () => {
     const newProps = {
       ...baseProps,
       requestStatus: { pending: false, fulfilled: true, error: false },
-      input: { value: 'Foo', onChange },
+      input: { value: 'Foo', onChange, onBlur, name: 'myName' },
     } as DynamicSelectProps;
 
     const { rerender } = render(<DynamicSelect {...newProps} />);
@@ -144,7 +147,7 @@ describe('<DynamicSelect>', () => {
 
     const setInputProps = {
       ...changedProps,
-      input: { value: '', onChange },
+      input: { value: '', onChange, onBlur, name: 'myName' },
     };
 
     rerender(<DynamicSelect {...setInputProps} />);
@@ -160,7 +163,7 @@ describe('<DynamicSelect>', () => {
   it('resets on lost dependencies', () => {
     const fulfilledProps = {
       ...baseProps,
-      input: { value: 'Foo', onChange },
+      input: { value: 'Foo', onChange, onBlur, name: 'myName' },
       requestStatus: { pending: false, fulfilled: true, error: false },
     } as DynamicSelectProps;
 
@@ -178,7 +181,7 @@ describe('<DynamicSelect>', () => {
 
     const setInputProps = {
       ...noDependenciesProps,
-      input: { value: '', onChange },
+      input: { value: '', onChange, onBlur, name: 'myName' },
     };
 
     rerender(<DynamicSelect {...setInputProps} />);

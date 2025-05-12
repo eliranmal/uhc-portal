@@ -1,20 +1,19 @@
 import * as React from 'react';
 import { useField } from 'formik';
 
-import { FormGroup, Tooltip } from '@patternfly/react-core';
-import { SelectOption as SelectOptionDeprecated } from '@patternfly/react-core/deprecated';
+import { FormGroup, SelectOption, Tooltip } from '@patternfly/react-core';
 
 import { noQuotaTooltip } from '~/common/helpers';
 import links from '~/common/installLinks.mjs';
 import { normalizeProductID } from '~/common/normalize';
 import { normalizedProducts } from '~/common/subscriptionTypes';
-import { isMPoolAz } from '~/components/clusters/ClusterDetails/clusterDetailsHelper';
+import { isMPoolAz } from '~/components/clusters/ClusterDetailsMultiRegion/clusterDetailsHelper';
 import { constants } from '~/components/clusters/common/CreateOSDFormConstants';
 import ExternalLink from '~/components/common/ExternalLink';
 import { FormGroupHelperText } from '~/components/common/FormGroupHelperText';
 import PopoverHint from '~/components/common/PopoverHint';
 import useFormikOnChange from '~/hooks/useFormikOnChange';
-import { Cluster } from '~/types/clusters_mgmt.v1';
+import { ClusterFromSubscription } from '~/types/types';
 
 import SelectField from './SelectField';
 
@@ -24,7 +23,7 @@ type NodeCountFieldProps = {
   mpAvailZones: number | undefined;
   minNodesRequired: number;
   options: number[];
-  cluster: Cluster;
+  cluster: ClusterFromSubscription;
 };
 
 const NodeCountField = ({
@@ -51,15 +50,15 @@ const NodeCountField = ({
 
   const selectField = (
     <SelectField
-      value={`${field.value}`}
+      value={`${isMultizoneMachinePool ? field.value / 3 : field.value}`}
       fieldId={fieldId}
       onSelect={(newValue) => onChange(parseInt(newValue as string, 10))}
       isDisabled={notEnoughQuota}
     >
       {options.map((option) => (
-        <SelectOptionDeprecated key={option} value={`${option}`}>
+        <SelectOption key={option} value={`${option}`}>
           {`${isMultizoneMachinePool ? option / 3 : option}`}
-        </SelectOptionDeprecated>
+        </SelectOption>
       ))}
     </SelectField>
   );

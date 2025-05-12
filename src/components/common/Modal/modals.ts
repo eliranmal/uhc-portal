@@ -9,9 +9,6 @@ const modals = {
   DELETE_MACHINE_POOL: 'delete-machine-pool',
   DELETE_PROTECTION: 'delete-protection',
   EDIT_APPLICATION_INGRESS: 'edit-application-ingress',
-  // redux-form
-  EDIT_CLUSTER_AUTOSCALING_V1: 'edit-cluster-autoscaling-v1',
-  // formik
   EDIT_CLUSTER_AUTOSCALING_V2: 'edit-cluster-autoscaling-v2',
   EDIT_CLUSTER_INGRESS: 'edit-cluster-ingress',
   EDIT_CLUSTER_WIDE_PROXY: 'EDIT_CLUSTER_WIDE_PROXY',
@@ -26,9 +23,12 @@ const modals = {
   RESUME_CLUSTER: 'resume-cluster',
   SCALE_CLUSTER: 'edit-cluster',
   TRANSFER_CLUSTER_OWNERSHIP: 'transfer-cluster-ownership',
+  TRANSFER_CLUSTER_OWNERSHIP_AUTO: 'transfer-cluster-ownership-auto',
   UNARCHIVE_CLUSTER: 'unarchive-cluster',
   UPDATE_MACHINE_POOL_VERSION: 'update-machine-pool-version',
   UPGRADE_TRIAL_CLUSTER: 'upgrade-trial-cluster',
   UPGRADE_WIZARD: 'upgrade-wizard',
+  ADD_HTPASSWD_USER: 'ADD_HTPASSWD_USER',
+  EDIT_HTPASSWD_USER: 'EDIT_HTPASSWD_USER',
 };
 export default modals;

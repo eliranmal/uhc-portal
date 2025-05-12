@@ -3,7 +3,10 @@ import { action, ActionType } from 'typesafe-actions';
 import { authorizationsService } from '~/services';
 import accessRequestService from '~/services/accessTransparency/accessRequestService';
 import { Decision } from '~/types/access_transparency.v1';
-import { SelfAccessReview } from '~/types/accounts_mgmt.v1';
+import {
+  SelfAccessReviewAction,
+  SelfAccessReviewResource_type as SelfAccessReviewResourceType,
+} from '~/types/accounts_mgmt.v1';
 import { ViewOptions } from '~/types/types';
 
 import { accessRequestConstants } from '../constants';
@@ -63,8 +66,8 @@ const canMakeDecision = (subscriptionId: string, organizationId: string) =>
   action(
     accessRequestConstants.CAN_MAKE_ACCESS_REQUEST_DECISION,
     authorizationsService.selfAccessReview({
-      action: SelfAccessReview.action.CREATE,
-      resource_type: SelfAccessReview.resource_type.ACCESS_REQUEST_DECISION,
+      action: SelfAccessReviewAction.create,
+      resource_type: SelfAccessReviewResourceType.AccessRequestDecision,
       subscription_id: subscriptionId,
       organization_id: organizationId,
     }),
@@ -101,16 +104,16 @@ type AccessRequestAction = ActionType<
 >;
 
 export {
+  AccessRequestAction,
   accessRequestActions,
-  getAccessRequests,
+  canMakeDecision,
   getAccessRequest,
+  getAccessRequests,
   getPendingAccessRequests,
   postAccessRequestDecision,
-  canMakeDecision,
-  resetAccessRequests,
   resetAccessRequest,
+  resetAccessRequests,
+  resetCanMakeDecision,
   resetGetPendingAccessRequests,
   resetPostAccessRequestDecision,
-  resetCanMakeDecision,
-  AccessRequestAction,
 };

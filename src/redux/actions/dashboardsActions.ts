@@ -15,8 +15,9 @@ limitations under the License.
 */
 import { action, ActionType } from 'typesafe-actions';
 
+import { SummaryVector } from '~/types/accounts_mgmt.v1';
+
 import { accountManager, accountsService } from '../../services';
-import type { SummaryVector } from '../../types/accounts_mgmt.v1/models/SummaryVector';
 import { dashboardsConstants } from '../constants';
 
 const getDashboard = () =>

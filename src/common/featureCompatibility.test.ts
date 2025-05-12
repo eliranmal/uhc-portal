@@ -1,11 +1,11 @@
 import { normalizedProducts } from '~/common/subscriptionTypes';
-import { Cluster } from '~/types/clusters_mgmt.v1';
+import { ClusterFromSubscription } from '~/types/types';
 
 import { isCompatibleFeature, SupportedFeature } from './featureCompatibility';
 
 describe('isCompatibleFeature', () => {
   describe('Security groups', () => {
-    const checkCompatibility = (testCluster: Partial<Cluster>) =>
+    const checkCompatibility = (testCluster: Partial<ClusterFromSubscription>) =>
       isCompatibleFeature(SupportedFeature.SECURITY_GROUPS, testCluster);
     describe('are incompatible for', () => {
       it.each([
@@ -35,9 +35,12 @@ describe('isCompatibleFeature', () => {
             aws: { subnet_ids: undefined },
           },
         ],
-      ])('"%s" clusters', (_clusterDesc: string, clusterSettings: Partial<Cluster>) => {
-        expect(checkCompatibility(clusterSettings)).toBeFalsy();
-      });
+      ])(
+        '"%s" clusters',
+        (_clusterDesc: string, clusterSettings: Partial<ClusterFromSubscription>) => {
+          expect(checkCompatibility(clusterSettings)).toBeFalsy();
+        },
+      );
     });
 
     describe('are compatible for', () => {
@@ -97,9 +100,42 @@ describe('isCompatibleFeature', () => {
             },
           },
         ],
-      ])('"%s" clusters', (_clusterDesc: string, clusterSettings: Partial<Cluster>) => {
-        expect(checkCompatibility(clusterSettings)).toBeTruthy();
-      });
+      ])(
+        '"%s" clusters',
+        (_clusterDesc: string, clusterSettings: Partial<ClusterFromSubscription>) => {
+          expect(checkCompatibility(clusterSettings)).toBeTruthy();
+        },
+      );
+    });
+  });
+  describe('Auto Cluster Transfer Ownership', () => {
+    const checkCompatibility = (testCluster: Partial<ClusterFromSubscription>) =>
+      isCompatibleFeature(SupportedFeature.AUTO_CLUSTER_TRANSFER_OWNERSHIP, testCluster);
+    describe('are incompatible for', () => {
+      it.each([
+        [
+          'Hypershift enabled',
+          { product: { id: normalizedProducts.ROSA }, hypershift: { enabled: true } },
+          false,
+        ],
+        [
+          'ROSA, not Hypershift',
+          { product: { id: normalizedProducts.ROSA }, hypershift: { enabled: false } },
+          true,
+        ],
+        ['ROSA_HyperShift', { product: { id: normalizedProducts.ROSA_HyperShift } }, false],
+        ['OCP', { product: { id: normalizedProducts.OCP } }, false],
+        ['OSD', { product: { id: normalizedProducts.OSD } }, false],
+      ])(
+        '"%s" clusters',
+        (
+          _clusterDesc: string,
+          clusterSettings: Partial<ClusterFromSubscription>,
+          result: boolean,
+        ) => {
+          expect(checkCompatibility(clusterSettings)).toEqual(result);
+        },
+      );
     });
   });
 });

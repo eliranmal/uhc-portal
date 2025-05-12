@@ -51,7 +51,9 @@ describe('<ExternalAuthProviderList />', () => {
     it('returns add new button', () => {
       apiRequestMock.get.mockResolvedValue({ items: [], page: 1, size: 0, total: 0 });
 
-      withState(initialState, true).render(<ExternalAuthProviderList />);
+      withState(initialState, true).render(
+        <ExternalAuthProviderList clusterID="myCluster" canUpdateClusterResource />,
+      );
       expect(apiRequestMock.get).toHaveBeenCalledTimes(1);
       expect(apiRequestMock.get).toHaveBeenCalledWith(
         '/api/clusters_mgmt/v1/clusters/myCluster/external_auth_config/external_auths',
@@ -66,7 +68,9 @@ describe('<ExternalAuthProviderList />', () => {
     it('no add button shown', async () => {
       apiRequestMock.get.mockResolvedValue(ExtAuthProviders);
 
-      withState(clusterWithExtAuthProvider, true).render(<ExternalAuthProviderList />);
+      withState(clusterWithExtAuthProvider, true).render(
+        <ExternalAuthProviderList clusterID="myCluster1" canUpdateClusterResource />,
+      );
 
       expect(apiRequestMock.get).toHaveBeenCalledTimes(1);
       expect(apiRequestMock.get).toHaveBeenCalledWith(
@@ -82,7 +86,9 @@ describe('<ExternalAuthProviderList />', () => {
 
     it('list shown of the external auth info', async () => {
       apiRequestMock.get.mockResolvedValue(ExtAuthProviders);
-      withState(clusterWithExtAuthProvider, true).render(<ExternalAuthProviderList />);
+      withState(clusterWithExtAuthProvider, true).render(
+        <ExternalAuthProviderList clusterID="myCluster1" canUpdateClusterResource />,
+      );
 
       expect(await screen.findByText('Name')).toBeInTheDocument();
       expect(await screen.findByText('Issuer URL')).toBeInTheDocument();

@@ -3,16 +3,21 @@ import PropTypes from 'prop-types';
 
 import { InfoCircleIcon } from '@patternfly/react-icons/dist/esm/icons/info-circle-icon';
 
-const MinorVersionUpgradeConfirm = ({
-  getAcks,
-  isMinorVersionUpgradesEnabled,
-  isNextMinorVersionAvailable,
-  isAutomatic,
-}) => {
+import {
+  getEnableMinorVersionUpgrades,
+  isNextMinorVersionAvailableHelper,
+} from '../MinorVersionUpgradeAlert/MinorVersionUpgradeAlertHelpers';
+import { getClusterAcks } from '../UpgradeAcknowledge/UpgradeAcknowledgeHelpers';
+
+const MinorVersionUpgradeConfirm = ({ upgradeGates, schedules, cluster }) => {
+  const isAutomatic = !schedules?.items?.some((policy) => policy.schedule_type === 'automatic');
+  const isMinorVersionUpgradesEnabled = getEnableMinorVersionUpgrades(schedules);
+  const isNextMinorVersionAvailable = isNextMinorVersionAvailableHelper(cluster);
+  const getAcks = getClusterAcks(schedules, cluster, upgradeGates);
   const [clusterUnmetAcks] = getAcks;
 
   if (
-    !isAutomatic ||
+    isAutomatic ||
     !isNextMinorVersionAvailable ||
     !isMinorVersionUpgradesEnabled ||
     clusterUnmetAcks.length !== 0
@@ -28,10 +33,9 @@ const MinorVersionUpgradeConfirm = ({
 };
 
 MinorVersionUpgradeConfirm.propTypes = {
-  isAutomatic: PropTypes.bool,
-  isMinorVersionUpgradesEnabled: PropTypes.bool,
-  isNextMinorVersionAvailable: PropTypes.bool,
-  getAcks: PropTypes.array,
+  upgradeGates: PropTypes.object,
+  schedules: PropTypes.object,
+  cluster: PropTypes.object,
 };
 
 export default MinorVersionUpgradeConfirm;

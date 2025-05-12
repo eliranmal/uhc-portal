@@ -7,8 +7,8 @@ import {
   EmptyStateFooter,
   EmptyStateHeader,
   PageSection,
+  Spinner,
 } from '@patternfly/react-core';
-import { Spinner } from '@redhat-cloud-services/frontend-components/Spinner';
 
 import { Link } from '~/common/routing';
 
@@ -146,7 +146,9 @@ const SubscriptionNotFulfilled = ({ data, refresh, marketplace }: Props) => {
   } else if (data.pending) {
     content = (
       <PageSection>
-        <Spinner centered />
+        <div className="pf-v5-u-text-align-center">
+          <Spinner size="lg" aria-label="Loading..." />
+        </div>
       </PageSection>
     );
   } else if (data.empty) {

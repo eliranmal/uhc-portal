@@ -4,10 +4,41 @@ import { checkAccessibility, render, screen } from '~/testUtils';
 
 import UpdateGraph from './UpdateGraph';
 
+const defaultProps = {
+  cluster: {
+    id: 'myClusterId',
+    version: {
+      raw_id: 'clusterVersionId',
+    },
+  },
+  upgradeGates: [
+    {
+      id: 'myUpgradeGatesId',
+      sts_only: false,
+      value: '4.12',
+      version_raw_id_prefix: '4.12',
+    },
+  ],
+  schedules: {
+    items: [
+      {
+        id: 'myUpgradePolicyId',
+        schedule_type: 'automatic',
+        enable_minor_version_upgrades: false,
+        version: '1.2.4',
+      },
+    ],
+  },
+};
+
 describe('<UpdateGraph />', () => {
   it('is accessible', async () => {
     const { container } = render(
-      <UpdateGraph currentVersion="current version" updateVersion="next version" />,
+      <UpdateGraph
+        currentVersion="current version"
+        updateVersion="next version"
+        {...defaultProps}
+      />,
     );
 
     expect(container.querySelectorAll('.ocm-upgrade-graph-version')).toHaveLength(2);
@@ -23,7 +54,7 @@ describe('<UpdateGraph />', () => {
   });
 
   it('should render with no updates available', () => {
-    const { container } = render(<UpdateGraph currentVersion="1.2.3" />);
+    const { container } = render(<UpdateGraph currentVersion="1.2.3" {...defaultProps} />);
 
     expect(screen.getByText('1.2.3')).toHaveClass('ocm-upgrade-graph-version');
     expect(container.querySelectorAll('.ocm-upgrade-graph-version')).toHaveLength(1);
@@ -35,7 +66,7 @@ describe('<UpdateGraph />', () => {
 
   it('should render when additional versions are available', () => {
     const { container } = render(
-      <UpdateGraph currentVersion="1.2.3" updateVersion="1.2.4" hasMore />,
+      <UpdateGraph currentVersion="1.2.3" updateVersion="1.2.4" hasMore {...defaultProps} />,
     );
 
     expect(container.querySelectorAll('.ocm-upgrade-graph-version')).toHaveLength(2);

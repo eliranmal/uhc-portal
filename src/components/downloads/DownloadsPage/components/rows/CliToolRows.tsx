@@ -4,7 +4,10 @@ import { Text, TextContent } from '@patternfly/react-core';
 
 import links, { channels, tools } from '~/common/installLinks.mjs';
 import ExternalLink from '~/components/common/ExternalLink';
-import SupportLevelBadge, { DEV_PREVIEW } from '~/components/common/SupportLevelBadge';
+import SupportLevelBadge, {
+  DEV_PREVIEW,
+  TECH_PREVIEW,
+} from '~/components/common/SupportLevelBadge';
 import { isRestrictedEnv } from '~/restrictedEnv';
 
 import { DownloadsPageRowsType } from './DownloadsPageRowsType';
@@ -123,6 +126,37 @@ const CliToolRows = ({
                 Manage and interact with CI pipelines on OpenShift Container Platform with the
                 Tekton CLI for OpenShift Pipelines.{' '}
                 <ExternalLink href={links.TKN_DOCS}>Get started</ExternalLink>
+              </Text>
+            }
+          />
+
+          <ToolAndDescriptionRows
+            {...commonProps}
+            tool={tools.ARGO_CD}
+            channel={channels.STABLE}
+            name={
+              <>
+                Argo CD command-line interface for OpenShift GitOps (argocd)
+                <SupportLevelBadge {...TECH_PREVIEW} />
+              </>
+            }
+            description={
+              <Text>
+                Manage applications on Argo CD from the command line using the Argo CD CLI for
+                OpenShift GitOps. <ExternalLink href={links.ARGO_CD_DOCS}>Get started</ExternalLink>
+              </Text>
+            }
+          />
+
+          <ToolAndDescriptionRows
+            {...commonProps}
+            tool={tools.SHP_CLI}
+            channel={channels.STABLE}
+            name="Shipwright command-line interface for Builds for OpenShift (shp)"
+            description={
+              <Text>
+                Manage and interact with Shipwright Builds on OpenShift using the Shipwright CLI.{' '}
+                <ExternalLink href={links.SHP_CLI_DOCS}>Get started</ExternalLink>
               </Text>
             }
           />

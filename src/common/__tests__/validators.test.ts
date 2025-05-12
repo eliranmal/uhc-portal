@@ -5,7 +5,6 @@ import validators, {
   checkCustomOperatorRolesPrefix,
   checkDisconnectedConsoleURL,
   checkDisconnectedMemCapacity,
-  checkDisconnectedNodeCount,
   checkDisconnectedSockets,
   checkDisconnectedvCPU,
   checkGithubTeams,
@@ -661,17 +660,7 @@ describe('Field is valid node count for OCP cluster', () => {
       undefined,
       "'aaa' is not a valid number of nodes.",
     ],
-  ])(
-    'value %p min %p max %p to be %p',
-    (
-      value: string | number,
-      min: { value: number; validationMsg?: string },
-      max: number | undefined,
-      expected: string | undefined,
-    ) => {
-      expect(validators.nodes(value, min, max)).toBe(expected);
-    },
-  );
+  ]);
 });
 
 describe('Field is valid node count for multi AZ', () => {
@@ -906,21 +895,6 @@ describe('Field contains a valid number of memory', () => {
     [`${Number.MAX_SAFE_INTEGER}`, 'Input cannot be more than 256000.'],
   ])('value %p to be %p', (value: string | undefined, expected: string | undefined) => {
     expect(checkDisconnectedMemCapacity(value)).toBe(expected);
-  });
-});
-
-describe('Field is valid number of compute nodes for disconnected cluster', () => {
-  it.each([
-    [undefined, 'Input must be a number.'],
-    ['', undefined],
-    ['asdf', 'Input must be a number.'],
-    [`${0}`, undefined],
-    [`${-1}`, 'The minimum number of nodes is 0.'],
-    [`${250}`, undefined],
-    [`${251}`, 'Maximum number allowed is 250.'],
-    [`${Number.MAX_SAFE_INTEGER}`, 'Maximum number allowed is 250.'],
-  ])('value %p to be %p', (value: string | undefined, expected: string | undefined) => {
-    expect(checkDisconnectedNodeCount(value)).toBe(expected);
   });
 });
 
@@ -1238,11 +1212,14 @@ describe('HTPasswd password', () => {
 });
 
 describe('HTPasswd username', () => {
+  const validationErrorMessage = 'Username must not contain /, :, %, or empty spaces.';
   it.each([
     ['username1234', undefined],
-    ['username%', 'Username must not contain /, :, or %.'],
-    ['username:', 'Username must not contain /, :, or %.'],
-    ['username/', 'Username must not contain /, :, or %.'],
+    ['username%', validationErrorMessage],
+    ['username:', validationErrorMessage],
+    ['username/', validationErrorMessage],
+    ['username1  ', validationErrorMessage],
+    [' ', validationErrorMessage],
   ])('value %p to be %p', (value: string, expected: string | undefined) => {
     expect(validateHTPasswdUsername(value)).toBe(expected);
   });

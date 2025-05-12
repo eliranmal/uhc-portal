@@ -4,7 +4,7 @@ import * as reactRedux from 'react-redux';
 
 import * as helpers from '~/common/helpers';
 import { checkAccessibility, render, screen, waitFor, within, withState } from '~/testUtils';
-import { CloudAccount } from '~/types/accounts_mgmt.v1/models/CloudAccount';
+import { CloudAccount } from '~/types/accounts_mgmt.v1';
 
 import { initialValues } from '../../constants';
 

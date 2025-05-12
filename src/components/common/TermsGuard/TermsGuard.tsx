@@ -5,11 +5,11 @@ import {
   Button,
   EmptyState,
   EmptyStateBody,
+  Spinner,
   Text,
   TextContent,
   TextVariants,
 } from '@patternfly/react-core';
-import { Spinner } from '@redhat-cloud-services/frontend-components/Spinner';
 
 import { useNavigate } from '~/common/routing';
 import type { PromiseReducerState } from '~/redux/types';
@@ -65,7 +65,9 @@ const TermsGuard = ({ selfTermsReview, selfTermsReviewResult, children, gobackPa
     return (
       <EmptyState>
         <EmptyStateBody>
-          <Spinner centered />
+          <div className="pf-v5-u-text-align-center">
+            <Spinner size="lg" aria-label="Loading..." />
+          </div>
         </EmptyStateBody>
       </EmptyState>
     );

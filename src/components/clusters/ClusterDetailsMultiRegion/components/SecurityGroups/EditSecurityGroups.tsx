@@ -1,24 +1,31 @@
 import React from 'react';
 
-import { FormGroup, GridItem } from '@patternfly/react-core';
 import {
-  Select as SelectDeprecated,
-  SelectOption as SelectOptionDeprecated,
-  SelectOptionObject as SelectOptionObjectDeprecated,
-} from '@patternfly/react-core/deprecated';
+  Badge,
+  FormGroup,
+  GridItem,
+  MenuToggle,
+  MenuToggleElement,
+  Select,
+  SelectList,
+  SelectOption,
+  SelectProps,
+} from '@patternfly/react-core';
 
 import { truncateTextWithEllipsis } from '~/common/helpers';
 import { validateSecurityGroups } from '~/common/validators';
 import { FormGroupHelperText } from '~/components/common/FormGroupHelperText';
 import { securityGroupsSort } from '~/redux/reducers/ccsInquiriesReducer';
-import { CloudVPC } from '~/types/clusters_mgmt.v1';
+import { CloudVpc } from '~/types/clusters_mgmt.v1';
 
 import SecurityGroupsViewList from './SecurityGroupsViewList';
+
+import './EditSecurityGroups.scss';
 
 export interface EditSecurityGroupsProps {
   label?: string;
   selectedGroupIds: string[];
-  selectedVPC: CloudVPC;
+  selectedVPC: CloudVpc;
   isReadOnly: boolean;
   isHypershift: boolean;
   onChange: (securityGroupIds: string[]) => void;
@@ -73,10 +80,29 @@ const EditSecurityGroups = ({
     onChange(newGroupIdsValue);
   };
 
-  const onSelect = (
-    _: React.MouseEvent | React.ChangeEvent,
-    value: string | SelectOptionObjectDeprecated,
-  ) => {
+  const onToggle = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const toggle = (toggleRef: React.Ref<MenuToggleElement>) => (
+    <MenuToggle
+      ref={toggleRef}
+      onClick={onToggle}
+      isExpanded={isOpen}
+      isFullWidth
+      badge={
+        selectedGroupIds.length > 0 && (
+          <Badge screenReaderText="some items">{selectedGroupIds.length}</Badge>
+        )
+      }
+      aria-label="Options menu"
+      className="security-groups-menu-toggle"
+    >
+      Select security groups
+    </MenuToggle>
+  );
+
+  const onSelect: SelectProps['onSelect'] = (_event, value) => {
     const selectedGroupId = value as string;
     const wasPreviouslySelected = selectedGroupIds.includes(selectedGroupId);
     if (wasPreviouslySelected) {
@@ -103,31 +129,35 @@ const EditSecurityGroups = ({
             isReadOnly={false}
             onClickItem={onDeleteGroup}
           />
-          <SelectDeprecated
-            variant="checkbox"
-            selections={selectedGroupIds}
+          <Select
+            role="menu"
             isOpen={isOpen}
-            placeholderText="Select security groups"
-            aria-labelledby="Select AWS security groups"
-            onToggle={(_event, isExpanded) => setIsOpen(isExpanded)}
+            selected={selectedGroupIds}
+            toggle={toggle}
             onSelect={onSelect}
-            maxHeight={300}
-            menuAppendTo={document.getElementById('edit-mp-modal') || undefined}
+            onOpenChange={(isOpen) => setIsOpen(isOpen)}
+            data-testid="securitygroups-id"
+            aria-labelledby="Select AWS security groups"
+            maxMenuHeight="300px"
           >
-            {vpcSecurityGroups.map(({ id = '', name = '' }) => {
-              const { displayName, isCut } = getDisplayName(name);
-              return (
-                <SelectOptionDeprecated
-                  key={id}
-                  value={id}
-                  description={id}
-                  title={isCut ? name : ''}
-                >
-                  {displayName}
-                </SelectOptionDeprecated>
-              );
-            })}
-          </SelectDeprecated>
+            <SelectList>
+              {vpcSecurityGroups.map(({ id = '', name = '' }) => {
+                const { displayName, isCut } = getDisplayName(name);
+                return (
+                  <SelectOption
+                    key={id}
+                    value={id}
+                    description={id}
+                    title={isCut ? name : ''}
+                    hasCheckbox
+                    isSelected={selectedGroupIds.includes(id)}
+                  >
+                    {displayName}
+                  </SelectOption>
+                );
+              })}
+            </SelectList>
+          </Select>
         </>
       </FormGroup>
       <FormGroupHelperText touched error={validationError} />

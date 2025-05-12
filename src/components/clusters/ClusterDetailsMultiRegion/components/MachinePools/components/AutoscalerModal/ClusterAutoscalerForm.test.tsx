@@ -14,6 +14,7 @@ const initialProps = {
     ...clusterAutoscalerData,
   },
   isClusterAutoscalerRefetching: false,
+  maxNodesTotalDefault: 180,
 };
 
 describe('Cluster autoscaler form', () => {

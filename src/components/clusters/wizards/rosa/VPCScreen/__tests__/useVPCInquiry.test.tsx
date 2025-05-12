@@ -8,26 +8,14 @@ jest.mock('react-redux', () => ({
   __esModule: true,
   ...jest.requireActual('react-redux'),
   useDispatch: () => jest.fn(),
-  useSelector: jest.fn().mockImplementation((selector) => selector()),
-}));
-
-// Mocks for the v1 case (ROSA wizard)
-jest.mock('~/components/clusters/common/v1VpcSelectors', () => ({
-  isVpcInquiryValidSelector: jest.fn().mockImplementation(() => false),
-  vpcInquiryRequestSelector: jest.fn().mockImplementation(() => ({
-    cloudProviderID: 'aws',
-    region: 'us-west-2-v1',
-    credentials: 'fake-credentials',
-  })),
-  vpcsSelector: jest.fn().mockImplementation(() => ({
+  useSelector: () => ({
     data: { items: vpcList },
     fulfilled: true,
     pending: false,
     error: false,
-  })),
+  }),
 }));
 
-// Mocks for the v2 case (OSD wizard)
 jest.mock('~/components/clusters/wizards/hooks', () => ({
   useFormState: () => ({
     values: {
@@ -38,14 +26,6 @@ jest.mock('~/components/clusters/wizards/hooks', () => ({
 
 describe('useAWSVPCInquiry', () => {
   describe('when isOSD=false', () => {
-    it('builds the request from the redux-form (v1) state', () => {
-      const view = renderHook(() => vpcInquiries.useAWSVPCInquiry(false));
-      const { requestParams } = view.result.current as {
-        requestParams: { region: string };
-      };
-      expect(requestParams.region).toEqual('us-west-2-v1');
-    });
-
     it('returns the vpcsResponse from the redux store', () => {
       const view = renderHook(() => vpcInquiries.useAWSVPCInquiry(false));
       const { vpcs } = view.result.current as { vpcs: VPCResponse };

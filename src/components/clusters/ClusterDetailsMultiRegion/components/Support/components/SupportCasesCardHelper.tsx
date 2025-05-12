@@ -12,15 +12,6 @@ const productMap: { [index: string]: string } = {
   OCP: 'OpenShift Container Platform',
 };
 
-const COLUMNS = [
-  { title: 'Case ID' },
-  { title: 'Issue summary' },
-  { title: 'Owner' },
-  { title: 'Modified by' },
-  { title: 'Severity' },
-  { title: 'Status' },
-];
-
 const getSupportCaseURL = (product?: string, version?: string, clusterUUID?: string) => {
   if (isRestrictedEnv()) {
     return SUPPORT_CASE_URL;
@@ -66,4 +57,4 @@ const supportCaseRow = (supportCase: SupportCase) => {
   };
 };
 
-export { COLUMNS, getSupportCaseURL, supportCaseRow };
+export { getSupportCaseURL, supportCaseRow };

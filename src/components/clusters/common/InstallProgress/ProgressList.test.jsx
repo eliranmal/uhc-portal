@@ -3,7 +3,7 @@ import React from 'react';
 import { checkAccessibility, render, screen } from '~/testUtils';
 
 import { normalizedProducts } from '../../../../common/subscriptionTypes';
-import fixtures from '../../ClusterDetails/__tests__/ClusterDetails.fixtures';
+import fixtures from '../../ClusterDetailsMultiRegion/__tests__/ClusterDetails.fixtures';
 import clusterStates from '../clusterStates';
 
 import ProgressList from './ProgressList';
@@ -11,17 +11,17 @@ import ProgressList from './ProgressList';
 describe('<ProgressList />', () => {
   const firstStepPending = {
     ...fixtures.clusterDetails.cluster,
-    state: clusterStates.PENDING,
+    state: clusterStates.pending,
   };
 
   const firstStepCompleted = {
     ...fixtures.clusterDetails.cluster,
-    state: clusterStates.INSTALLING,
+    state: clusterStates.installing,
   };
 
   const secondStepCompleted = {
     ...fixtures.clusterDetails.cluster,
-    state: clusterStates.INSTALLING,
+    state: clusterStates.installing,
     dns_ready: true,
   };
 
@@ -35,7 +35,7 @@ describe('<ProgressList />', () => {
         auto_mode: false,
       },
     },
-    state: clusterStates.WAITING,
+    state: clusterStates.waiting,
   };
 
   it('when cluster is pending, the first step is complete and second step is validating', async () => {

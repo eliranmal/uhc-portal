@@ -6,18 +6,21 @@ import {
   stringToArrayTrimmed,
   strToKeyValueObject,
 } from '~/common/helpers';
-import { billingModels } from '~/common/subscriptionTypes';
 import { getClusterAutoScalingSubmitSettings } from '~/components/clusters/common/clusterAutoScalingValues';
 import { GCPAuthType } from '~/components/clusters/wizards/osd/ClusterSettings/CloudProvider/types';
 import { FieldId } from '~/components/clusters/wizards/osd/constants';
 import { ApplicationIngressType } from '~/components/clusters/wizards/osd/Networking/constants';
 import config from '~/config';
+import { regionalizedClusterId } from '~/queries/helpers';
 import { createCluster } from '~/redux/actions/clustersActions';
 import { DEFAULT_FLAVOUR_ID } from '~/redux/actions/flavourActions';
-import { NamespaceOwnershipPolicy } from '~/types/clusters_mgmt.v1/models/NamespaceOwnershipPolicy';
-import { WildcardPolicy } from '~/types/clusters_mgmt.v1/models/WildcardPolicy';
+import { SubscriptionCommonFieldsCluster_billing_model as SubscriptionCommonFieldsClusterBillingModel } from '~/types/accounts_mgmt.v1';
+import { NamespaceOwnershipPolicy, WildcardPolicy } from '~/types/clusters_mgmt.v1/enums';
 
-import { canConfigureDayOneManagedIngress } from './constants';
+import {
+  canConfigureDayOneManagedIngress,
+  canConfigureDayOnePrivateServiceConnect,
+} from './constants';
 import * as submitRequestHelpers from './submitOSDRequestHelper';
 
 export const createClusterRequest = ({ isWizard = true, cloudProviderID, product }, formData) => {
@@ -49,7 +52,7 @@ export const createClusterRequest = ({ isWizard = true, cloudProviderID, product
     },
     multi_az: isMultiAz,
     etcd_encryption: formData.etcd_encryption,
-    billing_model: billingModels.STANDARD,
+    billing_model: SubscriptionCommonFieldsClusterBillingModel.standard,
     disable_user_workload_monitoring:
       isHypershiftSelected || !formData.enable_user_workload_monitoring,
     ...(!isHypershiftSelected && { fips: !!formData.fips }),
@@ -66,14 +69,16 @@ export const createClusterRequest = ({ isWizard = true, cloudProviderID, product
     };
   }
   if (isHypershiftSelected) {
-    clusterRequest.billing_model = billingModels.MARKETPLACE_AWS;
-  } else if (formData.billing_model === billingModels.MARKETPLACE_GCP) {
-    clusterRequest.billing_model = billingModels.MARKETPLACE_GCP;
+    clusterRequest.billing_model = SubscriptionCommonFieldsClusterBillingModel.marketplace_aws;
+  } else if (
+    formData.billing_model === SubscriptionCommonFieldsClusterBillingModel.marketplace_gcp
+  ) {
+    clusterRequest.billing_model = SubscriptionCommonFieldsClusterBillingModel.marketplace_gcp;
   } else if (formData.billing_model) {
     const [billing] = formData.billing_model.split('-');
     clusterRequest.billing_model = billing;
   } else {
-    clusterRequest.billing_model = billingModels.STANDARD;
+    clusterRequest.billing_model = SubscriptionCommonFieldsClusterBillingModel.standard;
   }
 
   if (formData.cluster_version) {
@@ -90,7 +95,11 @@ export const createClusterRequest = ({ isWizard = true, cloudProviderID, product
         max_replicas: maxNodes * formData.machinePoolsSubnets.length,
       };
     } else {
-      clusterRequest.autoscaler = getClusterAutoScalingSubmitSettings(formData.cluster_autoscaling);
+      if (formData.byoc === 'true') {
+        clusterRequest.autoscaler = getClusterAutoScalingSubmitSettings(
+          formData.cluster_autoscaling,
+        );
+      }
       clusterRequest.nodes.autoscale_compute = {
         min_replicas: isMultiAz ? minNodes * 3 : minNodes,
         max_replicas: isMultiAz ? maxNodes * 3 : maxNodes,
@@ -306,6 +315,16 @@ export const createClusterRequest = ({ isWizard = true, cloudProviderID, product
           kms_key_service_account: formData.kms_service_account,
         };
       }
+      if (
+        formData.private_service_connect &&
+        formData.psc_subnet &&
+        isInstallExistingVPC &&
+        canConfigureDayOnePrivateServiceConnect(formData.cluster_version?.raw_id)
+      ) {
+        clusterRequest.gcp.private_service_connect = {
+          service_attachment_subnet: formData.psc_subnet,
+        };
+      }
     }
 
     // For ROSA, GCP and AWS OSD with byoc
@@ -322,11 +341,11 @@ export const createClusterRequest = ({ isWizard = true, cloudProviderID, product
               : undefined,
             route_selectors: strToKeyValueObject(formData.defaultRouterSelectors, ''),
             route_wildcard_policy: formData.isDefaultRouterWildcardPolicyAllowed
-              ? WildcardPolicy.WILDCARDS_ALLOWED
-              : WildcardPolicy.WILDCARDS_DISALLOWED,
+              ? WildcardPolicy.WildcardsAllowed
+              : WildcardPolicy.WildcardsDisallowed,
             route_namespace_ownership_policy: formData.isDefaultRouterNamespaceOwnershipPolicyStrict
-              ? NamespaceOwnershipPolicy.STRICT
-              : NamespaceOwnershipPolicy.INTER_NAMESPACE_ALLOWED,
+              ? NamespaceOwnershipPolicy.Strict
+              : NamespaceOwnershipPolicy.InterNamespaceAllowed,
           },
         ],
       };
@@ -398,12 +417,12 @@ export const upgradeScheduleRequest = (formData) =>
         schedule: formData.automatic_upgrade_schedule,
       };
 
-// Returning a function that takes (formData) is convenient for redux-form `onSubmit` prop.
 const submitOSDRequest = (dispatch, params) => (formData) => {
+  const regionalId = regionalizedClusterId(formData);
   const { isWizard, cloudProviderID, product } = params;
   const clusterRequest = createClusterRequest({ isWizard, cloudProviderID, product }, formData);
   const upgradeSchedule = upgradeScheduleRequest(formData);
-  dispatch(createCluster(clusterRequest, upgradeSchedule));
+  dispatch(createCluster(clusterRequest, upgradeSchedule, regionalId));
 };
 
 export default submitOSDRequest;

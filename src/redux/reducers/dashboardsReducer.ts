@@ -16,10 +16,9 @@ limitations under the License.
 
 import { produce } from 'immer';
 
+import { OneMetric, Subscription, SummaryVector } from '~/types/accounts_mgmt.v1';
+
 import { getErrorState } from '../../common/errors';
-import type { OneMetric } from '../../types/accounts_mgmt.v1/models/OneMetric';
-import type { Subscription } from '../../types/accounts_mgmt.v1/models/Subscription';
-import type { SummaryVector } from '../../types/accounts_mgmt.v1/models/SummaryVector';
 import type { DashboardsAction } from '../actions/dashboardsActions';
 import { dashboardsConstants } from '../constants';
 import {
@@ -112,6 +111,6 @@ function dashboardsReducer(
 
 dashboardsReducer.initialState = initialState;
 
-export { initialState, dashboardsReducer };
+export { dashboardsReducer, initialState };
 
 export default dashboardsReducer;

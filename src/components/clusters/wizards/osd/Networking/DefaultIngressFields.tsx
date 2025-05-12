@@ -7,15 +7,15 @@ import { checkRouteSelectors, validateNamespacesList } from '~/common/validators
 import {
   ExcludedNamespacesHelpText,
   ExcludedNamespacesPopover,
-} from '~/components/clusters/ClusterDetails/components/Networking/components/ApplicationIngressCard/ExcludedNamespacesPopover';
-import { NamespaceOwnerPolicyPopover } from '~/components/clusters/ClusterDetails/components/Networking/components/ApplicationIngressCard/NamespaceOwnerPolicyPopover';
+} from '~/components/clusters/ClusterDetailsMultiRegion/components/Networking/components/ApplicationIngressCard/ExcludedNamespacesPopover';
+import { NamespaceOwnerPolicyPopover } from '~/components/clusters/ClusterDetailsMultiRegion/components/Networking/components/ApplicationIngressCard/NamespaceOwnerPolicyPopover';
 import {
   RouteSelectorsHelpText,
   RouteSelectorsPopover,
-} from '~/components/clusters/ClusterDetails/components/Networking/components/ApplicationIngressCard/RouteSelectorsPopover';
-import { WildcardPolicyPopover } from '~/components/clusters/ClusterDetails/components/Networking/components/ApplicationIngressCard/WildcardsPolicyPopover';
+} from '~/components/clusters/ClusterDetailsMultiRegion/components/Networking/components/ApplicationIngressCard/RouteSelectorsPopover';
+import { WildcardPolicyPopover } from '~/components/clusters/ClusterDetailsMultiRegion/components/Networking/components/ApplicationIngressCard/WildcardsPolicyPopover';
 import { FormGroupHelperText } from '~/components/common/FormGroupHelperText';
-import { ReduxCheckbox } from '~/components/common/ReduxFormComponents';
+import { ReduxCheckbox } from '~/components/common/ReduxFormComponents_deprecated';
 
 import { useFormState } from '../../hooks';
 import { FieldId } from '../constants';

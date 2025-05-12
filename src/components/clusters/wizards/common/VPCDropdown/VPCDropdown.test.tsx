@@ -3,7 +3,7 @@ import React from 'react';
 import * as vpcHelpers from '~/common/vpcHelpers';
 import { useAWSVPCInquiry } from '~/components/clusters/common/useVPCInquiry';
 import { render, screen } from '~/testUtils';
-import { CloudVPC } from '~/types/clusters_mgmt.v1';
+import { CloudVpc } from '~/types/clusters_mgmt.v1';
 
 import VPCDropdown from './VPCDropdown';
 
@@ -174,7 +174,7 @@ describe('<VPCDropdown />', () => {
       it('is not shown when the VPC has all necessary subnets', async () => {
         jest
           .spyOn(vpcHelpers, 'vpcHasRequiredSubnets')
-          .mockImplementation((vpc: CloudVPC) => vpc.name === 'lz-p2-318-z6fst-vpc');
+          .mockImplementation((vpc: CloudVpc) => vpc.name === 'lz-p2-318-z6fst-vpc');
 
         const { user } = render(<VPCDropdown {...defaultProps} />);
 
@@ -187,7 +187,7 @@ describe('<VPCDropdown />', () => {
       it('is shown as disabled when the VPC does not have all necessary subnets', async () => {
         jest
           .spyOn(vpcHelpers, 'vpcHasRequiredSubnets')
-          .mockImplementation((vpc: CloudVPC) => vpc.name !== 'lz-p2-318-z6fst-vpc');
+          .mockImplementation((vpc: CloudVpc) => vpc.name !== 'lz-p2-318-z6fst-vpc');
 
         const { user } = render(<VPCDropdown {...defaultProps} />);
 
@@ -195,8 +195,8 @@ describe('<VPCDropdown />', () => {
         await user.click(selectDropdown);
 
         expect(
-          screen.getByText('lz-p2-318-z6fst-vpc').parentElement?.nextElementSibling,
-        ).toHaveTextContent('This VPC does not have all necessary subnets');
+          screen.getByText('This VPC does not have all necessary subnets'),
+        ).toBeInTheDocument();
       });
     });
   });

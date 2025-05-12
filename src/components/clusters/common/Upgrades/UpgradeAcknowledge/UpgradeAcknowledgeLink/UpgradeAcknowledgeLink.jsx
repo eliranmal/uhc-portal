@@ -7,10 +7,14 @@ import { global_warning_color_100 as warningColor } from '@patternfly/react-toke
 
 import { Link } from '~/common/routing';
 
+import { getHasUnMetClusterAcks } from '../UpgradeAcknowledgeHelpers';
+
 import './UpgradeAcknowledgeWarningLink.scss';
 
 const UpgradeAcknowledgeLink = (props) => {
-  const { clusterId, hasAcks } = props;
+  const { clusterId, cluster, schedules, upgradeGates } = props;
+
+  const hasAcks = getHasUnMetClusterAcks(schedules, cluster, upgradeGates);
 
   return hasAcks ? (
     <Link
@@ -27,7 +31,9 @@ const UpgradeAcknowledgeLink = (props) => {
 
 UpgradeAcknowledgeLink.propTypes = {
   clusterId: PropTypes.string,
-  hasAcks: PropTypes.bool,
+  cluster: PropTypes.object,
+  schedules: PropTypes.object,
+  upgradeGates: PropTypes.object,
 };
 
 export default UpgradeAcknowledgeLink;

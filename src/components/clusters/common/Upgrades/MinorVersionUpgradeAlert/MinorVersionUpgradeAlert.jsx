@@ -1,14 +1,22 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { useDispatch } from 'react-redux';
 
 import { Alert, AlertActionLink, Spinner } from '@patternfly/react-core';
 import ArrowCircleUpIcon from '@patternfly/react-icons/dist/esm/icons/arrow-circle-up-icon';
 
-import links from '../../../../../common/installLinks.mjs';
-import clusterService from '../../../../../services/clusterService';
-import ExternalLink from '../../../../common/ExternalLink';
+import { useEditSchedule } from '~/queries/ClusterDetailsQueries/ClusterSettingsTab/useEditSchedule';
 
-const { patchControlPlaneUpgradeSchedule, patchUpgradeSchedule } = clusterService;
+import links from '../../../../../common/installLinks.mjs';
+import { normalizedProducts } from '../../../../../common/subscriptionTypes';
+import ExternalLink from '../../../../common/ExternalLink';
+import { setAutomaticUpgradePolicy } from '../clusterUpgradeActions';
+import { getHasUnMetClusterAcks } from '../UpgradeAcknowledge/UpgradeAcknowledgeHelpers';
+
+import {
+  getEnableMinorVersionUpgrades,
+  isNextMinorVersionAvailableHelper,
+} from './MinorVersionUpgradeAlertHelpers';
 
 const actionLink = (onChange, isCurrentlyEnabled) => (
   <AlertActionLink onClick={() => onChange(!isCurrentlyEnabled)}>
@@ -19,19 +27,26 @@ const actionLink = (onChange, isCurrentlyEnabled) => (
 );
 
 const MinorVersionUpgradeAlert = ({
-  isMinorVersionUpgradesEnabled,
-  isAutomatic,
   clusterId,
-  hasUnmetUpgradeAcknowledge,
-  automaticUpgradePolicyId,
-  setUpgradePolicy,
-  isNextMinorVersionAvailable,
-  isRosa,
   isHypershift,
-  isSTSEnabled,
+  schedules,
+  cluster,
+  upgradeGates,
 }) => {
+  const dispatch = useDispatch();
+  const { mutateAsync: editScheduleMutate } = useEditSchedule(clusterId, isHypershift);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState(null);
+
+  const isAutomatic = schedules?.items?.some((policy) => policy.schedule_type === 'automatic');
+  const hasUnmetUpgradeAcknowledge = getHasUnMetClusterAcks(schedules, cluster, upgradeGates);
+  const isMinorVersionUpgradesEnabled = getEnableMinorVersionUpgrades(schedules);
+  const automaticUpgradePolicyId = schedules?.items?.find(
+    (item) => item.schedule_type === 'automatic',
+  )?.id;
+  const isNextMinorVersionAvailable = isNextMinorVersionAvailableHelper(cluster);
+  const isRosa = cluster?.subscription?.plan.type === normalizedProducts.ROSA;
+  const isSTSEnabled = cluster?.aws?.sts?.enabled;
 
   if (
     !isAutomatic ||
@@ -49,16 +64,21 @@ const MinorVersionUpgradeAlert = ({
     setError(null);
 
     try {
-      const requestPatch = isHypershift ? patchControlPlaneUpgradeSchedule : patchUpgradeSchedule;
-      const response = await requestPatch(clusterId, automaticUpgradePolicyId, {
-        enable_minor_version_upgrades: isEnable,
-      });
-
-      // Because this response can be quick, adding loading to prevent a double click
-      setTimeout(() => {
-        setUpgradePolicy(response.data);
-        setLoading(false);
-      }, 500);
+      const response = await editScheduleMutate(
+        {
+          policyID: automaticUpgradePolicyId,
+          schedule: { enable_minor_version_upgrades: isEnable },
+        },
+        {
+          onSuccess: () => {
+            // Because this response can be quick, adding loading to prevent a double click
+            setTimeout(() => {
+              dispatch(setAutomaticUpgradePolicy(response.data));
+              setLoading(false);
+            }, 500);
+          },
+        },
+      );
     } catch (err) {
       setError(err.response.data.reason || err.response.data);
     }
@@ -112,19 +132,11 @@ const MinorVersionUpgradeAlert = ({
 };
 
 MinorVersionUpgradeAlert.propTypes = {
-  isMinorVersionUpgradesEnabled: PropTypes.bool,
-  isAutomatic: PropTypes.bool,
-  hasUnmetUpgradeAcknowledge: PropTypes.bool,
-  automaticUpgradePolicyId: PropTypes.string,
-  clusterId: PropTypes.string,
-  setUpgradePolicy: PropTypes.func,
-  isNextMinorVersionAvailable: PropTypes.bool,
-  isRosa: PropTypes.bool,
   isHypershift: PropTypes.bool,
-  isSTSEnabled: PropTypes.bool,
-};
-MinorVersionUpgradeAlert.defaultProps = {
-  isMinorVersionUpgradesEnabled: false,
+  clusterId: PropTypes.string,
+  schedules: PropTypes.object,
+  cluster: PropTypes.object,
+  upgradeGates: PropTypes.array,
 };
 
 export default MinorVersionUpgradeAlert;

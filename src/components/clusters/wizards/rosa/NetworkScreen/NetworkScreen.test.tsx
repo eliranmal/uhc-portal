@@ -89,5 +89,21 @@ describe('<NetworkScreen />', () => {
       expect(screen.getByTestId('cluster_privacy-internal')).toBeChecked();
       expect(screen.getByTestId('cluster_privacy-internal')).toBeDisabled();
     });
+    it('Cluster privacy is set to internal and only private is visible for HCP', async () => {
+      const { rerender } = render(
+        buildTestComponent(<NetworkScreen showClusterPrivacy />, { hypershift: 'true' }),
+      );
+
+      expect(await screen.findByTestId('cluster_privacy-external')).toBeInTheDocument();
+      expect(screen.getByTestId('cluster_privacy-external')).not.toBeDisabled();
+      expect(screen.getByTestId('cluster_privacy-internal')).not.toBeDisabled();
+
+      isRestrictedEnv.mockReturnValue(true);
+      rerender(buildTestComponent(<NetworkScreen showClusterPrivacy />));
+
+      expect(screen.queryByTestId('cluster_privacy-external')).toBeNull();
+      expect(screen.getByTestId('cluster_privacy-internal')).toBeChecked();
+      expect(screen.getByTestId('cluster_privacy-internal')).toBeDisabled();
+    });
   });
 });

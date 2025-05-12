@@ -4,7 +4,7 @@ import { Dictionary } from 'lodash';
 import { ClusterAutoScalingForm } from '~/components/clusters/common/clusterAutoScalingValues';
 import { Subscription } from '~/types/accounts_mgmt.v1';
 import { Ingress, MachineType } from '~/types/clusters_mgmt.v1';
-import { ErrorDetail } from '~/types/types';
+import { ErrorDetail, ErrorState } from '~/types/types';
 
 export type SubscriptionResponseType = {
   subscription: Subscription;
@@ -22,6 +22,12 @@ export type RQApiErrorType = {
   operationID?: string;
   errorMessage?: string | React.ReactElement;
   errorDetails?: ErrorDetail[];
+};
+
+export type MutationFormattedErrorType = {
+  isLoading: boolean;
+  isError: boolean;
+  error: Pick<ErrorState, 'errorMessage' | 'errorDetails' | 'operationID' | 'errorCode' | 'reason'>;
 };
 
 export type MachineTypesResponse = {
@@ -73,4 +79,26 @@ export type RegionalizedCloudRegion = {
   ccs_only?: boolean;
   supports_hypershift?: boolean;
   is_regionalized?: boolean;
+};
+
+export type AvailableRegionalInstance = {
+  cloud_provider_id?: string;
+  href?: string;
+  id?: string;
+  kind?: string;
+  url?: string;
+  environment?: string;
+  isDefault?: boolean;
+};
+
+export type HTPasswdUser = {
+  id?: string;
+  username?: string;
+  kind?: string;
+  href?: string;
+};
+
+export type HTPasswdIdpUsers = {
+  idpId: string;
+  htpUsers: HTPasswdUser[];
 };

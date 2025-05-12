@@ -6,10 +6,6 @@ import CostBreakdownSummary from '../CostBreakdownSummary';
 
 import { report } from './CostBreakdownSummary.fixtures';
 
-jest.mock('@redhat-cloud-services/frontend-components/Skeleton', () => () => (
-  <div data-testid="skeleton">SkeletonMock</div>
-));
-
 jest.mock('../components/CostBreakdownSummaryChart', () =>
   jest.fn(() => (
     <div data-testid="cost-breakdown-summary-chart">CostBreakdownSummaryChartMock</div>
@@ -25,7 +21,7 @@ describe('CostBreakdownSummary', () => {
     render(<CostBreakdownSummary report={{ fulfilled: false } as any} />);
 
     // Assert
-    expect(screen.getByTestId('skeleton')).toBeInTheDocument();
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
   });
 
   it('should render Title and CostBreakdownSummaryChart when report is fulfilled', () => {

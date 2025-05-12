@@ -1,5 +1,5 @@
 import totalNodesDataSelector from '~/components/clusters/common/totalNodesDataSelector';
-import { Cluster, MachinePool } from '~/types/clusters_mgmt.v1';
+import { MachinePool } from '~/types/clusters_mgmt.v1';
 import { ClusterFromSubscription } from '~/types/types';
 
 // Determine whether a master instance resize alert should be shown.
@@ -20,10 +20,10 @@ export const masterResizeAlertThreshold = ({
 }: {
   selectedMachinePoolID: string;
   requestedNodes: number;
-  cluster: Cluster; // this needs to be refatored, since  MachinePools -> EditMachinePoolModal -> EditNodeCountSection -> ResizingAlert -> masterResizeAlertThreshold
+  cluster: ClusterFromSubscription;
   machinePools: MachinePool[];
 }) => {
-  const nodes = totalNodesDataSelector(cluster as ClusterFromSubscription, machinePools);
+  const nodes = totalNodesDataSelector(cluster, machinePools);
   const currentNodes = nodes.totalMaxNodesCount;
   let totalRequestedNodes = 0;
   const selectedMachinePool = machinePools.find(

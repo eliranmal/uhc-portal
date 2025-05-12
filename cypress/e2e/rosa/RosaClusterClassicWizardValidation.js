@@ -66,6 +66,8 @@ describe('Rosa Classic cluster wizard validations', { tags: ['smoke'] }, () => {
     CreateRosaWizardPage.isTextContainsInPage(
       clusterFieldValidations.ClusterSettings.Details.InvalidClusterNamesErrors[2],
     );
+    CreateRosaWizardPage.setClusterName(clusterName);
+    CreateRosaWizardPage.closePopoverDialogs();
     CreateRosaWizardPage.createCustomDomainPrefixCheckbox().scrollIntoView().check();
     CreateRosaWizardPage.setDomainPrefix(
       clusterFieldValidations.ClusterSettings.Details.InvalidDomainPrefixValues[0],
@@ -89,8 +91,6 @@ describe('Rosa Classic cluster wizard validations', { tags: ['smoke'] }, () => {
       clusterFieldValidations.ClusterSettings.Details.InvalidDomainPrefixErrors[2],
     );
     CreateRosaWizardPage.createCustomDomainPrefixCheckbox().uncheck();
-    CreateRosaWizardPage.setClusterName(clusterName);
-    CreateRosaWizardPage.closePopoverDialogs();
     CreateRosaWizardPage.advancedEncryptionLink().click();
     CreateRosaWizardPage.useCustomKMSKeyRadio().check();
     CreateRosaWizardPage.rosaNextButton().click({ force: true });
@@ -121,7 +121,7 @@ describe('Rosa Classic cluster wizard validations', { tags: ['smoke'] }, () => {
     CreateRosaWizardPage.isTextContainsInPage(
       clusterFieldValidations.ClusterSettings.Machinepool.NodeCount.SingleZone.LowerLimitError,
     );
-    CreateRosaWizardPage.setMinimumNodeCount('200');
+    CreateRosaWizardPage.setMinimumNodeCount('500');
     CreateRosaWizardPage.isTextContainsInPage(
       clusterFieldValidations.ClusterSettings.Machinepool.NodeCount.SingleZone.UpperLimitError,
     );
@@ -130,7 +130,7 @@ describe('Rosa Classic cluster wizard validations', { tags: ['smoke'] }, () => {
         .MinAndMaxLimitDependencyError,
     );
     CreateRosaWizardPage.setMinimumNodeCount('2');
-    CreateRosaWizardPage.setMaximumNodeCount('200');
+    CreateRosaWizardPage.setMaximumNodeCount('500');
     CreateRosaWizardPage.isTextContainsInPage(
       clusterFieldValidations.ClusterSettings.Machinepool.NodeCount.SingleZone.UpperLimitError,
     );
@@ -168,7 +168,7 @@ describe('Rosa Classic cluster wizard validations', { tags: ['smoke'] }, () => {
     CreateRosaWizardPage.isTextContainsInPage(
       clusterFieldValidations.ClusterSettings.Machinepool.NodeCount.MultiZone.LowerLimitError,
     );
-    CreateRosaWizardPage.setMinimumNodeCount('200');
+    CreateRosaWizardPage.setMinimumNodeCount('500');
     CreateRosaWizardPage.isTextContainsInPage(
       clusterFieldValidations.ClusterSettings.Machinepool.NodeCount.MultiZone.UpperLimitError,
     );
@@ -178,7 +178,7 @@ describe('Rosa Classic cluster wizard validations', { tags: ['smoke'] }, () => {
         .MinAndMaxLimitDependencyError,
     );
     CreateRosaWizardPage.setMinimumNodeCount('2');
-    CreateRosaWizardPage.setMaximumNodeCount('200');
+    CreateRosaWizardPage.setMaximumNodeCount('500');
     CreateRosaWizardPage.isTextContainsInPage(
       clusterFieldValidations.ClusterSettings.Machinepool.NodeCount.MultiZone.UpperLimitError,
     );
@@ -211,6 +211,8 @@ describe('Rosa Classic cluster wizard validations', { tags: ['smoke'] }, () => {
     );
   });
   it('Step - Cluster Settings - machine pool- Cluster autoscaling section - widget validations', () => {
+    CreateRosaWizardPage.disabledAutoScaling();
+    CreateRosaWizardPage.enableAutoScaling();
     CreateRosaWizardPage.editClusterAutoscalingSettingsButton().click();
     CreateRosaWizardPage.clusterAutoscalingLogVerbosityInput().type('{selectAll}').type('0').blur();
     CreateRosaWizardPage.isTextContainsInPage(
@@ -308,6 +310,42 @@ describe('Rosa Classic cluster wizard validations', { tags: ['smoke'] }, () => {
       clusterFieldValidations.ClusterSettings.Machinepool.ClusterAutoscaling.MinMaxLimitError,
       false,
     );
+    CreateRosaWizardPage.clusterAutoscalingMaxNodesTotalInput().should('have.value', '255');
+    CreateRosaWizardPage.clusterAutoscalingMaxNodesTotalInput()
+      .type('{selectAll}')
+      .type('257')
+      .blur();
+    CreateRosaWizardPage.isTextContainsInPage(
+      clusterFieldValidations.ClusterSettings.Machinepool.ClusterAutoscaling
+        .MaxNodesValueMultizoneLimitError,
+    );
+
+    CreateRosaWizardPage.clusterAutoscalingRevertAllToDefaultsButton().click();
+    CreateRosaWizardPage.clusterAutoscalingCloseButton().click();
+    CreateRosaWizardPage.rosaBackButton().click();
+    CreateRosaWizardPage.selectAvailabilityZone('Single Zone');
+    CreateRosaWizardPage.rosaNextButton().click();
+    CreateRosaWizardPage.disabledAutoScaling();
+    CreateRosaWizardPage.enableAutoScaling();
+    CreateRosaWizardPage.editClusterAutoscalingSettingsButton().click();
+    CreateRosaWizardPage.clusterAutoscalingMaxNodesTotalInput().should('have.value', '254');
+    CreateRosaWizardPage.clusterAutoscalingMaxNodesTotalInput()
+      .type('{selectAll}')
+      .type('255')
+      .blur();
+    CreateRosaWizardPage.isTextContainsInPage(
+      clusterFieldValidations.ClusterSettings.Machinepool.ClusterAutoscaling
+        .MaxNodesValueSinglezoneLimitError,
+    );
+
+    CreateRosaWizardPage.clusterAutoscalingRevertAllToDefaultsButton().click();
+    CreateRosaWizardPage.clusterAutoscalingCloseButton().click();
+    CreateRosaWizardPage.rosaBackButton().click();
+    CreateRosaWizardPage.selectAvailabilityZone('Multi-zone');
+    CreateRosaWizardPage.rosaNextButton().click();
+    CreateRosaWizardPage.disabledAutoScaling();
+    CreateRosaWizardPage.enableAutoScaling();
+    CreateRosaWizardPage.editClusterAutoscalingSettingsButton().click();
     CreateRosaWizardPage.clusterAutoscalingGPUsInput().type('{selectAll}').type('test').blur();
     CreateRosaWizardPage.isTextContainsInPage(
       clusterFieldValidations.ClusterSettings.Machinepool.ClusterAutoscaling.InvalidGPUValueError,
@@ -334,7 +372,8 @@ describe('Rosa Classic cluster wizard validations', { tags: ['smoke'] }, () => {
       .should('not.exist');
     CreateRosaWizardPage.clusterAutoscalingScaleDownUtilizationThresholdInput()
       .type('{selectAll}')
-      .type('1.5');
+      .type('1.5')
+      .blur();
     CreateRosaWizardPage.isTextContainsInPage(
       clusterFieldValidations.ClusterSettings.Machinepool.ClusterAutoscaling.ThreasholdLimitError,
     );
@@ -728,6 +767,5 @@ describe('Rosa Classic cluster wizard validations', { tags: ['smoke'] }, () => {
       .type('test-123-test');
     CreateRosaWizardPage.rosaNextButton().click();
     CreateRosaWizardPage.rosaCancelButton().click();
-    LeaveCreateClusterPrompt.submit();
   });
 });

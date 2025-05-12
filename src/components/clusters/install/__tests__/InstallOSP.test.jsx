@@ -18,12 +18,12 @@ describe('InstallOSP', () => {
 
     expect(screen.getByRole('link', { name: /Learn more about automated/ })).toHaveAttribute(
       'href',
-      `https://docs.openshift.com/container-platform/${version}/installing/installing_openstack/installing-openstack-installer-custom.html`,
+      `https://docs.redhat.com/en/documentation/openshift_container_platform/${version}/html/installing_on_openstack/installing-openstack-installer-custom`,
     );
 
     expect(screen.getByRole('link', { name: /Learn more about full control/ })).toHaveAttribute(
       'href',
-      `https://docs.openshift.com/container-platform/${version}/installing/installing_openstack/installing-openstack-user.html`,
+      `https://docs.redhat.com/en/documentation/openshift_container_platform/${version}/html/installing_on_openstack/installing-openstack-user`,
     );
   });
 });

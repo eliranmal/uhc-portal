@@ -13,7 +13,7 @@ export type State = {
 
 const initialState: State = {
   token: {
-    auths: undefined,
+    auths: {},
   },
 };
 

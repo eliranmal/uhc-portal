@@ -6,7 +6,7 @@ import {
   defaultClusterFromSubscription,
   defaultSubscription,
 } from '~/components/clusters/common/__tests__/defaultClusterFromSubscription.fixtures';
-import { OneMetric, SubscriptionCommonFields } from '~/types/accounts_mgmt.v1';
+import { OneMetric, SubscriptionCommonFieldsStatus } from '~/types/accounts_mgmt.v1';
 import { ClusterFromSubscription } from '~/types/types';
 
 const mockNodes = {
@@ -226,7 +226,7 @@ const mockOCPDisconnectedClusterDetails: ClusterFromSubscription = {
       username: 'xueli-stg0001',
     },
     managed: false,
-    status: SubscriptionCommonFields.status.DISCONNECTED,
+    status: SubscriptionCommonFieldsStatus.Disconnected,
     last_reconcile_date: '0001-01-01T00:00:00Z',
   },
   state: 'ready',
@@ -311,7 +311,7 @@ const mockOCPActiveClusterDetails = produce(
   mockOCPDisconnectedClusterDetails,
   (draft: ClusterFromSubscription) => {
     if (draft.subscription) {
-      draft.subscription.status = SubscriptionCommonFields.status.ACTIVE;
+      draft.subscription.status = SubscriptionCommonFieldsStatus.Active;
     }
   },
 );
@@ -320,7 +320,7 @@ const archivedCluster: ClusterFromSubscription = {
   ...defaultClusterFromSubscription,
   subscription: {
     ...defaultSubscription,
-    status: SubscriptionCommonFields.status.ARCHIVED,
+    status: SubscriptionCommonFieldsStatus.Archived,
   },
 };
 
@@ -328,7 +328,7 @@ const disconnectedCluster: ClusterFromSubscription = {
   ...defaultClusterFromSubscription,
   subscription: {
     ...defaultSubscription,
-    status: SubscriptionCommonFields.status.DISCONNECTED,
+    status: SubscriptionCommonFieldsStatus.Disconnected,
   },
 };
 
@@ -473,25 +473,25 @@ const makeFreshCheckIn = () => new Date(Date.now() - (2 * hour + 20 * minute));
 const makeStaleCheckIn = () => new Date(Date.now() - (3 * hour + 20 * minute));
 
 export {
-  mockAlerts,
-  mockWatchdog,
-  mockNodes,
-  mockOperators,
-  resourceUsageWithIssues,
-  resourceUsageWithoutIssues,
-  mockOCPActiveClusterDetails,
-  mockOCPDisconnectedClusterDetails,
   archivedCluster,
-  disconnectedCluster,
-  cpuCluster,
-  memoryCluster,
   cpuAndMemoryCluster,
   cpuAndMemoryClusterRecentlyUpdated,
   cpuAndMemoryClusterThreshold,
+  cpuCluster,
+  disconnectedCluster,
   expectedMonitoringItemLinkPropsAlert,
   expectedMonitoringItemLinkPropsNode,
   expectedMonitoringItemLinkPropsOperator,
-  makeFutureDate,
   makeFreshCheckIn,
+  makeFutureDate,
   makeStaleCheckIn,
+  memoryCluster,
+  mockAlerts,
+  mockNodes,
+  mockOCPActiveClusterDetails,
+  mockOCPDisconnectedClusterDetails,
+  mockOperators,
+  mockWatchdog,
+  resourceUsageWithIssues,
+  resourceUsageWithoutIssues,
 };

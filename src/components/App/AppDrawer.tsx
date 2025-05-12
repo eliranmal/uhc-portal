@@ -50,7 +50,7 @@ export const AppDrawer: React.FC<PropsWithChildren<{}>> = ({ children }) => {
   const [isOpening, setIsOpening] = useState(false);
 
   const closeDrawer = useCallback(
-    (args = { skipOnClose: false }) => {
+    (args: { skipOnClose?: boolean } = { skipOnClose: false }) => {
       const { skipOnClose } = args;
       setDrawerSettings((settings: AppDrawerSettings) => {
         const { drawerProps, drawerPanelContent, onClose, focusOnClose } = settings;

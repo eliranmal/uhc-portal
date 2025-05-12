@@ -14,7 +14,7 @@ objects:
     spec:
       envName: ${ENV_NAME}
       title: OCM UI
-      deploymentRepo: https://gitlab.cee.redhat.com/service/uhc-portal
+      deploymentRepo: https://github.com/RedHatInsights/uhc-portal
       API:
         versions:
           - v1

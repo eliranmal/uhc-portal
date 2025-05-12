@@ -5,7 +5,6 @@ import { Alert, AlertVariant, Button, ButtonVariant } from '@patternfly/react-co
 import { OutlinedArrowAltCircleUpIcon } from '@patternfly/react-icons/dist/esm/icons/outlined-arrow-alt-circle-up-icon';
 import { DateFormat } from '@redhat-cloud-services/frontend-components/DateFormat';
 
-import { isHypershiftCluster } from '~/components/clusters/common/clusterStates';
 import Modal from '~/components/common/Modal/Modal';
 import { modalActions } from '~/components/common/Modal/ModalActions';
 import modalIds from '~/components/common/Modal/modals';
@@ -19,8 +18,6 @@ import { NodePoolWithUpgradePolicies } from '../machinePoolCustomTypes';
 
 import {
   canMachinePoolBeUpgradedSelector,
-  controlPlaneIdSelector,
-  controlPlaneVersionSelector,
   displayControlPlaneVersion,
   isMachinePoolScheduleError,
   isMachinePoolUpgrading,
@@ -34,16 +31,17 @@ export const UpdatePoolButton = ({
   machinePool,
   isMachinePoolError,
   isHypershift,
+  controlPlaneVersion,
 }: {
   machinePool: NodePoolWithUpgradePolicies;
   isMachinePoolError: boolean;
   isHypershift: boolean;
+  controlPlaneVersion: string;
 }) => {
   const dispatch = useDispatch();
-  const controlPlaneVersion = useSelector((state: GlobalState) =>
-    controlPlaneVersionSelector(state),
-  );
+
   const updateSchedules = useGlobalState((state) => state.clusterUpgrades.schedules);
+
   const canBeUpdated = useSelector((state: GlobalState) =>
     canMachinePoolBeUpgradedSelector(
       updateSchedules,
@@ -53,7 +51,7 @@ export const UpdatePoolButton = ({
       isHypershift,
     ),
   );
-  const isAvailableVersion = useIsControlPlaneValidForMachinePool(machinePool);
+  const isAvailableVersion = useIsControlPlaneValidForMachinePool(machinePool, controlPlaneVersion);
   const machinePoolUpdating = isMachinePoolUpgrading(machinePool);
 
   if (canBeUpdated && !isMachinePoolError) {
@@ -111,17 +109,22 @@ export const UpdatePoolButton = ({
   return null;
 };
 
-export const UpdateMachinePoolModal = ({ region }: { region?: string }) => {
+export const UpdateMachinePoolModal = ({
+  isHypershift,
+  clusterId,
+  refreshMachinePools,
+  controlPlaneVersion,
+  region,
+}: {
+  isHypershift: boolean;
+  clusterId: string;
+  refreshMachinePools?: () => void;
+  controlPlaneVersion?: string;
+  region?: string;
+}) => {
   const [pending, setPending] = React.useState(false);
   const [error, setError] = React.useState('');
-  const isHypershift = useSelector((state: GlobalState) =>
-    isHypershiftCluster(state.clusters.details.cluster),
-  );
 
-  const clusterId = useSelector(controlPlaneIdSelector);
-  const controlPlaneVersion = useSelector((state: GlobalState) =>
-    controlPlaneVersionSelector(state),
-  );
   const isModalOpen = useSelector((state: GlobalState) => shouldShowModal(state, updateModalId));
   // @ts-ignore - useSelector is return as "any"
   const modalData: { machinePool: NodePoolWithUpgradePolicies } = useSelector(
@@ -129,6 +132,7 @@ export const UpdateMachinePoolModal = ({ region }: { region?: string }) => {
   );
 
   const { machinePool } = modalData;
+
   const dispatch = useDispatch();
   const cleanUp = () => {
     dispatch(modalActions.closeModal());
@@ -155,7 +159,11 @@ export const UpdateMachinePoolModal = ({ region }: { region?: string }) => {
     setPending(false);
     setError(errors[0] || '');
 
-    refetchMachineOrNodePoolsQuery(clusterId, isHypershift, controlPlaneVersion);
+    if (isHypershift && refreshMachinePools) {
+      refreshMachinePools();
+    } else {
+      refetchMachineOrNodePoolsQuery(clusterId, isHypershift, controlPlaneVersion, region);
+    }
 
     if (!errors[0]) {
       dispatch(modalActions.closeModal());

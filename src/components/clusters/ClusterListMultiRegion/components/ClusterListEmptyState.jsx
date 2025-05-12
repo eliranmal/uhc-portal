@@ -15,19 +15,6 @@ import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circ
 
 import { Link } from '~/common/routing';
 
-import { ASSISTED_INSTALLER_FEATURE } from '../../../../redux/constants/featureConstants';
-import withFeatureGate from '../../../features/with-feature-gate';
-
-const AssistedInstallerLink = withFeatureGate(
-  () => (
-    <Link to="/assisted-installer">
-      <Button variant="link">Assisted Installer clusters</Button>
-    </Link>
-  ),
-  ASSISTED_INSTALLER_FEATURE,
-  () => false,
-);
-
 function ClusterListEmptyState() {
   return (
     <EmptyState variant={EmptyStateVariant.lg} className="cluster-list-empty-state">
@@ -55,7 +42,12 @@ function ClusterListEmptyState() {
           <Link to="/archived">
             <Button variant="link">View cluster archives</Button>
           </Link>
-          <AssistedInstallerLink />
+          <Link to="/cluster-request">
+            <Button variant="link">View cluster requests</Button>
+          </Link>
+          <Link to="/assisted-installer">
+            <Button variant="link">Assisted Installer clusters</Button>
+          </Link>
         </EmptyStateActions>
       </EmptyStateFooter>
     </EmptyState>

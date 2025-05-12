@@ -1,9 +1,0 @@
-const GET_ONDEMAND_METRICS = 'GET_ONDEMAND_METRICS';
-const CLEAR_MONITORING_STATE = 'CLEAR_MONITORING_STATE';
-
-const monitoringConstants = {
-  GET_ONDEMAND_METRICS,
-  CLEAR_MONITORING_STATE,
-};
-
-export default monitoringConstants;

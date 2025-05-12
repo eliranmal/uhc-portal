@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { CLI_SSO_AUTHORIZATION } from '~/redux/constants/featureConstants';
+import { CLI_SSO_AUTHORIZATION } from '~/queries/featureGates/featureConstants';
 import accountsService from '~/services/accountsService';
 import { mockRestrictedEnv, mockUseChrome, mockUseFeatureGate, render, screen } from '~/testUtils';
 

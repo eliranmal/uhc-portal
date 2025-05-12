@@ -19,6 +19,9 @@ import {
   TextVariants,
 } from '@patternfly/react-core';
 
+import { MULTIREGION_PREVIEW_ENABLED } from '~/queries/featureGates/featureConstants';
+import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
+
 import {
   isErrorSharedGCPVPCValues,
   isHypershiftCluster,
@@ -33,18 +36,21 @@ import ROSACLITab from './ROSACLITab';
 const ROSA_CLI_TAB_INDEX = 1;
 const AWS_CLI_TAB_INDEX = 2;
 
-function ActionRequiredModal({ cluster, isOpen, onClose }) {
+function ActionRequiredModal({ cluster, isOpen, onClose, regionalInstance }) {
   const isWaitingAndROSAManual = isWaitingROSAManualMode(cluster);
   const isHCPCluster = isHypershiftCluster(cluster);
   const isWaitingForOIDCProviderOrOperatorRoles =
     isWaitingForOIDCProviderOrOperatorRolesMode(cluster);
   const isBadSharedGCPVPCValues = isErrorSharedGCPVPCValues(cluster);
   const [activeTab, setActiveTab] = React.useState(ROSA_CLI_TAB_INDEX);
+  const isMultiRegionEnabled =
+    useFeatureGate(MULTIREGION_PREVIEW_ENABLED) && isHCPCluster && regionalInstance;
 
   const createByOIDCId = (cluster) => {
     const oidcConfigID = cluster.aws.sts?.oidc_config?.id;
     const operatorRolePrefix = cluster.aws?.sts?.operator_role_prefix;
     const installerRole = cluster.aws?.sts?.role_arn;
+    const rosaRegionLoginCommand = `rosa login --url ${regionalInstance?.url}`;
     const operatorRolesCliCommand = `rosa create operator-roles ${
       isHCPCluster ? '--hosted-cp' : ''
     } --prefix "${operatorRolePrefix}" --oidc-config-id "${oidcConfigID}"  --installer-role-arn ${installerRole}`;
@@ -58,6 +64,26 @@ function ActionRequiredModal({ cluster, isOpen, onClose }) {
               Your cluster will proceed to ready state only after the operator roles and OIDC
               provider are created.
             </Text>
+          </TextContent>
+        </StackItem>
+        {isMultiRegionEnabled ? (
+          <StackItem>
+            <TextContent>
+              <Text component={TextVariants.p}>
+                To log in to your cluster&apos;s region, run the following command:
+              </Text>
+              <ClipboardCopy
+                textAriaLabel="Copyable ROSA region login"
+                variant={ClipboardCopyVariant.expansion}
+                isReadOnly
+              >
+                {rosaRegionLoginCommand}
+              </ClipboardCopy>
+            </TextContent>
+          </StackItem>
+        ) : null}
+        <StackItem>
+          <TextContent>
             <Text component={TextVariants.p}>
               To create the operator roles, run the following command:
             </Text>
@@ -194,6 +220,12 @@ ActionRequiredModal.propTypes = {
   cluster: PropTypes.object.isRequired,
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
+  regionalInstance: PropTypes.shape({
+    environment: PropTypes.string,
+    id: PropTypes.string,
+    isDefault: PropTypes.bool,
+    url: PropTypes.string,
+  }),
 };
 
 export default ActionRequiredModal;

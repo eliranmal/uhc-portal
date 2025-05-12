@@ -1,16 +1,16 @@
 import get from 'lodash/get';
 
-import { type Subscription, SubscriptionCommonFields } from '../types/accounts_mgmt.v1';
+import { type Subscription, SubscriptionCommonFieldsStatus } from '../types/accounts_mgmt.v1';
 import { AugmentedCluster, ClusterFromSubscription } from '../types/types';
 
 import { normalizedProducts } from './subscriptionTypes';
 
 const isAssistedInstallSubscription = (subscription?: Subscription): boolean =>
-  subscription?.plan?.id === normalizedProducts.OCP_ASSISTED_INSTALL;
+  subscription?.plan?.id === normalizedProducts.OCP_AssistedInstall;
 
 export const isAvailableAssistedInstallCluster = (cluster: AugmentedCluster): boolean => {
   const isArchived =
-    get(cluster, 'subscription.status', false) === SubscriptionCommonFields.status.ARCHIVED;
+    get(cluster, 'subscription.status', false) === SubscriptionCommonFieldsStatus.Archived;
   return !isArchived && !!cluster.aiCluster && isAssistedInstallSubscription(cluster.subscription);
 };
 
@@ -21,7 +21,7 @@ export const isAssistedInstallCluster = (cluster: ClusterFromSubscription): bool
 // being installed (in progress) or failed  installation (unsuccessful installation)
 export const isUninstalledAICluster = (cluster: ClusterFromSubscription): boolean =>
   isAssistedInstallSubscription(cluster.subscription) &&
-  cluster.subscription?.status === SubscriptionCommonFields.status.RESERVED &&
+  cluster.subscription?.status === SubscriptionCommonFieldsStatus.Reserved &&
   cluster.state !== 'installed';
 
 // The cluster has not been installed yet or is shortly after installation.

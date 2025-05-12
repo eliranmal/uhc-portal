@@ -1,20 +1,11 @@
 import { useSelector } from 'react-redux';
 import semver from 'semver';
 
-import { isHypershiftCluster } from '~/components/clusters/common/clusterStates';
-import {
-  updateStartedSelector,
-  updateStartedSelectorMultiRegion,
-} from '~/components/clusters/common/Upgrades/upgradeHelpers';
+import { updateStartedSelectorMultiRegion } from '~/components/clusters/common/Upgrades/upgradeHelpers';
 import { GlobalState } from '~/redux/store';
 import clusterService, { getClusterServiceForRegion } from '~/services/clusterService';
-import {
-  ScheduleType,
-  UpgradePolicy,
-  UpgradePolicyState,
-  UpgradeType,
-} from '~/types/clusters_mgmt.v1';
-import { NodePool } from '~/types/clusters_mgmt.v1/models/NodePool';
+import { NodePool, UpgradePolicy, UpgradePolicyState } from '~/types/clusters_mgmt.v1';
+import { ScheduleType, UpgradeType } from '~/types/clusters_mgmt.v1/enums';
 
 import { NodePoolWithUpgradePolicies } from '../machinePoolCustomTypes';
 
@@ -27,21 +18,6 @@ export const controlPlaneVersionSelector = (state: GlobalState) =>
 export const displayControlPlaneVersion = (controlPlaneVersion: string | undefined) =>
   semver.coerce(controlPlaneVersion)?.version;
 
-export const isHCPControlPlaneUpdating = (state: GlobalState) => {
-  const controlPlaneUpgradeStarted = updateStartedSelector(state);
-  const controlPlaneVersion = controlPlaneVersionSelector(state);
-  const machinePools = state.machinePools?.getMachinePools;
-  const isHypershift = isHypershiftCluster(state.clusters.details.cluster);
-
-  return (
-    !isHypershift ||
-    !controlPlaneVersion ||
-    controlPlaneUpgradeStarted ||
-    !machinePools.data ||
-    !machinePools.fulfilled ||
-    machinePools.error
-  );
-};
 type UpgradePolicyWithState = UpgradePolicy & { state: UpgradePolicyState };
 type Schedules = {
   items: UpgradePolicyWithState[];
@@ -133,11 +109,11 @@ export const updateAllMachinePools = async (
     const MINUTES_IN_MS = 1000 * 60;
 
     const schedule = {
-      schedule_type: ScheduleType.MANUAL,
+      schedule_type: ScheduleType.manual,
       next_run: new Date(new Date().getTime() + 6 * MINUTES_IN_MS).toISOString(),
       version: semver.coerce(toBeVersion)?.version,
       node_pool_id: pool.id,
-      upgrade_type: UpgradeType.NODE_POOL,
+      upgrade_type: UpgradeType.NodePool,
     };
 
     if (region) {
@@ -147,21 +123,9 @@ export const updateAllMachinePools = async (
     return clusterService.postNodePoolUpgradeSchedule(clusterId, pool.id || '', schedule);
   });
 
-  // @ts-ignore  error due to using an older compiler
   const results = await Promise.allSettled(promisesArray);
 
-  interface PromiseFulfilledResult<T> {
-    status: 'fulfilled';
-    value: T;
-  }
-  interface PromiseRejectedResult {
-    status: 'rejected';
-    reason: any;
-  }
-
-  type PromiseSettledResult<T> = PromiseFulfilledResult<T> | PromiseRejectedResult;
-
-  results.forEach((result: PromiseSettledResult<string>) => {
+  results.forEach((result) => {
     if (result.status === 'rejected') {
       errors.push(`${result.reason.response.data.code} - ${result.reason.response.data.reason}`);
     }
@@ -183,10 +147,10 @@ export const isControlPlaneValidForMachinePool = (
   );
 };
 
-export const useIsControlPlaneValidForMachinePool = (machinePool: NodePool): boolean => {
-  const controlPlaneVersion = useSelector(controlPlaneVersionSelector);
-  return isControlPlaneValidForMachinePool(machinePool, controlPlaneVersion || '');
-};
+export const useIsControlPlaneValidForMachinePool = (
+  machinePool: NodePool,
+  controlPlaneVersion: string,
+): boolean => isControlPlaneValidForMachinePool(machinePool, controlPlaneVersion || '');
 
 export const isMachinePoolUpgrading = (machinePool: NodePoolWithUpgradePolicies) =>
   !!machinePool.upgradePolicies?.items?.length;

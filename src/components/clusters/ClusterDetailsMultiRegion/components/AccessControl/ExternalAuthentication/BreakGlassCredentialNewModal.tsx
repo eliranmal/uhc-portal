@@ -1,5 +1,4 @@
 import React from 'react';
-import { AxiosError } from 'axios';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 
@@ -9,31 +8,23 @@ import ErrorBox from '~/components/common/ErrorBox';
 import { NumberInputField } from '~/components/common/formik/NumberInputField';
 import TextField from '~/components/common/formik/TextField';
 import Modal from '~/components/common/Modal/Modal';
-import { clusterService } from '~/services';
-import type { BreakGlassCredential } from '~/types/clusters_mgmt.v1';
+import { usePostBreakGlassCredentials } from '~/queries/ClusterDetailsQueries/AccessControlTab/ExternalAuthenticationQueries/usePostBreakGlassCredentials';
 
 type BreakGlassCredentialNewModalProps = {
   clusterId: string;
   credentialList?: string[];
   onClose: () => void;
   isNewModalOpen: boolean;
+  region?: string;
 };
 
 export function BreakGlassCredentialNewModal(props: BreakGlassCredentialNewModalProps) {
-  const { clusterId, isNewModalOpen, onClose, credentialList } = props;
-  const [error, setError] = React.useState<AxiosError>();
-  const [isPending, setIsPending] = React.useState(false);
+  const { clusterId, isNewModalOpen, onClose, credentialList, region } = props;
 
-  const submitCredentials = ({
+  const { isPending, isError, error, mutate, reset } = usePostBreakGlassCredentials(
+    region,
     clusterId,
-    data,
-  }: {
-    clusterId: string;
-    data: BreakGlassCredential;
-  }) => {
-    const request = clusterService.postBreakGlassCredentials;
-    return request(clusterId || '', data);
-  };
+  );
 
   const addNHoursToCurrentTime = (hours: number): string => {
     const today = new Date();
@@ -41,7 +32,7 @@ export function BreakGlassCredentialNewModal(props: BreakGlassCredentialNewModal
   };
 
   const handleClose = () => {
-    setError(undefined);
+    reset();
     onClose();
   };
 
@@ -64,22 +55,13 @@ export function BreakGlassCredentialNewModal(props: BreakGlassCredentialNewModal
           .test('is-integer', 'expiration must be an integer', (value) => Number.isInteger(value)),
       })}
       onSubmit={async (values) => {
-        setError(undefined);
-        setIsPending(true);
-        try {
-          await submitCredentials({
-            clusterId,
-            data: {
-              username: values.username,
-              expiration_timestamp: addNHoursToCurrentTime(values.expiration || 1),
-            },
-          });
-          onClose();
-        } catch (err) {
-          setError(err as AxiosError);
-        } finally {
-          setIsPending(false);
-        }
+        const data = {
+          username: values.username,
+          expiration_timestamp: addNHoursToCurrentTime(values.expiration || 1),
+        };
+        mutate(data, {
+          onSuccess: () => onClose(),
+        });
       }}
     >
       {(formik) => (
@@ -91,13 +73,13 @@ export function BreakGlassCredentialNewModal(props: BreakGlassCredentialNewModal
           description="Add a break glass credential to access the cluster."
           footer={
             <Stack hasGutter>
-              {error && (
+              {isError && (
                 <StackItem>
                   <ErrorBox
                     message="A problem occurred while adding credential"
                     response={{
-                      errorMessage: (error.response?.data as any)?.reason,
-                      operationID: (error.response?.data as any)?.operation_id,
+                      errorMessage: error.error.reason,
+                      operationID: error.error.operationID,
                     }}
                   />
                 </StackItem>

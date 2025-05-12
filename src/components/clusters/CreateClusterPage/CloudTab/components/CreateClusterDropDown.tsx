@@ -14,13 +14,17 @@ import { Link } from '~/common/routing';
 
 interface CreateClusterDropDownProps {
   toggleId?: string;
+  canCreateManagedCluster: boolean;
 }
 
 const getStartedPath = '/create/rosa/getstarted';
 
 const CreateButtonLink = (props: any) => <Link {...props} to={getStartedPath} />;
 
-const CreateClusterDropDown = ({ toggleId }: CreateClusterDropDownProps) => {
+const CreateClusterDropDown = ({
+  toggleId,
+  canCreateManagedCluster,
+}: CreateClusterDropDownProps) => {
   const [isDropDownOpen, setIsDropDownOpen] = React.useState(false);
   const menuToggleRef = useRef<HTMLButtonElement>(null);
   const dropDownRef = React.useRef<HTMLButtonElement>(null);
@@ -72,6 +76,7 @@ const CreateClusterDropDown = ({ toggleId }: CreateClusterDropDownProps) => {
               variant={ButtonVariant.primary}
               className="create-button"
               data-testid="rosa-create-cluster-button"
+              isDisabled={!canCreateManagedCluster}
             >
               Create cluster
             </MenuToggle>
@@ -82,7 +87,12 @@ const CreateClusterDropDown = ({ toggleId }: CreateClusterDropDownProps) => {
       </Dropdown>
 
       <br />
-      <Button variant="link" className="create-button" component={CreateButtonLink}>
+      <Button
+        variant="link"
+        className="create-button"
+        component={CreateButtonLink}
+        isDisabled={!canCreateManagedCluster}
+      >
         Prerequisites
       </Button>
     </>

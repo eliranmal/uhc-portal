@@ -2,12 +2,18 @@ import ClusterDetailsPage from '../../pageobjects/ClusterDetails.page';
 import CreateRosaWizardPage from '../../pageobjects/CreateRosaWizard.page';
 import CreateClusterPage from '../../pageobjects/CreateCluster.page';
 import OverviewPage from '../../pageobjects/Overview.page';
+const clusterProfiles = require('../../fixtures/rosa/RosaClusterClassicCreation.json');
+const clusterProperties = clusterProfiles['rosa-classic-smoke-advanced'];
 
 // awsAccountID,rolePrefix and installerARN are set by prerun script for smoke requirements.
+const region = clusterProperties.Region.split(',')[0];
 const awsAccountID = Cypress.env('QE_AWS_ID');
 const rolePrefix = Cypress.env('QE_ACCOUNT_ROLE_PREFIX');
+const qeInfrastructure = Cypress.env('QE_INFRA_REGIONS')[region][0];
+const securityGroups = qeInfrastructure.SECURITY_GROUPS_NAME;
 const installerARN = `arn:aws:iam::${awsAccountID}:role/${rolePrefix}-Installer-Role`;
-const clusterName = `ocmui-cypress-smoke-rosa-${(Math.random() + 1).toString(36).substring(7)}`;
+const clusterSuffix = (Math.random() + 1).toString(36).slice(3, 7);
+const clusterName = `${clusterProperties.ClusterNamePrefix}-${clusterSuffix}`;
 const clusterDomainPrefix = `rosa${(Math.random() + 1).toString(36).substring(2)}`;
 
 describe(
@@ -49,7 +55,8 @@ describe(
       CreateRosaWizardPage.createCustomDomainPrefixCheckbox().check();
       CreateRosaWizardPage.setDomainPrefix(clusterDomainPrefix);
       CreateRosaWizardPage.closePopoverDialogs();
-      CreateRosaWizardPage.selectAvailabilityZone('Multi-zone');
+      CreateRosaWizardPage.selectRegion(clusterProperties.Region);
+      CreateRosaWizardPage.selectAvailabilityZone(clusterProperties.Availability);
       CreateRosaWizardPage.advancedEncryptionLink().click();
       CreateRosaWizardPage.enableAdditionalEtcdEncryptionCheckbox().check();
       CreateRosaWizardPage.enableFIPSCryptographyCheckbox().check();
@@ -59,27 +66,75 @@ describe(
 
     it('Step - Cluster Settings - machine pool- Select advanced options', () => {
       CreateRosaWizardPage.isClusterMachinepoolsScreen();
-      CreateRosaWizardPage.selectComputeNodeType('m6id.xlarge');
+      CreateRosaWizardPage.selectComputeNodeType(clusterProperties.MachinePools[0].InstanceType);
       CreateRosaWizardPage.enableAutoScaling();
-      CreateRosaWizardPage.setMinimumNodeCount('2');
+      CreateRosaWizardPage.setMinimumNodeCount(clusterProperties.MachinePools[0].MinimumNodeCount);
       cy.get('span').contains('x 3 zones = 6').should('be.visible');
-      CreateRosaWizardPage.setMaximumNodeCount('3');
+      CreateRosaWizardPage.setMaximumNodeCount(clusterProperties.MachinePools[0].MaximumNodeCount);
       cy.get('span').contains('x 3 zones = 9').should('be.visible');
       CreateRosaWizardPage.useIMDSv2Radio().check();
-      CreateRosaWizardPage.rootDiskSizeInput().clear().type('{selectAll}').type('555');
+      CreateRosaWizardPage.rootDiskSizeInput()
+        .clear()
+        .type('{selectAll}')
+        .type(clusterProperties.RootDiskSize);
       CreateRosaWizardPage.editNodeLabelLink().click();
-      CreateRosaWizardPage.addNodeLabelKeyAndValue('smoke', 'tests', 0);
+      CreateRosaWizardPage.addNodeLabelKeyAndValue(
+        clusterProperties.MachinePools[0].NodeLabels[0].Key,
+        clusterProperties.MachinePools[0].NodeLabels[0].Value,
+        0,
+      );
       CreateRosaWizardPage.addAdditionalLabelLink().click();
-      CreateRosaWizardPage.addNodeLabelKeyAndValue('rosa', 'advanced', 1);
+      CreateRosaWizardPage.addNodeLabelKeyAndValue(
+        clusterProperties.MachinePools[0].NodeLabels[1].Key,
+        clusterProperties.MachinePools[0].NodeLabels[1].Value,
+        1,
+      );
       CreateRosaWizardPage.rosaNextButton().click();
     });
 
-    it('Step - Networking', () => {
+    it('Step - Networking - Configuration settings', () => {
+      CreateRosaWizardPage.selectClusterPrivacy('private');
+      CreateRosaWizardPage.selectClusterPrivacy(clusterProperties.ClusterPrivacy);
+      CreateRosaWizardPage.enableInstallIntoExistingVpc();
+
       cy.get('button').contains('Next').click();
+    });
+
+    it('Step - Networking - VPC Settings', () => {
+      CreateRosaWizardPage.isVPCSettingsScreen();
+      cy.contains(`Select a VPC to install your cluster into your selected region: ${region}`)
+        .scrollIntoView()
+        .should('be.visible');
+      CreateRosaWizardPage.waitForVPCList();
+      CreateRosaWizardPage.selectVPC(qeInfrastructure.VPC_NAME);
+      let i = 0;
+      clusterProperties.MachinePools[0].AvailabilityZones.forEach((zone) => {
+        CreateRosaWizardPage.selectSubnetAvailabilityZone(zone);
+        CreateRosaWizardPage.selectPrivateSubnet(
+          i,
+          qeInfrastructure.SUBNETS.ZONES[zone].PRIVATE_SUBNET_NAME,
+        );
+        CreateRosaWizardPage.selectPublicSubnet(
+          i,
+          qeInfrastructure.SUBNETS.ZONES[zone].PUBLIC_SUBNET_NAME,
+        );
+        i = i + 1;
+      });
+
+      CreateRosaWizardPage.additionalSecurityGroupsLink().click();
+      CreateRosaWizardPage.applySameSecurityGroupsToAllNodeTypes().check();
+      securityGroups.forEach((value) => {
+        CreateRosaWizardPage.selectAdditionalSecurityGroups(value);
+      });
+      CreateRosaWizardPage.rosaNextButton().click();
     });
 
     it('Step - Networking - CIDR Ranges - advanced options', () => {
       CreateRosaWizardPage.useCIDRDefaultValues(false);
+      CreateRosaWizardPage.machineCIDRInput().should('have.value', clusterProperties.MachineCIDR);
+      CreateRosaWizardPage.serviceCIDRInput().should('have.value', clusterProperties.ServiceCIDR);
+      CreateRosaWizardPage.podCIDRInput().should('have.value', clusterProperties.PodCIDR);
+      CreateRosaWizardPage.hostPrefixInput().should('have.value', clusterProperties.HostPrefix);
       CreateRosaWizardPage.rosaNextButton().click();
     });
 
@@ -91,12 +146,13 @@ describe(
         .should('include', clusterName.substring(0, 27));
       CreateRosaWizardPage.customOperatorPrefixInput()
         .type('{selectAll}')
-        .type(clusterName.substring(0, 27));
+        .type(`${clusterName.substring(0, 27)}${clusterSuffix}`);
       CreateRosaWizardPage.rosaNextButton().click();
     });
 
     it('Step - Cluster update - update strategies - advanced options', () => {
-      CreateRosaWizardPage.selectUpdateStratergy('Recurring updates');
+      CreateRosaWizardPage.selectUpdateStratergy(clusterProperties.UpdateStrategy);
+      CreateRosaWizardPage.selectGracePeriod(clusterProperties.NodeDrainingGracePeriod);
       CreateRosaWizardPage.rosaNextButton().click();
     });
 
@@ -130,29 +186,72 @@ describe(
       CreateRosaWizardPage.rosaNextButton().click();
     });
     it('Cluster wizard revisit - Step - cluster details - machine pool', () => {
-      CreateRosaWizardPage.minimumNodeInput().should('have.value', '2');
-      CreateRosaWizardPage.maximumNodeInput().should('have.value', '3');
-      CreateRosaWizardPage.rootDiskSizeInput().should('have.value', '555');
+      CreateRosaWizardPage.minimumNodeInput().should(
+        'have.value',
+        clusterProperties.MachinePools[0].MinimumNodeCount,
+      );
+      CreateRosaWizardPage.maximumNodeInput().should(
+        'have.value',
+        clusterProperties.MachinePools[0].MaximumNodeCount,
+      );
+      CreateRosaWizardPage.rootDiskSizeInput().should('have.value', clusterProperties.RootDiskSize);
       CreateRosaWizardPage.useIMDSv2Radio().should('be.checked');
-      CreateRosaWizardPage.isNodeLabelKeyAndValue('smoke', 'tests', 0);
-      CreateRosaWizardPage.isNodeLabelKeyAndValue('rosa', 'advanced', 1);
+      CreateRosaWizardPage.isNodeLabelKeyAndValue(
+        clusterProperties.MachinePools[0].NodeLabels[0].Key,
+        clusterProperties.MachinePools[0].NodeLabels[0].Value,
+        0,
+      );
+      CreateRosaWizardPage.isNodeLabelKeyAndValue(
+        clusterProperties.MachinePools[0].NodeLabels[1].Key,
+        clusterProperties.MachinePools[0].NodeLabels[1].Value,
+        1,
+      );
       CreateRosaWizardPage.rosaNextButton().click();
     });
-    it('Cluster wizard revisit - Step - Networking', () => {
+    it('Cluster wizard revisit - Step - Networking Configuration', () => {
       CreateRosaWizardPage.clusterPrivacyPublicRadio().should('be.checked');
+      CreateRosaWizardPage.installIntoExistingVpcCheckbox().should('be.checked');
       CreateRosaWizardPage.rosaNextButton().click();
+    });
+    it('Cluster wizard revisit - Step - Networking VPC settings', () => {
+      CreateRosaWizardPage.isVPCSettingsScreen();
+      cy.contains(`Select a VPC to install your cluster into your selected region: ${region}`)
+        .scrollIntoView()
+        .should('be.visible');
+      cy.contains(new RegExp(`^${qeInfrastructure.VPC_NAME}$`, 'g'))
+        .scrollIntoView()
+        .should('be.visible');
+      let i = 0;
+      clusterProperties.MachinePools[0].AvailabilityZones.forEach((zone) => {
+        CreateRosaWizardPage.isSubnetAvailabilityZoneSelected(zone);
+        CreateRosaWizardPage.isPrivateSubnetSelected(
+          i,
+          qeInfrastructure.SUBNETS.ZONES[zone].PRIVATE_SUBNET_NAME,
+        );
+        CreateRosaWizardPage.isPubliceSubnetSelected(
+          i,
+          qeInfrastructure.SUBNETS.ZONES[zone].PUBLIC_SUBNET_NAME,
+        );
+        i = i + 1;
+      });
+      securityGroups.forEach((value) => {
+        cy.contains(value).scrollIntoView().should('be.visible').should('be.exist');
+      });
+      CreateRosaWizardPage.rosaNextButton().click();
+    });
+    it('Cluster wizard revisit - Step - Networking CIDR settings', () => {
       CreateRosaWizardPage.cidrDefaultValuesCheckBox().should('not.be.checked');
-      CreateRosaWizardPage.machineCIDRInput().should('have.value', '10.0.0.0/16');
-      CreateRosaWizardPage.serviceCIDRInput().should('have.value', '172.30.0.0/16');
-      CreateRosaWizardPage.podCIDRInput().should('have.value', '10.128.0.0/14');
-      CreateRosaWizardPage.hostPrefixInput().should('have.value', '/23');
+      CreateRosaWizardPage.machineCIDRInput().should('have.value', clusterProperties.MachineCIDR);
+      CreateRosaWizardPage.serviceCIDRInput().should('have.value', clusterProperties.ServiceCIDR);
+      CreateRosaWizardPage.podCIDRInput().should('have.value', clusterProperties.PodCIDR);
+      CreateRosaWizardPage.hostPrefixInput().should('have.value', clusterProperties.HostPrefix);
       CreateRosaWizardPage.rosaNextButton().click();
     });
     it('Cluster wizard revisit - Step - Cluster roles and policies', () => {
       CreateRosaWizardPage.createModeAutoRadio().should('be.checked');
       CreateRosaWizardPage.customOperatorPrefixInput().should(
         'have.value',
-        clusterName.substring(0, 27),
+        `${clusterName.substring(0, 27)}${clusterSuffix}`,
       );
       CreateRosaWizardPage.rosaNextButton().click();
     });
@@ -165,40 +264,98 @@ describe(
     it('Step - Review and create step -its definitions', () => {
       // Some situation the ARN spinner in progress and blocks cluster creation.
       cy.get('.pf-v5-c-spinner', { timeout: 30000 }).should('not.exist');
-      CreateRosaWizardPage.isClusterPropertyMatchesValue('Control plane', 'Classic');
-      CreateRosaWizardPage.isClusterPropertyMatchesValue('Availability', 'Multi-zone');
+      CreateRosaWizardPage.isClusterPropertyMatchesValue(
+        'Control plane',
+        clusterProperties.ControlPlaneType,
+      );
+      CreateRosaWizardPage.isClusterPropertyMatchesValue(
+        'Availability',
+        clusterProperties.Availability,
+      );
       CreateRosaWizardPage.isClusterPropertyMatchesValue('Domain prefix', clusterDomainPrefix);
-      CreateRosaWizardPage.isClusterPropertyMatchesValue('User workload monitoring', 'Enabled');
+      CreateRosaWizardPage.isClusterPropertyMatchesValue(
+        'User workload monitoring',
+        clusterProperties.UserWorkloadMonitoring,
+      );
       CreateRosaWizardPage.isClusterPropertyMatchesValue(
         'Encrypt volumes with customer keys',
         'Disabled',
       );
-      CreateRosaWizardPage.isClusterPropertyMatchesValue('Additional etcd encryption', 'Enabled');
-      CreateRosaWizardPage.isClusterPropertyMatchesValue('FIPS cryptography', 'Enabled');
-      CreateRosaWizardPage.isClusterPropertyMatchesValue('Node instance type', 'm6id.xlarge');
-      CreateRosaWizardPage.isClusterPropertyMatchesValue('Autoscaling', 'Enabled');
-      CreateRosaWizardPage.isClusterPropertyMatchesValue('Install into existing VPC', 'Disabled');
+      CreateRosaWizardPage.isClusterPropertyMatchesValue(
+        'Additional etcd encryption',
+        clusterProperties.AdditionalEncryption,
+      );
+      CreateRosaWizardPage.isClusterPropertyMatchesValue(
+        'FIPS cryptography',
+        clusterProperties.FIPSCryptography,
+      );
+      CreateRosaWizardPage.isClusterPropertyMatchesValue(
+        'Additional etcd encryption',
+        clusterProperties.AdditionalEncryption,
+      );
+      CreateRosaWizardPage.isClusterPropertyMatchesValue(
+        'FIPS cryptography',
+        clusterProperties.FIPSCryptography,
+      );
+      CreateRosaWizardPage.isClusterPropertyMatchesValue(
+        'Node instance type',
+        clusterProperties.MachinePools[0].InstanceType,
+      );
+      CreateRosaWizardPage.computeNodeRangeValue().contains(
+        `Minimum nodes per zone: ${clusterProperties.MachinePools[0].MinimumNodeCount}`,
+      );
+      CreateRosaWizardPage.computeNodeRangeValue().contains(
+        `Maximum nodes per zone: ${clusterProperties.MachinePools[0].MaximumNodeCount}`,
+      );
+      CreateRosaWizardPage.isClusterPropertyMatchesValue(
+        'Autoscaling',
+        clusterProperties.MachinePools[0].Autoscaling,
+      );
+      CreateRosaWizardPage.isClusterPropertyMatchesValue(
+        'Install into existing VPC',
+        clusterProperties.InstallIntoExistingVPC,
+      );
       CreateRosaWizardPage.isClusterPropertyMatchesValue(
         'Instance Metadata Service (IMDS)',
-        'IMDSv2',
+        clusterProperties.InstanceMetadataService,
       );
-      CreateRosaWizardPage.isClusterPropertyMatchesValue('Worker root disk size', '555 GiB');
-      CreateRosaWizardPage.isClusterPropertyMatchesValue('Cluster privacy', 'Public');
-      CreateRosaWizardPage.isClusterPropertyMatchesValue('Machine CIDR', '10.0.0.0/16');
-      CreateRosaWizardPage.isClusterPropertyMatchesValue('Service CIDR', '172.30.0.0/16');
-      CreateRosaWizardPage.isClusterPropertyMatchesValue('Pod CIDR', '10.128.0.0/14');
-      CreateRosaWizardPage.isClusterPropertyMatchesValue('Host prefix', '/23');
+      CreateRosaWizardPage.isClusterPropertyMatchesValue(
+        'Worker root disk size',
+        `${clusterProperties.RootDiskSize} GiB`,
+      );
+      CreateRosaWizardPage.isClusterPropertyMatchesValue(
+        'Cluster privacy',
+        clusterProperties.ClusterPrivacy,
+      );
+      CreateRosaWizardPage.isClusterPropertyMatchesValue(
+        'Machine CIDR',
+        clusterProperties.MachineCIDR,
+      );
+      CreateRosaWizardPage.isClusterPropertyMatchesValue(
+        'Service CIDR',
+        clusterProperties.ServiceCIDR,
+      );
+      CreateRosaWizardPage.isClusterPropertyMatchesValue('Pod CIDR', clusterProperties.PodCIDR);
+      CreateRosaWizardPage.isClusterPropertyMatchesValue(
+        'Host prefix',
+        clusterProperties.HostPrefix,
+      );
       CreateRosaWizardPage.isClusterPropertyMatchesValue(
         'Application ingress',
         'Use default settings',
       );
-      CreateRosaWizardPage.isClusterPropertyMatchesValue('Host prefix', '/23');
       CreateRosaWizardPage.isClusterPropertyMatchesValue(
         'Operator roles and OIDC provider mode',
         'auto',
       );
-      CreateRosaWizardPage.isClusterPropertyMatchesValue('Update strategy', 'Recurring updates');
-      CreateRosaWizardPage.isClusterPropertyMatchesValue('Node draining', '60 minutes');
+      CreateRosaWizardPage.isClusterPropertyMatchesValue(
+        'Update strategy',
+        clusterProperties.UpdateStrategy,
+      );
+      CreateRosaWizardPage.isClusterPropertyMatchesValue(
+        'Node draining',
+        clusterProperties.NodeDrainingGracePeriod,
+      );
       CreateRosaWizardPage.reviewAndCreateTree().click();
     });
 
@@ -211,19 +368,20 @@ describe(
       ClusterDetailsPage.clusterDetailsPageRefresh();
       ClusterDetailsPage.checkInstallationStepStatus('Account setup');
       ClusterDetailsPage.checkInstallationStepStatus('OIDC and operator roles');
+      ClusterDetailsPage.checkInstallationStepStatus('Network settings');
       ClusterDetailsPage.checkInstallationStepStatus('DNS setup');
       ClusterDetailsPage.checkInstallationStepStatus('Cluster installation');
-      ClusterDetailsPage.clusterTypeLabelValue().contains('ROSA');
-      ClusterDetailsPage.clusterAvailabilityLabelValue().contains('Multi-zone');
+      ClusterDetailsPage.clusterTypeLabelValue().contains(clusterProperties.Type);
+      ClusterDetailsPage.clusterAvailabilityLabelValue().contains(clusterProperties.Availability);
       ClusterDetailsPage.clusterDomainPrefixLabelValue().contains(clusterDomainPrefix);
       ClusterDetailsPage.clusterInfrastructureAWSaccountLabelValue().contains(awsAccountID);
       ClusterDetailsPage.clusterFipsCryptographyStatus().contains('FIPS Cryptography enabled');
-      ClusterDetailsPage.clusterIMDSValue().contains('IMDSv2 only');
+      ClusterDetailsPage.clusterIMDSValue().contains(clusterProperties.InstanceMetadataService);
       ClusterDetailsPage.clusterAutoScalingStatus().contains('Enabled');
       ClusterDetailsPage.clusterAdditionalEncryptionStatus().contains('Enabled');
-      ClusterDetailsPage.clusterMachineCIDRLabelValue().contains('10.0.0.0/16');
-      ClusterDetailsPage.clusterServiceCIDRLabelValue().contains('172.30.0.0/16');
-      ClusterDetailsPage.clusterPodCIDRLabelValue().contains('10.128.0.0/14');
+      ClusterDetailsPage.clusterMachineCIDRLabelValue().contains(clusterProperties.MachineCIDR);
+      ClusterDetailsPage.clusterServiceCIDRLabelValue().contains(clusterProperties.ServiceCIDR);
+      ClusterDetailsPage.clusterPodCIDRLabelValue().contains(clusterProperties.PodCIDR);
       ClusterDetailsPage.clusterHostPrefixLabelValue().contains('23');
     });
     it('Delete the advanced ROSA cluster', () => {

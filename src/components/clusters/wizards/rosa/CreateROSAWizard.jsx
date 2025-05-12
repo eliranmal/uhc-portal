@@ -5,11 +5,11 @@ import PropTypes from 'prop-types';
 import {
   Banner,
   PageSection,
+  Spinner,
   Wizard,
   WizardStep,
   WizardStepChangeScope,
 } from '@patternfly/react-core';
-import { Spinner } from '@redhat-cloud-services/frontend-components';
 
 import { ocmResourceType, trackEvents } from '~/common/analytics';
 import { shouldRefetchQuota } from '~/common/helpers';
@@ -26,26 +26,27 @@ import {
 import config from '~/config';
 import withAnalytics from '~/hoc/withAnalytics';
 import useAnalytics from '~/hooks/useAnalytics';
-import { useFeatureGate } from '~/hooks/useFeatureGate';
 import usePreventBrowserNav from '~/hooks/usePreventBrowserNav';
-import { HYPERSHIFT_WIZARD_FEATURE } from '~/redux/constants/featureConstants';
+import { HYPERSHIFT_WIZARD_FEATURE } from '~/queries/featureGates/featureConstants';
+import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 import { isRestrictedEnv } from '~/restrictedEnv';
 
 import ErrorBoundary from '../../../App/ErrorBoundary';
 import Breadcrumbs from '../../../common/Breadcrumbs';
 import PageTitle from '../../../common/PageTitle';
 import Unavailable from '../../../common/Unavailable';
+import { useClusterWizardResetStepsHook } from '../hooks/useClusterWizardResetStepsHook';
 
 import CIDRScreen from './CIDRScreen/CIDRScreen';
 import ClusterRolesScreen from './ClusterRolesScreen/ClusterRolesScreen';
 import Details from './ClusterSettings/Details/Details';
+import ControlPlaneScreen from './ControlPlaneScreen/ControlPlaneScreen';
 import NetworkScreen from './NetworkScreen/NetworkScreen';
 import UpdatesScreen from './UpdatesScreen/UpdatesScreen';
-import VPCScreen from './VPCScreen/VPCScreen';
+import { VPCScreen } from './VPCScreen/VPCScreen';
 import AccountsRolesScreen from './AccountsRolesScreen';
 import ClusterProxyScreen from './ClusterProxyScreen';
 import { FieldId, initialTouched, initialValues, initialValuesRestrictedEnv } from './constants';
-import ControlPlaneScreen from './ControlPlaneScreen';
 import CreateClusterErrorModal from './CreateClusterErrorModal';
 import CreateRosaWizardFooter from './CreateRosaWizardFooter';
 import MachinePoolScreen from './MachinePoolScreen';
@@ -93,10 +94,10 @@ const CreateROSAWizardInternal = ({
   configureProxySelected,
   resetResponse,
   closeDrawer,
-  hasProductQuota,
   isErrorModalOpen,
   openModal,
   selectedAWSAccountID,
+  createCluster,
 }) => {
   const navigate = useNavigate();
   const track = useAnalytics();
@@ -117,41 +118,17 @@ const CreateROSAWizardInternal = ({
       goToStepById,
     };
   };
-
-  React.useEffect(() => {
-    if (!currentStep) {
-      return;
-    }
-
-    const steps = wizardContextRef.current?.steps;
-    const setStep = wizardContextRef.current?.setStep;
-
-    // eslint-disable-next-line no-plusplus
-    for (let i = currentStep.index; i < steps.length; i++) {
-      const nextStep = steps[i];
-      const isParentStep = nextStep.subStepIds !== undefined;
-      if (!isParentStep && !nextStep.isHidden) {
-        if (!nextStep.isVisited) {
-          // can break out early if isVisited is not true for the remainder
-          break;
-        }
-        // unvisit if step is past account roles step and has no assoc. aws acct. selected
-        const noAssocAwsAcct = nextStep.id > accountAndRolesStepId && !selectedAWSAccountID;
-        // unvisit if step is past the current step that has had a form change
-        const afterChangedStep = nextStep.id > currentStepId;
-        // TODO: Not all form changes should cause following steps to be unvisited
-        setStep({
-          ...nextStep,
-          isVisited: !afterChangedStep && !noAssocAwsAcct,
-        });
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [values]);
+  useClusterWizardResetStepsHook({
+    currentStep,
+    wizardContextRef,
+    values,
+    additionalStepIndex: accountAndRolesStepId,
+    additionalCondition: !selectedAWSAccountID,
+  });
 
   React.useEffect(() => {
     // On component mount
-    if (shouldRefetchQuota(organization)) {
+    if (shouldRefetchQuota(organization, false)) {
       getOrganizationAndQuota();
     }
     if (!cloudProviders.fulfilled && !cloudProviders.pending) {
@@ -210,13 +187,6 @@ const CreateROSAWizardInternal = ({
     closeDrawer({ skipOnClose: true });
   };
 
-  // RENDERING ////////////////
-  // Not enough quota
-  const orgWasFetched = !organization.pending && organization.fulfilled;
-  if (orgWasFetched && !hasProductQuota) {
-    return <Navigate replace to="/create" />;
-  }
-
   // Needed data requests are pending
   const requests = [
     {
@@ -234,7 +204,9 @@ const CreateROSAWizardInternal = ({
       <>
         {title}
         <PageSection>
-          <Spinner centered />
+          <div className="pf-v5-u-text-align-center">
+            <Spinner size="lg" arial-label="Loading..." />
+          </div>
         </PageSection>
       </>
     );
@@ -405,7 +377,10 @@ const CreateROSAWizardInternal = ({
             </WizardStep>
 
             <WizardStep id={stepId.REVIEW_AND_CREATE} name={stepNameById[stepId.REVIEW_AND_CREATE]}>
-              <ReviewClusterScreen isSubmitPending={createClusterResponse?.pending} />
+              <ReviewClusterScreen
+                createCluster={createCluster}
+                isSubmitPending={createClusterResponse?.pending}
+              />
             </WizardStep>
           </Wizard>
           {config.fakeOSD && <ValuesPanel />}
@@ -439,7 +414,8 @@ function CreateROSAWizard(props) {
     selectedAWSAccountID,
     isHypershiftSelected,
   };
-  const isHypershiftEnabled = useFeatureGate(HYPERSHIFT_WIZARD_FEATURE) && !isRestrictedEnv();
+  const isHypershiftEnabled = useFeatureGate(HYPERSHIFT_WIZARD_FEATURE);
+
   return (
     <AppPage title="Create OpenShift ROSA Cluster">
       <AppDrawerContext.Consumer>
@@ -492,15 +468,13 @@ CreateROSAWizardInternal.propTypes = {
 
   getMachineTypes: PropTypes.func,
   getOrganizationAndQuota: PropTypes.func,
+  createCluster: PropTypes.func,
   getUserRole: PropTypes.func,
   getCloudProviders: PropTypes.func,
 
   resetResponse: PropTypes.func,
   openModal: PropTypes.func,
   getUserRoleResponse: PropTypes.object,
-
-  // for "no quota" redirect
-  hasProductQuota: PropTypes.bool,
 
   // for cancel button
   history: PropTypes.shape({

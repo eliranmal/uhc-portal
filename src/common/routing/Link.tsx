@@ -1,3 +1,4 @@
+/* eslint-disable custom-rules/restrict-react-router-imports */
 import React from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 

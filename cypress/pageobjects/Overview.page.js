@@ -32,7 +32,7 @@ class Overview extends Page {
         return this;
       },
       checkLink: function (title, link) {
-        return new LinkHelper({ name: 'header', isParent: true }, title, link).linkExists();
+        return new LinkHelper({ name: 'header', isParent: false }, title, link).linkExists();
       },
     };
   };
@@ -73,10 +73,16 @@ class Overview extends Page {
     cy.get('[data-testid^="offering-card"]').should('have.length', numberOfCards);
   }
 
-  centralSectionHeaderLinkExists(title, link) {
+  centralSectionFooterLinkExists(title, link) {
+    cy.get('[data-testid^="offering-card"]')
+      .parentsUntil('section')
+      .next('a')
+      .contains(title)
+      .as('centralSectionFooterLink')
+      .should('have.attr', 'href', link);
     cy.get('a').contains(title).as('centralSectionHeaderLink').should('have.attr', 'href', link);
     return new ButtonHelper(
-      { name: 'centralSectionHeaderLink', isParent: false },
+      { name: 'centralSectionFooterLink', isParent: false },
       title,
       link,
     ).btnExists();
@@ -86,7 +92,6 @@ class Overview extends Page {
     cy.get('h2').contains('Recommended operators').as('header');
     cy.get('@header')
       .parent()
-      .next()
       .within(() => {
         cy.get('a')
           .contains('View all in Ecosystem Catalog')
@@ -96,10 +101,24 @@ class Overview extends Page {
   }
 
   recommendedOperatorsExpected(numberOfContents) {
-    cy.getByTestId('product-overview-card').should('have.length', numberOfContents);
+    cy.get('h2')
+      .contains('Recommended operators')
+      .parent()
+      .within(() => {
+        cy.getByTestId('product-overview-card').should('have.length', numberOfContents);
+      });
   }
 
-  recommendedOperator(text, description) {
+  featuredProductsExpected(numberOfContents) {
+    cy.get('h2')
+      .contains('Featured products')
+      .parent()
+      .within(() => {
+        cy.getByTestId('product-overview-card').should('have.length', numberOfContents);
+      });
+  }
+
+  productsOrOperatorCards(text, description) {
     cy.get('h3').contains(text).parents('div[data-testid="product-overview-card"]').as('headerObj');
     cy.get('@headerObj').find('div').contains(description).should('be.exist');
     cy.get('@headerObj').contains('Learn more').as('learnMore');

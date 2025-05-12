@@ -7,18 +7,18 @@ This is NOT a React component, because it returns an array of rows, so it's not 
 
 import React from 'react';
 
-import Skeleton from '@redhat-cloud-services/frontend-components/Skeleton';
+import { Skeleton } from '@patternfly/react-core';
 
 const skeletonRows = (
   count = 10,
   colSpan = 6,
-  size: React.ComponentProps<typeof Skeleton>['size'] = 'lg',
+  size: React.ComponentProps<typeof Skeleton>['fontSize'] = 'lg',
 ) => {
   const row = {
     cells: [
       {
         props: { colSpan },
-        title: <Skeleton size={size} />,
+        title: <Skeleton fontSize={size} screenreaderText="Loading..." />,
       },
     ],
   };

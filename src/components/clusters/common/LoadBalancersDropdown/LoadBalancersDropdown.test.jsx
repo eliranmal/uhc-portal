@@ -1,29 +1,65 @@
 import React from 'react';
 
-import { checkAccessibility, render, screen, within } from '~/testUtils';
+import * as useFetchLoadBalancerQuotaValues from '~/queries/ClusterActionsQueries/useFetchLoadBalancerQuotaValues';
+import * as useFetchOrganizationAndQuota from '~/queries/common/useFetchOrganizationAndQuota';
+import { checkAccessibility, render, screen, waitFor, within } from '~/testUtils';
 
-import fixtures from '../../ClusterDetails/__tests__/ClusterDetails.fixtures';
-import { loadBalancerQuotaList } from '../__tests__/quota.fixtures';
+import fixtures from '../../ClusterDetailsMultiRegion/__tests__/ClusterDetails.fixtures';
 
 import LoadBalancersDropdown from './LoadBalancersDropdown';
 
-const baseState = {
-  error: false,
-  errorMessage: '',
-  pending: false,
-  fulfilled: false,
-  values: [],
+const mockedUseFetchOrganizationAndQuota = jest.spyOn(
+  useFetchOrganizationAndQuota,
+  'useFetchOrganizationAndQuota',
+);
+
+const mockedQuotaListReturnedData = {
+  items: [
+    {
+      kind: 'QuotaCost',
+      href: '/api/accounts_mgmt/v1/organizations/1MK6ieFXd0eu1hERdENAPvpbi7x/quota_cost',
+      organization_id: '1MK6ieFXd0eu1hERdENAPvpbi7x',
+      quota_id: 'network.loadbalancer|network',
+      allowed: 17,
+      consumed: 0,
+      related_resources: [
+        {
+          cloud_provider: 'any',
+          resource_name: 'network',
+          resource_type: 'network.loadbalancer',
+          byoc: 'rhinfra',
+          availability_zone_type: 'any',
+          product: 'ANY',
+          billing_model: 'standard',
+          cost: 1,
+        },
+        {
+          cloud_provider: 'any',
+          resource_name: 'network',
+          resource_type: 'network.loadbalancer',
+          byoc: 'byoc',
+          availability_zone_type: 'any',
+          product: 'ANY',
+          billing_model: 'standard',
+          cost: 0,
+        },
+      ],
+    },
+  ],
 };
 
+const mockedUseFetchLoadBalancerQuotaValues = jest.spyOn(
+  useFetchLoadBalancerQuotaValues,
+  'useFetchLoadBalancerQuotaValues',
+);
+
+const mockedLoadBalancerValues = [0, 4, 8, 12, 16, 20, 24];
+
 describe('<LoadBalancersDropdown />', () => {
-  const getLoadBalancers = jest.fn();
   const onChange = jest.fn();
 
   const defaultProps = {
-    loadBalancerValues: baseState,
     input: { onChange },
-    getLoadBalancers,
-    quotaList: loadBalancerQuotaList,
     product: fixtures.clusterDetails.cluster.subscription.plan.type,
     cloudProviderID: fixtures.clusterDetails.cluster.cloud_provider.id,
     billingModel: 'standard',
@@ -32,39 +68,48 @@ describe('<LoadBalancersDropdown />', () => {
     disabled: false,
   };
 
+  const setMockingValues = () => {
+    mockedUseFetchOrganizationAndQuota.mockReturnValue({
+      isPending: false,
+      isFetched: true,
+      isError: false,
+      quota: mockedQuotaListReturnedData,
+    });
+
+    mockedUseFetchLoadBalancerQuotaValues.mockReturnValue({
+      isPending: false,
+      isFetched: true,
+      isError: false,
+      data: mockedLoadBalancerValues,
+    });
+  };
+
   afterEach(() => {
     jest.clearAllMocks();
   });
 
   describe('when load balancer list needs to be fetched', () => {
-    it('is accessible', async () => {
-      const { container } = render(<LoadBalancersDropdown {...defaultProps} />);
-      expect(screen.getByText('Loading load balancers list...')).toBeInTheDocument();
-      await checkAccessibility(container);
-    });
-
     it('calls getLoadBalancers', () => {
-      expect(getLoadBalancers).not.toBeCalled();
+      setMockingValues();
+      expect(mockedUseFetchLoadBalancerQuotaValues).not.toHaveBeenCalled();
       render(<LoadBalancersDropdown {...defaultProps} />);
-      expect(getLoadBalancers).toBeCalled();
+      expect(mockedUseFetchLoadBalancerQuotaValues).toHaveBeenCalled();
     });
   });
 
   describe('when there was an error', () => {
-    const errorState = {
-      ...baseState,
-      error: true,
-      errorMessage: 'This is an error message',
-    };
-
-    const errorProps = {
-      ...defaultProps,
-      loadBalancerValues: errorState,
-    };
-
     it('displays an error', () => {
-      render(<LoadBalancersDropdown {...errorProps} />);
-      expect(getLoadBalancers).not.toBeCalled();
+      setMockingValues();
+      mockedUseFetchLoadBalancerQuotaValues.mockReturnValue({
+        isPending: false,
+        isFetched: true,
+        isError: true,
+        error: { errorMessage: 'This is an error message', operationID: 'error_id' },
+        data: undefined,
+      });
+
+      render(<LoadBalancersDropdown {...defaultProps} />);
+
       expect(
         within(screen.getByTestId('alert-error')).getByText('This is an error message'),
       ).toBeInTheDocument();
@@ -72,46 +117,31 @@ describe('<LoadBalancersDropdown />', () => {
   });
 
   describe('when the request is pending', () => {
-    const pendingState = {
-      error: false,
-      errorMessage: '',
-      pending: true,
-      fulfilled: false,
-      values: [],
-    };
-    const pendingProps = {
-      ...defaultProps,
-      loadBalancerValues: pendingState,
-    };
-
-    it('displays a loading message', () => {
-      render(<LoadBalancersDropdown {...pendingProps} />);
-      expect(getLoadBalancers).not.toBeCalled();
+    it('is accessible', async () => {
+      setMockingValues();
+      mockedUseFetchLoadBalancerQuotaValues.mockReturnValue({
+        isPending: true,
+        isFetched: false,
+        isError: false,
+        data: undefined,
+      });
+      const { container } = render(<LoadBalancersDropdown {...defaultProps} />);
       expect(screen.getByText('Loading load balancers list...')).toBeInTheDocument();
+      await checkAccessibility(container);
     });
   });
 
   describe('when the load balancer list is available', () => {
-    const loadBalancerValues = [0, 4, 8, 12, 16, 20, 24];
-    const availableState = {
-      ...baseState,
-      fulfilled: true,
-      values: loadBalancerValues,
-    };
-
-    const availableProps = {
-      ...defaultProps,
-      loadBalancerValues: availableState,
-    };
-
     it('shows expected options', async () => {
       // loadBalancerQuotaList allows 17.
-      const listAllowedWithQuota = loadBalancerValues.filter((item) => item < 17);
-      const { container } = render(<LoadBalancersDropdown {...availableProps} />);
-      expect(getLoadBalancers).not.toBeCalled();
+      const listAllowedWithQuota = mockedLoadBalancerValues.filter((item) => item < 17);
 
-      const options = screen.getAllByRole('option');
-      expect(options).toHaveLength(listAllowedWithQuota.length);
+      setMockingValues();
+      const { container } = render(<LoadBalancersDropdown {...defaultProps} />);
+
+      await waitFor(() =>
+        expect(screen.getAllByRole('option')).toHaveLength(listAllowedWithQuota.length),
+      );
 
       listAllowedWithQuota.forEach((item) => {
         expect(screen.getByRole('option', { name: item })).toBeInTheDocument();

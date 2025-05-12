@@ -2,7 +2,7 @@ import {
   AWS_DEFAULT_REGION,
   GCP_DEFAULT_REGION,
 } from '~/components/clusters/wizards/common/constants';
-import type { CloudRegion } from '~/types/clusters_mgmt.v1/models/CloudRegion';
+import type { CloudRegion } from '~/types/clusters_mgmt.v1';
 
 export type CheckedRegion = CloudRegion & {
   // Functionality: Valid iff undefined.  TODO: text not shown yet.

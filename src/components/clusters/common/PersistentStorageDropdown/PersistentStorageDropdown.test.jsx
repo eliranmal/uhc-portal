@@ -1,29 +1,83 @@
 import React from 'react';
 
+import * as useFetchStorageQuotaValues from '~/queries/ClusterActionsQueries/useFetchStorageQuotaValues';
+import * as useFetchOrganizationAndQuota from '~/queries/common/useFetchOrganizationAndQuota';
 import { checkAccessibility, render, screen, within } from '~/testUtils';
 
-import fixtures from '../../ClusterDetails/__tests__/ClusterDetails.fixtures';
-import { storageQuotaList } from '../__tests__/quota.fixtures';
+import fixtures from '../../ClusterDetailsMultiRegion/__tests__/ClusterDetails.fixtures';
 
 import PersistentStorageDropdown from './PersistentStorageDropdown';
 
-const baseState = {
-  error: false,
-  errorMessage: '',
-  pending: false,
-  fulfilled: false,
+const mockedUseFetchOrganizationAndQuota = jest.spyOn(
+  useFetchOrganizationAndQuota,
+  'useFetchOrganizationAndQuota',
+);
+const mockedQuotaListReturnedData = {
+  items: [
+    {
+      organization_id: '1MK6ieFXd0eu1hERdENAPvpbi7x',
+      quota_id: 'pv.storage|gp2',
+      allowed: 27000,
+      consumed: 0,
+      related_resources: [
+        {
+          cloud_provider: 'any',
+          resource_name: 'gp2',
+          resource_type: 'pv.storage',
+          byoc: 'rhinfra',
+          availability_zone_type: 'any',
+          product: 'ANY',
+          billing_model: 'standard',
+          cost: 1,
+        },
+        {
+          cloud_provider: 'any',
+          resource_name: 'gp2',
+          resource_type: 'pv.storage',
+          byoc: 'byoc',
+          availability_zone_type: 'any',
+          product: 'ANY',
+          billing_model: 'standard',
+          cost: 0,
+        },
+      ],
+    },
+    {
+      allowed: 12,
+      consumed: 4,
+      quota_id: 'network.loadbalancer|network',
+      related_resources: [
+        {
+          availability_zone_type: 'any',
+          billing_model: 'standard',
+          byoc: 'rhinfra',
+          cloud_provider: 'any',
+          cost: 1,
+          product: 'ANY',
+          resource_name: 'network',
+          resource_type: 'network.loadbalancer',
+        },
+      ],
+    },
+  ],
 };
 
+const mockedUseFetchStorageQuotaValues = jest.spyOn(
+  useFetchStorageQuotaValues,
+  'useFetchStorageQuotaValues',
+);
+const mockedStorageQuotaReturnedData = [
+  { unit: 'B', value: 1181116006400 },
+  { unit: 'B', value: 644245094400 },
+  { unit: 'B', value: 107374182400 },
+];
+
 describe('<PersistentStorageDropdown />', () => {
-  const getPersistentStorage = jest.fn();
   const onChange = jest.fn();
 
   const defaultCluster = fixtures.clusterDetails.cluster;
   const defaultProps = {
-    persistentStorageValues: baseState,
     input: { onChange },
-    getPersistentStorage,
-    quotaList: storageQuotaList,
     product: defaultCluster.subscription.plan.type,
     cloudProviderID: defaultCluster.cloud_provider.id,
     billingModel: 'standard',
@@ -31,90 +85,103 @@ describe('<PersistentStorageDropdown />', () => {
     isMultiAZ: defaultCluster.multi_az,
     disabled: false,
   };
-  const errorState = { ...baseState, error: true, errorMessage: 'This is an error message' };
 
+  const setMockingValues = () => {
+    mockedUseFetchOrganizationAndQuota.mockReturnValue({
+      isPending: false,
+      isFetched: true,
+      isError: false,
+      quota: mockedQuotaListReturnedData,
+    });
+
+    mockedUseFetchStorageQuotaValues.mockReturnValue({
+      isPending: false,
+      isFetched: true,
+      isError: false,
+      data: mockedStorageQuotaReturnedData,
+    });
+  };
   afterEach(() => {
     jest.clearAllMocks();
   });
+
   describe('when persistent storage list needs to be fetched', () => {
-    it('calls getPersistentStorage on mount and is accessible', async () => {
-      expect(getPersistentStorage).not.toBeCalled();
+    it('calls getPersistentStorage on mount', async () => {
+      setMockingValues();
+      expect(mockedUseFetchStorageQuotaValues).not.toHaveBeenCalled();
+      render(<PersistentStorageDropdown {...defaultProps} />);
+
+      expect(mockedUseFetchStorageQuotaValues).toHaveBeenCalled();
+    });
+
+    it('is accessible', async () => {
+      setMockingValues();
       const { container } = render(<PersistentStorageDropdown {...defaultProps} />);
-
-      expect(getPersistentStorage).toBeCalled();
-      expect(within(screen.getByRole('status')).getByText('Loading...')).toBeInTheDocument();
-
       await checkAccessibility(container);
     });
   });
 
   describe('when there was an error', () => {
-    const errorState = { ...baseState, error: true, errorMessage: 'This is an error message' };
-    const errorProps = { ...defaultProps, persistentStorageValues: errorState };
-
     it('displays an error', async () => {
-      const { container } = render(<PersistentStorageDropdown {...errorProps} />);
+      setMockingValues();
+
+      mockedUseFetchStorageQuotaValues.mockReturnValue({
+        isPending: false,
+        isFetched: true,
+        isError: true,
+        error: { errorMessage: 'This is an error message', operationID: 'error_id' },
+        data: undefined,
+      });
+
+      render(<PersistentStorageDropdown {...defaultProps} />);
 
       expect(
         within(screen.getByTestId('alert-error')).getByText('This is an error message'),
       ).toBeInTheDocument();
-      await checkAccessibility(container);
     });
   });
 
   describe('when the request is pending', () => {
-    const pendingState = {
-      error: false,
-      errorMessage: '',
-      pending: true,
-      fulfilled: false,
-      values: [],
-    };
-
-    const pendingProps = { ...defaultProps, persistentStorageValues: pendingState };
-
     it('displays a spinner', async () => {
-      const { container } = render(<PersistentStorageDropdown {...pendingProps} />);
+      setMockingValues();
 
-      expect(screen.getByRole('status')).toBeInTheDocument();
+      mockedUseFetchStorageQuotaValues.mockReturnValue({
+        isPending: true,
+        isFetched: false,
+        isError: false,
+        error: undefined,
+        data: undefined,
+      });
+
+      render(<PersistentStorageDropdown {...defaultProps} />);
+
+      expect(screen.getByRole('progressbar')).toBeInTheDocument();
       expect(screen.getByText('Loading persistent storage list...')).toBeInTheDocument();
-
-      await checkAccessibility(container);
-    });
-
-    it('does not call getPersistentStorage again if request returns an error', () => {
-      const { rerender } = render(<PersistentStorageDropdown {...pendingProps} />);
-      expect(getPersistentStorage).not.toBeCalled();
-
-      rerender(
-        <PersistentStorageDropdown {...{ ...pendingProps, persistentStorageValues: errorState }} />,
-      );
-      expect(getPersistentStorage).not.toBeCalled();
     });
   });
 
   describe('when the storage list is available', () => {
-    const fulFilledState = {
-      ...baseState,
-      fulfilled: true,
-      values: [
-        { unit: 'B', value: 107374182400 },
-        { unit: 'B', value: 644245094400 },
-        { unit: 'B', value: 1181116006400 },
-      ],
-    };
-    const fulFilledProps = { ...defaultProps, persistentStorageValues: fulFilledState };
-
     it('displays expected options', async () => {
-      const { container } = render(<PersistentStorageDropdown {...fulFilledProps} />);
+      setMockingValues();
 
-      expect(screen.getAllByRole('option')).toHaveLength(fulFilledState.values.length);
+      render(<PersistentStorageDropdown {...defaultProps} />);
+
+      expect(screen.getAllByRole('option')).toHaveLength(mockedStorageQuotaReturnedData.length);
 
       expect(screen.getByRole('option', { name: '100 GiB' })).toBeInTheDocument();
       expect(screen.getByRole('option', { name: '600 GiB' })).toBeInTheDocument();
       expect(screen.getByRole('option', { name: '1100 GiB' })).toBeInTheDocument();
+    });
 
-      await checkAccessibility(container);
+    it('displays expected options on expected order', async () => {
+      setMockingValues();
+
+      render(<PersistentStorageDropdown {...defaultProps} />);
+
+      const options = screen.getAllByRole('option');
+      expect(within(options[0]).queryByText('100 GiB')).toBeInTheDocument();
+      expect(within(options[1]).queryByText('600 GiB')).toBeInTheDocument();
+      expect(within(options[2]).queryByText('1100 GiB')).toBeInTheDocument();
     });
   });
 });

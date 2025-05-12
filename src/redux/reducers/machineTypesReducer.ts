@@ -16,7 +16,7 @@ limitations under the License.
 import keyBy from 'lodash/keyBy';
 
 import { getErrorState } from '../../common/errors';
-import { MachineType } from '../../types/clusters_mgmt.v1/models/MachineType';
+import { MachineType } from '../../types/clusters_mgmt.v1';
 import { MachineTypesAction } from '../actions/machineTypesActions';
 import { machineTypesConstants } from '../constants';
 import {

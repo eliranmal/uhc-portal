@@ -10,9 +10,9 @@ import validators, { required } from '~/common/validators';
 import { useFormState } from '~/components/clusters/wizards/hooks';
 import { FieldId } from '~/components/clusters/wizards/rosa/constants';
 import ExternalLink from '~/components/common/ExternalLink';
-import { ReduxCheckbox } from '~/components/common/ReduxFormComponents';
+import { ReduxCheckbox } from '~/components/common/ReduxFormComponents_deprecated';
 
-import ReduxVerticalFormGroup from '../../../../common/ReduxFormComponents/ReduxVerticalFormGroup';
+import ReduxVerticalFormGroup from '../../../../common/ReduxFormComponents_deprecated/ReduxVerticalFormGroup';
 import { constants } from '../../../common/CreateOSDFormConstants';
 import {
   HOST_PREFIX_DEFAULT,

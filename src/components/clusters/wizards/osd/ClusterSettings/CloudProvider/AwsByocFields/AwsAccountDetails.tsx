@@ -39,6 +39,7 @@ export const AwsAccountDetails = () => {
             validate={awsNumericAccountID}
             isDisabled={isValidating}
             onChange={clearMachineTypes}
+            tooltipWidth="27rem"
             tooltip={
               <>
                 <p>

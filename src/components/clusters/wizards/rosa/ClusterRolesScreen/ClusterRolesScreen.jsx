@@ -8,6 +8,7 @@ import {
   FormGroup,
   Grid,
   GridItem,
+  Spinner,
   Text,
   TextContent,
   TextVariants,
@@ -15,7 +16,6 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from '@patternfly/react-core';
-import { Spinner } from '@redhat-cloud-services/frontend-components/Spinner';
 
 import { trackEvents } from '~/common/analytics';
 import { useFormState } from '~/components/clusters/wizards/hooks';
@@ -24,15 +24,13 @@ import {
   getOperatorRolesCommand,
 } from '~/components/clusters/wizards/rosa/ClusterRolesScreen/clusterRolesHelper';
 import { FieldId } from '~/components/clusters/wizards/rosa/constants';
-import ReduxHiddenCheckbox from '~/components/common/FormikFormComponents/HiddenCheckbox';
 import useAnalytics from '~/hooks/useAnalytics';
-import { useFeatureGate } from '~/hooks/useFeatureGate';
-import { formatRegionalInstanceUrl } from '~/queries/helpers';
+import { MULTIREGION_PREVIEW_ENABLED } from '~/queries/featureGates/featureConstants';
+import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 import {
   refetchGetOCMRole,
   useFetchGetOCMRole,
 } from '~/queries/RosaWizardQueries/useFetchGetOCMRole';
-import { MULTIREGION_PREVIEW_ENABLED } from '~/redux/constants/featureConstants';
 
 import links from '../../../../../common/installLinks.mjs';
 import { required } from '../../../../../common/validators';
@@ -40,7 +38,7 @@ import ErrorBox from '../../../../common/ErrorBox';
 import ExternalLink from '../../../../common/ExternalLink';
 import InstructionCommand from '../../../../common/InstructionCommand';
 import PopoverHint from '../../../../common/PopoverHint';
-import RadioButtons from '../../../../common/ReduxFormComponents/RadioButtons';
+import RadioButtons from '../../../../common/ReduxFormComponents_deprecated/RadioButtons';
 import { BackToAssociateAwsAccountLink } from '../common/BackToAssociateAwsAccountLink';
 
 import CustomerOIDCConfiguration from './CustomerOIDCConfiguration';
@@ -77,7 +75,7 @@ const ClusterRolesScreen = () => {
   const [getOCMRoleErrorBox, setGetOCMRoleErrorBox] = useState(null);
   const track = useAnalytics();
 
-  const regionSearch = formatRegionalInstanceUrl(regionalInstance?.url);
+  const regionSearch = regionalInstance?.id;
 
   const {
     data: getOCMRoleData,
@@ -124,7 +122,6 @@ const ClusterRolesScreen = () => {
   useEffect(() => {
     // clearing the ocm_role_response results in ocm role being re-fetched
     // when navigating to this step (from Next or Back)
-    setFieldValue(FieldId.DetectedOcmRole, false);
     refetchGetOCMRole();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -140,8 +137,9 @@ const ClusterRolesScreen = () => {
     if (isGetOCMRolePending) {
       setGetOCMRoleErrorBox(null);
     } else if (isGetOCMRoleSuccess) {
-      setFieldValue(FieldId.RosaCreatorArn, getOCMRoleData.data?.arn);
-      setFieldValue(FieldId.DetectedOcmRole, true);
+      if (FieldId.RosaCreatorArn !== getOCMRoleData.data?.arn) {
+        setFieldValue(FieldId.RosaCreatorArn, getOCMRoleData.data?.arn);
+      }
       const isAdmin = getOCMRoleData.data?.isAdmin;
       setIsAutoModeAvailable(isAdmin);
       setGetOCMRoleErrorBox(null);
@@ -292,12 +290,11 @@ const ClusterRolesScreen = () => {
             </GridItem>
           </>
         )}
-        <ReduxHiddenCheckbox name="detected_ocm_role" />
         {getOCMRoleErrorBox && <GridItem>{getOCMRoleErrorBox}</GridItem>}
         {isGetOCMRolePending && (
           <GridItem>
             <div className="spinner-fit-container">
-              <Spinner />
+              <Spinner size="lg" aria-label="Loading..." />
             </div>
             <div className="spinner-loading-text pf-v5-u-ml-xl">Checking for admin OCM role...</div>
           </GridItem>

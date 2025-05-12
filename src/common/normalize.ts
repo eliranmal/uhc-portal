@@ -2,7 +2,12 @@ import type { AxiosResponse } from 'axios';
 import { Draft, produce } from 'immer';
 
 import type { Cluster as AICluster } from '@openshift-assisted/types/assisted-installer-service';
-import * as OCM from '@openshift-assisted/ui-lib/ocm';
+import {
+  getClusterMemoryAmount as getAIMemoryAmount,
+  getClustervCPUCount as getAIClusterCPUCount,
+  getMasterCount as getAICMasterCount,
+  getWorkerCount as getAICWorkerCount,
+} from '@openshift-assisted/ui-lib/ocm';
 
 import {
   type ClusterMetricsNodes,
@@ -10,7 +15,7 @@ import {
   type OneMetric,
   type QuotaCost,
   type Subscription,
-  SubscriptionCommonFields,
+  SubscriptionCommonFieldsStatus,
 } from '../types/accounts_mgmt.v1';
 import type { Cluster } from '../types/clusters_mgmt.v1';
 import type { FakeCluster } from '../types/types';
@@ -18,13 +23,6 @@ import type { FakeCluster } from '../types/types';
 import { isAISubscriptionWithoutMetrics } from './isAssistedInstallerCluster';
 import { clustersServiceProducts, normalizedProducts } from './subscriptionTypes';
 import { versionComparator } from './versionComparator';
-
-const {
-  getClustervCPUCount: getAIClusterCPUCount,
-  getClusterMemoryAmount: getAIMemoryAmount,
-  getMasterCount: getAICMasterCount,
-  getWorkerCount: getAICWorkerCount,
-} = OCM;
 
 /**
  * Erases the differences between clusters-service products and account-manager plans
@@ -37,22 +35,22 @@ const normalizeProductID = (id: string | undefined): string => {
   const map: { [key: string]: string } = {
     OCP: normalizedProducts.OCP,
     OSD: normalizedProducts.OSD,
-    OSDTRIAL: normalizedProducts.OSDTRIAL,
+    OSDTRIAL: normalizedProducts.OSDTrial,
     RHMI: normalizedProducts.RHMI,
     MOA: normalizedProducts.ROSA,
     ROSA: normalizedProducts.ROSA,
     ROSA_HYPERSHIFT: normalizedProducts.ROSA_HyperShift,
     MOA_HOSTEDCONTROLPLANE: normalizedProducts.ROSA_HyperShift,
     ARO: normalizedProducts.ARO,
-    OCP_ASSISTEDINSTALL: normalizedProducts.OCP_ASSISTED_INSTALL,
+    OCP_ASSISTEDINSTALL: normalizedProducts.OCP_AssistedInstall,
     RHACS: normalizedProducts.RHACS,
-    RHACSTRIAL: normalizedProducts.RHACSTRIAL,
+    RHACSTRIAL: normalizedProducts.RHACSTrial,
     RHOSR: normalizedProducts.RHOSR,
-    RHOSRTRIAL: normalizedProducts.RHOSRTRIAL,
+    RHOSRTRIAL: normalizedProducts.RHOSRTrial,
     RHOSAK: normalizedProducts.RHOSAK,
-    RHOSAKTRIAL: normalizedProducts.RHOSAKTRIAL,
+    RHOSAKTRIAL: normalizedProducts.RHOSAKTrial,
     RHOSE: normalizedProducts.RHOSE,
-    RHOSETRIAL: normalizedProducts.RHOSETRIAL,
+    RHOSETRIAL: normalizedProducts.RHOSETrial,
     RHOIC: normalizedProducts.RHOIC,
     ANY: normalizedProducts.ANY, // used by account-manager in quota_cost
   };
@@ -199,7 +197,17 @@ const normalizeCluster = <C extends Cluster>(cluster: C): C => {
 
   // make sure available_upgrades are sorted
   if (cluster.version && cluster.version.available_upgrades) {
-    result.version?.available_upgrades?.sort(versionComparator);
+    // There are rare situations where when a modal is opened on the cluster list and cluster details
+    // pages the sort command below throws an error
+    // the exact cause of this error is not known but this protects the UI from crashing
+    try {
+      result.version?.available_upgrades?.sort(versionComparator);
+    } catch (error) {
+      // code should continue with unsorted items
+
+      // eslint-disable-next-line no-console
+      console.error(error);
+    }
   }
 
   return result;
@@ -232,7 +240,7 @@ const fakeClusterFromSubscription = (subscription: Subscription): FakeCluster =>
     ccs: {
       // deprovisioned clusters do not have CCS info, so leaving it as 'undefined'
       enabled:
-        subscription.status !== SubscriptionCommonFields.status.DEPROVISIONED ? false : undefined,
+        subscription.status !== SubscriptionCommonFieldsStatus.Deprovisioned ? false : undefined,
     },
     metrics,
   };

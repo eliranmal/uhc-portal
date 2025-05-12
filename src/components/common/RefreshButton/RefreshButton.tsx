@@ -46,7 +46,9 @@ const RefreshBtn = ({
   useShortTimer,
 }: Props) => {
   const [shortTimerTries, setShortTimerTries] = React.useState(0);
-  const [interValTime, setInterValTime] = React.useState(0);
+  const [interValTime, setInterValTime] = React.useState(
+    useShortTimer ? shortTimerSeconds : longTimerSeconds,
+  );
 
   useInterval(() => {
     if (interValTime === shortTimerSeconds) {

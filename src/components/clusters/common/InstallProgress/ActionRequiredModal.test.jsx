@@ -1,10 +1,11 @@
 import React from 'react';
 
+import { MULTIREGION_PREVIEW_ENABLED } from '~/queries/featureGates/featureConstants';
 import accountsService from '~/services/accountsService';
 import clusterService from '~/services/clusterService';
-import { checkAccessibility, render, screen } from '~/testUtils';
+import { checkAccessibility, mockUseFeatureGate, render, screen } from '~/testUtils';
 
-import fixtures from '../../ClusterDetails/__tests__/ClusterDetails.fixtures';
+import fixtures from '../../ClusterDetailsMultiRegion/__tests__/ClusterDetails.fixtures';
 
 import ActionRequiredModal from './ActionRequiredModal';
 
@@ -61,5 +62,39 @@ describe('<ActionRequiredModal />', () => {
     expect(await screen.findByText('AWS CLI')).toBeInTheDocument();
     expect(await screen.findByRole('tabpanel')).toBeInTheDocument();
     await checkAccessibility(container);
+  });
+
+  it('shows rosa login command when isMultiRegionEnabled', async () => {
+    mockUseFeatureGate([[MULTIREGION_PREVIEW_ENABLED, true]]);
+
+    const newProps = {
+      ...defaultProps,
+      cluster: fixtures.ROSAHypershiftWaitingClusterDetails.cluster,
+      regionalInstance: fixtures.regionalInstance,
+    };
+
+    const { container } = render(<ActionRequiredModal {...newProps} />);
+
+    await checkAccessibility(container);
+    expect(screen.getByLabelText('Copyable ROSA region login')).toBeInTheDocument();
+    expect(screen.getByLabelText('Copyable ROSA create operator-roles')).toBeInTheDocument();
+    expect(screen.getByLabelText('Copyable ROSA OIDC provider')).toBeInTheDocument();
+  });
+
+  it('does not show rosa login command when isMultiRegionEnabled is false', async () => {
+    mockUseFeatureGate([[MULTIREGION_PREVIEW_ENABLED, false]]);
+
+    const newProps = {
+      ...defaultProps,
+      cluster: fixtures.ROSAHypershiftWaitingClusterDetails.cluster,
+      regionalInstance: fixtures.regionalInstance,
+    };
+
+    const { container } = render(<ActionRequiredModal {...newProps} />);
+
+    await checkAccessibility(container);
+    expect(screen.queryByLabelText('Copyable ROSA region login')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Copyable ROSA create operator-roles')).toBeInTheDocument();
+    expect(screen.getByLabelText('Copyable ROSA OIDC provider')).toBeInTheDocument();
   });
 });

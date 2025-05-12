@@ -1,6 +1,5 @@
 import React from 'react';
 import * as reactRedux from 'react-redux';
-import { reduxForm } from 'redux-form';
 
 import { useGlobalState } from '~/redux/hooks';
 import { checkAccessibility, render, screen } from '~/testUtils';
@@ -24,10 +23,6 @@ jest.mock('~/redux/hooks', () => ({
 jest.mock('../EditSubscriptionSettings');
 
 describe('<RegisterCluster />', () => {
-  const ConnectedRegisterCluster = reduxForm({
-    form: 'RegisterCluster',
-  })(RegisterCluster);
-
   const useDispatchMock = jest.spyOn(reactRedux, 'useDispatch');
   const mockedDispatch = jest.fn();
   useDispatchMock.mockReturnValue(mockedDispatch);
@@ -50,7 +45,8 @@ describe('<RegisterCluster />', () => {
     });
 
     // Act
-    const { container } = render(<ConnectedRegisterCluster />);
+    // @ts-ignore
+    const { container } = render(<RegisterCluster />);
 
     // Assert
     await checkAccessibility(container);
@@ -66,10 +62,12 @@ describe('<RegisterCluster />', () => {
     });
 
     // Act
-    render(<ConnectedRegisterCluster />);
+    // @ts-ignore
+    render(<RegisterCluster />);
 
     // Assert
-    expect(screen.getByRole('status')).toHaveTextContent('Loading...');
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByLabelText('Loading...')).toBeInTheDocument();
     expect(screen.queryByLabelText('Cluster ID', { exact: false })).not.toBeInTheDocument();
     expect(screen.queryByText('Redirected to ', { exact: false })).not.toBeInTheDocument();
   });
@@ -85,7 +83,8 @@ describe('<RegisterCluster />', () => {
     });
 
     // Act
-    render(<ConnectedRegisterCluster />);
+    // @ts-ignore
+    render(<RegisterCluster />);
 
     // Assert
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
@@ -106,7 +105,8 @@ describe('<RegisterCluster />', () => {
     });
 
     // Act
-    render(<ConnectedRegisterCluster />);
+    // @ts-ignore
+    render(<RegisterCluster />);
 
     // Assert
     expect(

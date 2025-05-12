@@ -1,5 +1,5 @@
 import React from 'react';
-import { WrappedFieldInputProps } from 'redux-form';
+import { FieldInputProps } from 'formik';
 
 import {
   Button,
@@ -11,6 +11,7 @@ import {
 } from '@patternfly/react-core';
 
 import { humanizeValueWithoutUnit } from '~/common/units';
+import { useFormState } from '~/components/clusters/wizards/hooks';
 import { FormGroupHelperText } from '~/components/common/FormGroupHelperText';
 
 import './CAUpload.scss';
@@ -23,7 +24,8 @@ export type CAUploadProps = {
   label: string;
   helpText?: string;
   isDisabled?: boolean;
-  input: WrappedFieldInputProps;
+  input: FieldInputProps<string>;
+  fieldName: string;
   isRequired?: boolean;
   certValue?: string;
   maxFileSize?: number;
@@ -37,9 +39,10 @@ const CAUpload = ({
   isRequired = false,
   certValue,
   maxFileSize = MAX_FILE_SIZE,
+  fieldName,
 }: CAUploadProps) => {
+  const { setFieldValue } = useFormState();
   const baseButtonClass = 'pf-v5-c-button pf-m-tertiary co-btn-file';
-
   const [fileName, setFileName] = React.useState('');
   const [errorMessage, setErrorMessage] = React.useState('');
   const [certValueState, setCertValueState] = React.useState<string | ArrayBuffer | null>('');
@@ -49,10 +52,12 @@ const CAUpload = ({
 
   React.useEffect(() => {
     if (certValue && certValue !== '') {
+      setFieldValue(fieldName, certValue);
       setCertValueState(certValue);
       setShowCAText(true);
     }
-  }, [certValue]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [certValue, fieldName, certValue]);
 
   React.useEffect(() => {
     setButtonClass(isDisabled ? `${baseButtonClass} pf-m-disabled` : baseButtonClass);
@@ -65,6 +70,7 @@ const CAUpload = ({
   const onClearClick = () => {
     setFileName('');
     setCertValueState('');
+    setFieldValue(fieldName, '');
   };
 
   const fileUpload = (event: React.FormEvent<HTMLInputElement>) => {
@@ -133,7 +139,9 @@ const CAUpload = ({
             />
             Browse&hellip;
           </span>
-          <Button onClick={onClearClick}>Clear</Button>
+          <Button onClick={onClearClick} className="pf-v5-u-ml-md">
+            Clear
+          </Button>
         </InputGroupItem>
       </InputGroup>
 

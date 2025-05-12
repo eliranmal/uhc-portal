@@ -1,4 +1,4 @@
-import { CloudVPC, Subnetwork } from '~/types/clusters_mgmt.v1';
+import { CloudVpc, Subnetwork } from '~/types/clusters_mgmt.v1';
 
 export type SubnetPrivacy = 'private' | 'public';
 
@@ -22,7 +22,7 @@ const isSubnetMatchingPrivacy = (subnet: Subnetwork, privacy?: SubnetPrivacy) =>
  */
 const getMatchingAvailabilityZones = (
   region: string,
-  vpc: CloudVPC,
+  vpc: CloudVpc,
   privacyList: SubnetPrivacy[],
 ) =>
   ['a', 'b', 'c', 'd', 'e', 'f']
@@ -45,7 +45,7 @@ const getMatchingAvailabilityZones = (
  * @returns array of unique availability zones belonging to the specified private subnets
  */
 const getSelectedAvailabilityZones = (
-  vpc: CloudVPC,
+  vpc: CloudVpc,
   formSubnets: { privateSubnetId: string }[],
 ) => {
   const azs: string[] = [];
@@ -65,7 +65,7 @@ const getSelectedAvailabilityZones = (
  * @param vpc Cloud VPC
  * @param usePrivateLink if the cluster has private visibility
  */
-const vpcHasRequiredSubnets = (vpc: CloudVPC, usePrivateLink?: boolean) => {
+const vpcHasRequiredSubnets = (vpc: CloudVpc, usePrivateLink?: boolean) => {
   const subnets = vpc.aws_subnets || [];
   const hasPrivateSubnets = subnets.some((subnet) => isSubnetMatchingPrivacy(subnet, 'private'));
   if (!hasPrivateSubnets) {
@@ -82,9 +82,9 @@ const vpcHasRequiredSubnets = (vpc: CloudVPC, usePrivateLink?: boolean) => {
  * Returns only the VPCs that are not managed by Red Hat
 
  * @param vpcs list of VPC items
- * @returns CloudVPC[] copy of the VPC list
+ * @returns CloudVpc[] copy of the VPC list
  */
-const filterOutRedHatManagedVPCs = (vpcs: CloudVPC[]) =>
+const filterOutRedHatManagedVPCs = (vpcs: CloudVpc[]) =>
   vpcs.filter((vpcItem) => !vpcItem.red_hat_managed);
 
 /**

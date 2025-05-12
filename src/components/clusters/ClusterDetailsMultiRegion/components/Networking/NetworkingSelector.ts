@@ -1,7 +1,10 @@
 import { arrayToString } from '~/common/helpers';
-import { Ingress, LoadBalancerFlavor } from '~/types/clusters_mgmt.v1';
-import { NamespaceOwnershipPolicy } from '~/types/clusters_mgmt.v1/models/NamespaceOwnershipPolicy';
-import { WildcardPolicy } from '~/types/clusters_mgmt.v1/models/WildcardPolicy';
+import { Ingress } from '~/types/clusters_mgmt.v1';
+import {
+  LoadBalancerFlavor,
+  NamespaceOwnershipPolicy,
+  WildcardPolicy,
+} from '~/types/clusters_mgmt.v1/enums';
 
 export const routeSelectorPairsAsStrings = (routeSelectors = {}) =>
   Object.entries(routeSelectors).map((entry) => entry.join('=')) || [];
@@ -41,13 +44,13 @@ const NetworkingSelector = (clusterRouters: Ingress[]): ClusterRouters => {
       isDefault: !!r.default,
       isPrivate: r.listening === 'internal',
       address: r.dns_name,
-      loadBalancer: r.load_balancer_type,
+      loadBalancer: r.load_balancer_type as LoadBalancerFlavor,
       routeSelectors: r.route_selectors,
       excludedNamespaces: r.excluded_namespaces,
-      // Default is NamespaceOwnershipPolicy.STRICT if route_namespace_ownership_policy not set
+      // Default is NamespaceOwnershipPolicy.Strict if route_namespace_ownership_policy not set
       isNamespaceOwnershipPolicyStrict:
-        r.route_namespace_ownership_policy !== NamespaceOwnershipPolicy.INTER_NAMESPACE_ALLOWED,
-      isWildcardPolicyAllowed: r.route_wildcard_policy === WildcardPolicy.WILDCARDS_ALLOWED,
+        r.route_namespace_ownership_policy !== NamespaceOwnershipPolicy.InterNamespaceAllowed,
+      isWildcardPolicyAllowed: r.route_wildcard_policy === WildcardPolicy.WildcardsAllowed,
       tlsSecretRef: r.cluster_routes_tls_secret_ref,
       hostname: r.cluster_routes_hostname,
     };

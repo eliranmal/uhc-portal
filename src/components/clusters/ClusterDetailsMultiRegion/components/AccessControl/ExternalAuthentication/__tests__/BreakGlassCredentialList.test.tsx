@@ -45,7 +45,12 @@ describe('<BreakGlassCredentialList />', () => {
         error: undefined,
       });
 
-      withState(initialState, true).render(<BreakGlassCredentialList />);
+      withState(initialState, true).render(
+        <BreakGlassCredentialList
+          clusterID="myCluster"
+          subscriptionID="1msoogsgTLQ4PePjrTOt3UqvMzX"
+        />,
+      );
 
       expect(useCanUpdateBreakGlassCredentialsMocked).toHaveBeenCalledWith(
         initialState.clusters.details.cluster.subscription.id,
@@ -69,7 +74,12 @@ describe('<BreakGlassCredentialList />', () => {
       });
       apiRequestMock.get.mockResolvedValue(BreakGlassCreds);
 
-      withState(initialState, true).render(<BreakGlassCredentialList />);
+      withState(initialState, true).render(
+        <BreakGlassCredentialList
+          clusterID="myCluster"
+          subscriptionID="1msoogsgTLQ4PePjrTOt3UqvMzX"
+        />,
+      );
 
       expect(await screen.findByRole('button', { name: /New Credentials/i })).toHaveAttribute(
         'aria-disabled',
@@ -90,7 +100,12 @@ describe('<BreakGlassCredentialList />', () => {
       });
       apiRequestMock.get.mockResolvedValue(BreakGlassCreds);
 
-      withState(initialState, true).render(<BreakGlassCredentialList />);
+      withState(initialState, true).render(
+        <BreakGlassCredentialList
+          clusterID="myCluster"
+          subscriptionID="1msoogsgTLQ4PePjrTOt3UqvMzX"
+        />,
+      );
 
       expect(await screen.findByText('ID')).toBeInTheDocument();
       expect(await screen.findByText('Username')).toBeInTheDocument();

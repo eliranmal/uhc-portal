@@ -10,6 +10,10 @@ const mockClearFiltersAndFlags = jest.fn();
 const mockHistoryPush = jest.fn();
 
 describe('<ClusterLogsToolbar />', () => {
+  const today = new Date();
+  const tenYearsFromNow = new Date(today.setFullYear(today.getFullYear() + 10))
+    .toISOString()
+    .split('T')[0];
   const defaultProps = {
     viewOptions: {},
     history: {
@@ -64,7 +68,7 @@ describe('<ClusterLogsToolbar />', () => {
 
   it.each([
     ['2021-01-01', '2024-01-12', 'The start date cannot be before the cluster creation date.'],
-    ['2024-01-10', '2025-01-10', 'The end date cannot be in the future.'],
+    ['2024-01-10', tenYearsFromNow, 'The end date cannot be in the future.'],
     ['2024-01-10', '2024-01-04', 'The end date cannot be before the start date.'],
   ])(
     'validates min/max and date range for datepicker',

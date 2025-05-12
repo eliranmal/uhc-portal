@@ -10,10 +10,9 @@ import { useFormState } from '~/components/clusters/wizards/hooks';
 import { FieldId, StepId } from '~/components/clusters/wizards/osd/constants';
 import ExternalLink from '~/components/common/ExternalLink';
 import PopoverHint from '~/components/common/PopoverHint';
-import { useFeatureGate } from '~/hooks/useFeatureGate';
-import { OSD_GCP_SHARED_VPC_FEATURE } from '~/redux/constants/featureConstants';
 
 import { CheckboxField, TextInputField } from '../../../form';
+import { ClusterPrivacyType } from '../constants';
 
 import { GcpVpcNameSelectField } from './GcpVpcNameSelectField';
 import { GcpVpcSubnetSelectField } from './GcpVpcSubnetSelectField';
@@ -23,14 +22,13 @@ export const GcpVpcSettings = () => {
     values: {
       [FieldId.ClusterVersion]: clusterVersion,
       [FieldId.InstallToSharedVpc]: installToSharedVpc,
+      [FieldId.PrivateServiceConnect]: privateServiceConnect,
+      [FieldId.ClusterPrivacy]: clusterPrivacy,
     },
     getFieldProps,
     getFieldMeta,
     setFieldValue,
   } = useFormState();
-
-  // is vpc permitted
-  const isVPCFeaturePermitted = useFeatureGate(OSD_GCP_SHARED_VPC_FEATURE);
 
   const { goToStepById } = useWizardContext();
 
@@ -82,31 +80,30 @@ export const GcpVpcSettings = () => {
     return null;
   }, [clusterVersion?.raw_id, goToStepById, installToSharedVpc]);
 
+  const showPSCSubnet = privateServiceConnect && clusterPrivacy === ClusterPrivacyType.Internal;
   return (
     <>
-      {isVPCFeaturePermitted && (
-        <GridItem span={8}>
-          <Title headingLevel="h4" size="md">
-            GCP shared VPC
-          </Title>
-          <div className="pf-v5-u-mt-md  pf-v5-u-mb-lg">
-            <CheckboxField
-              name={FieldId.InstallToSharedVpc}
-              label="Install into GCP Shared VPC"
-              tooltip={
-                <>
-                  <p>Install into a VPC shared by another account in your GCP organization.</p>
-                  <ExternalLink href={links.INSTALL_GCP_VPC}>
-                    Learn more about GCP shared VPC.
-                  </ExternalLink>
-                </>
-              }
-              input={{ onChange: onInstallIntoSharedVPCchange }}
-            />
-            {hostProjectId}
-          </div>
-        </GridItem>
-      )}
+      <GridItem span={8}>
+        <Title headingLevel="h4" size="md">
+          GCP shared VPC
+        </Title>
+        <div className="pf-v5-u-mt-md  pf-v5-u-mb-lg">
+          <CheckboxField
+            name={FieldId.InstallToSharedVpc}
+            label="Install into GCP Shared VPC"
+            tooltip={
+              <>
+                <p>Install into a VPC shared by another account in your GCP organization.</p>
+                <ExternalLink href={links.INSTALL_GCP_VPC}>
+                  Learn more about GCP shared VPC.
+                </ExternalLink>
+              </>
+            }
+            input={{ onChange: onInstallIntoSharedVPCchange }}
+          />
+          {hostProjectId}
+        </div>
+      </GridItem>
 
       <GridItem>
         <Title headingLevel="h4" size="md">
@@ -208,6 +205,31 @@ export const GcpVpcSettings = () => {
           />
         )}
       </GridItem>
+      {showPSCSubnet ? (
+        <GridItem md={3}>
+          {installToSharedVpc ? (
+            <TextInputField
+              name={FieldId.PSCSubnet}
+              label="Private Service Connect subnet name"
+              validate={validateGCPSubnet}
+            />
+          ) : (
+            <Field
+              component={GcpVpcSubnetSelectField}
+              name={FieldId.PSCSubnet}
+              validate={required}
+              label="Private Service Connect subnet name"
+              placeholder="Select subnet name"
+              emptyPlaceholder="No subnet names"
+              input={{
+                ...getFieldProps(FieldId.PSCSubnet),
+                onChange: (value: string) => setFieldValue(FieldId.PSCSubnet, value),
+              }}
+              meta={getFieldMeta(FieldId.PSCSubnet)}
+            />
+          )}
+        </GridItem>
+      ) : null}
 
       {installToSharedVpc && (
         <GridItem span={9}>
@@ -215,7 +237,7 @@ export const GcpVpcSettings = () => {
             <Alert
               variant="info"
               isInline
-              title="For successful installation, be sure your Host project ID, Existing VPC name, Control plane subnet name, and Compute subnet name are correct."
+              title={`For successful installation, be sure your Host project ID, Existing VPC name, Control plane subnet name, ${showPSCSubnet ? 'Compute subnet name, and Private Service Connect subnet name' : 'and Compute subnet name'} are correct.`}
             />
           </div>
         </GridItem>

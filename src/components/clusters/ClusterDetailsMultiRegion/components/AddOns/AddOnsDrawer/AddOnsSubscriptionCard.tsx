@@ -1,20 +1,24 @@
 import * as React from 'react';
 
-import { Card, CardBody, CardFooter, CardTitle } from '@patternfly/react-core';
 import {
-  Select as SelectDeprecated,
-  SelectOption as SelectOptionDeprecated,
-} from '@patternfly/react-core/deprecated';
+  Card,
+  CardBody,
+  CardFooter,
+  CardTitle,
+  MenuToggle,
+  MenuToggleElement,
+  Select,
+  SelectList,
+  SelectOption,
+} from '@patternfly/react-core';
 
 import { BillingQuotaCloudAccounts } from '~/components/clusters/common/quotaModel';
 import ExternalLink from '~/components/common/ExternalLink';
+import { SubscriptionCommonFieldsCluster_billing_model as SubscriptionCommonFieldsClusterBillingModel } from '~/types/accounts_mgmt.v1';
 
-import {
-  CloudProviders,
-  SetSubscriptionModel,
-  SubscriptionModel,
-  SubscriptionModels,
-} from './AddOnsTypes';
+import { CloudProviders, SetSubscriptionModel, SubscriptionModels } from './AddOnsTypes';
+
+import './AddOnsSubscriptionCard.scss';
 
 const SELECT_ACCOUNT_PLACEHOLDER = 'Select an account';
 const marketplaceLinks: {
@@ -48,7 +52,7 @@ const AddOnsSubscriptionCard = ({
   isReady: boolean;
   cloudAccounts?: BillingQuotaCloudAccounts;
   installedAddOn: any;
-  billingModel: SubscriptionModel;
+  billingModel: SubscriptionCommonFieldsClusterBillingModel;
   name: string;
   cloudProvider: CloudProviders;
 }) => {
@@ -72,6 +76,25 @@ const AddOnsSubscriptionCard = ({
       setAccount('');
     }
   }, [activeSubscription?.billingModel]);
+
+  const onToggle = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const toggle = (toggleRef: React.Ref<MenuToggleElement>) => (
+    <MenuToggle
+      ref={toggleRef}
+      onClick={onToggle}
+      isExpanded={isOpen}
+      isDisabled={!isReady}
+      isFullWidth
+      aria-label="account menu"
+      className="account-menu-toggle"
+    >
+      {account || SELECT_ACCOUNT_PLACEHOLDER}
+    </MenuToggle>
+  );
+
   return (
     <Card
       id={billingModel}
@@ -105,12 +128,12 @@ const AddOnsSubscriptionCard = ({
         </CardFooter>
       ) : (
         <CardFooter>
-          <SelectDeprecated
+          <Select
             isOpen={isOpen}
-            selections={account}
-            onToggle={() => setIsOpen(!isOpen)}
+            selected={account}
+            toggle={toggle}
             onSelect={(event, selection) => {
-              event.stopPropagation();
+              event?.stopPropagation();
               setSubscriptionModel({
                 ...subscriptionModels,
                 [activeCardId]: {
@@ -122,16 +145,17 @@ const AddOnsSubscriptionCard = ({
               setAccount(selection as string);
               setIsOpen(false);
             }}
-            placeholderText={SELECT_ACCOUNT_PLACEHOLDER}
-            isDisabled={!isReady}
+            onOpenChange={(isOpen) => setIsOpen(isOpen)}
           >
-            {cloudAccounts &&
-              cloudAccounts[cloudProvider].map(({ cloud_account_id: accountId }) => (
-                <SelectOptionDeprecated key={accountId} value={accountId}>
-                  {accountId}
-                </SelectOptionDeprecated>
-              ))}
-          </SelectDeprecated>
+            <SelectList>
+              {cloudAccounts &&
+                cloudAccounts[cloudProvider].map(({ cloud_account_id: accountId }) => (
+                  <SelectOption key={accountId} value={accountId}>
+                    {accountId}
+                  </SelectOption>
+                ))}
+            </SelectList>
+          </Select>
         </CardFooter>
       )}
     </Card>

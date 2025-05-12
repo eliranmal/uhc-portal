@@ -25,6 +25,13 @@ backend-config.yml
 .yalc
 yalc.lock
 
-candidateBranch.txt
-masterBranch.txt
-output.txt
+
+*.patch
+
+*storybook.log
+
+openapi/*.json
+
+.env*
+
+/unitTestCoverage

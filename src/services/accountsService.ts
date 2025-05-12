@@ -3,6 +3,9 @@ import apiRequest from '~/services/apiRequest';
 import type {
   Account,
   AccountList,
+  ClusterTransfer,
+  ClusterTransferList,
+  ClusterTransferPatchRequest,
   Label,
   LabelList,
   Organization,
@@ -16,10 +19,10 @@ import type {
   SupportCasesCreatedResponse,
 } from '../types/accounts_mgmt.v1';
 import type {
-  AWSSTSAccountRole,
-  AWSSTSPolicy,
-  AWSSTSRole,
-  STSCredentialRequest,
+  AwsstsAccountRole,
+  AwsstsPolicy,
+  AwsstsRole,
+  StsCredentialRequest,
 } from '../types/clusters_mgmt.v1';
 
 const getCurrentAccount = () => apiRequest.get<Account>('/api/accounts_mgmt/v1/current_account');
@@ -75,6 +78,17 @@ const fetchSubscriptionByExternalId = (clusterExternalID: string) =>
   apiRequest.get<SubscriptionList>('/api/accounts_mgmt/v1/subscriptions', {
     params: {
       search: `external_cluster_id='${clusterExternalID}'`,
+      fetchAccounts: true,
+      fetchCpuAndSocket: true,
+      fetchCapabilities: true,
+      fetchMetrics: true,
+    },
+  });
+
+const fetchSubscriptionByClusterId = (clusterID: string) =>
+  apiRequest.get<SubscriptionList>('/api/accounts_mgmt/v1/subscriptions', {
+    params: {
+      search: `cluster_id='${clusterID}'`,
       fetchAccounts: true,
       fetchCpuAndSocket: true,
       fetchCapabilities: true,
@@ -183,12 +197,12 @@ const getOrganizationLabels = (organizationID: string) =>
   apiRequest.get<LabelList>(`/api/accounts_mgmt/v1/organizations/${organizationID}/labels`);
 
 const getAWSAccountARNs = (awsAccountID: string) =>
-  apiRequest.post<AWSSTSAccountRole>('/api/clusters_mgmt/v1/aws_inquiries/sts_account_roles', {
+  apiRequest.post<AwsstsAccountRole>('/api/clusters_mgmt/v1/aws_inquiries/sts_account_roles', {
     account_id: awsAccountID,
   });
 
 const getOCMRole = (awsAccountID: string) =>
-  apiRequest.post<AWSSTSRole>('/api/clusters_mgmt/v1/aws_inquiries/sts_ocm_role', {
+  apiRequest.post<AwsstsRole>('/api/clusters_mgmt/v1/aws_inquiries/sts_ocm_role', {
     account_id: awsAccountID,
   });
 
@@ -200,7 +214,7 @@ const getPolicies = () =>
     /**
      * Retrieved list of policies.
      */
-    items?: Array<AWSSTSPolicy>;
+    items?: Array<AwsstsPolicy>;
     /**
      * Index of the requested page, where one corresponds to the first page.
      */
@@ -221,7 +235,7 @@ const getCredentialRequests = () =>
     /**
      * Retrieved list of CredRequest.
      */
-    items?: Array<STSCredentialRequest>;
+    items?: Array<StsCredentialRequest>;
     /**
      * Index of the requested page, where one corresponds to the first page.
      */
@@ -236,6 +250,46 @@ const getCredentialRequests = () =>
      */
     total?: number;
   }>('/api/clusters_mgmt/v1/aws_inquiries/sts_credential_requests');
+
+const getRegionalInstances = () => apiRequest.get(`/api/accounts_mgmt/v1/regions`);
+
+const createClusterTransfer = (
+  clusterID: string,
+  currentOwner: string,
+  recipient: string,
+  recipientOrgId: string | null,
+  recipientAccountId: string | null,
+) =>
+  apiRequest({
+    method: 'post',
+    data: {
+      cluster_uuid: clusterID,
+      owner: currentOwner,
+      recipient,
+      recipient_external_org_id: recipientOrgId,
+      recipient_ebs_account_id: recipientAccountId,
+    },
+    url: '/api/accounts_mgmt/v1/cluster_transfers',
+  });
+
+const getClusterTransfers = () =>
+  apiRequest.get<ClusterTransferList>('/api/accounts_mgmt/v1/cluster_transfers');
+
+const getClusterTransferByExternalID = (clusterExternalID: string) =>
+  apiRequest.get<ClusterTransferList>('/api/accounts_mgmt/v1/cluster_transfers', {
+    params: {
+      search: `cluster_uuid='${clusterExternalID}'`,
+    },
+  });
+const searchClusterTransfers = (filter: string) =>
+  apiRequest.get<ClusterTransferList>('/api/accounts_mgmt/v1/cluster_transfers', {
+    params: {
+      search: filter,
+      orderBy: 'updated_at desc',
+    },
+  });
+const editClusterTransfer = (transferID: string, data: ClusterTransferPatchRequest) =>
+  apiRequest.patch<ClusterTransfer>(`/api/accounts_mgmt/v1/cluster_transfers/${transferID}`, data);
 
 const accountsService = {
   getCurrentAccount,
@@ -263,6 +317,13 @@ const accountsService = {
   getPolicies,
   getCredentialRequests,
   searchSubscriptions,
+  getRegionalInstances,
+  fetchSubscriptionByClusterId,
+  createClusterTransfer,
+  getClusterTransfers,
+  getClusterTransferByExternalID,
+  searchClusterTransfers,
+  editClusterTransfer,
 };
 
 export default accountsService;

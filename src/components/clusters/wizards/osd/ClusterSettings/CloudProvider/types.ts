@@ -1,4 +1,4 @@
-import { WifConfig } from '~/components/clusters/wizards/osd/ClusterSettings/CloudProvider/tempWifTypes/WifConfig';
+import { WifConfig } from '~/types/clusters_mgmt.v1';
 
 export enum CloudProviderType {
   Aws = 'aws',

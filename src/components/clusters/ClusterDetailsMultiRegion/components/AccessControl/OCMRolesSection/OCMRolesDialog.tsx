@@ -1,25 +1,27 @@
 import React, { useEffect, useState } from 'react';
+import { Formik } from 'formik';
 import { useDispatch } from 'react-redux';
 
 import {
   Form,
   FormGroup,
+  MenuToggle,
+  MenuToggleElement,
+  Select,
+  SelectList,
+  SelectOption,
   Text,
   TextContent,
   TextInput,
   TextVariants,
 } from '@patternfly/react-core';
-import {
-  Select as SelectDeprecated,
-  SelectOption as SelectOptionDeprecated,
-} from '@patternfly/react-core/deprecated';
 
 import { FormGroupHelperText } from '~/components/common/FormGroupHelperText';
 import shouldShowModal from '~/components/common/Modal/ModalSelectors';
+import { MutationFormattedErrorType } from '~/queries/types';
 import { useGlobalState } from '~/redux/hooks';
 
 import { ocmRoles } from '../../../../../../common/subscriptionTypes';
-import OCMRolesActions from '../../../../../../redux/actions/OCMRolesActions';
 import Modal from '../../../../../common/Modal/Modal';
 import { closeModal } from '../../../../../common/Modal/ModalActions';
 import modals from '../../../../../common/Modal/modals';
@@ -27,21 +29,36 @@ import PopoverHint from '../../../../../common/PopoverHint';
 
 import { OCMRolesRow } from './OCMRolesRow';
 
+import './OCMRolesDialog.scss';
+
 export type OCMRolesDialogProps = {
   onSubmit: (row: OCMRolesRow, username: string, roleID: string) => void;
   row: OCMRolesRow;
   productId?: string;
+  isGrantOcmRolePending: boolean;
+  isGrantOcmRoleError: boolean;
+  isGrantOcmRoleSuccess: boolean;
+  grantOcmRoleError: MutationFormattedErrorType | null;
+  resetGrantOcmRoleMutation: () => void;
 };
 
-function OCMRolesDialog({ onSubmit, row, productId }: OCMRolesDialogProps) {
-  const [username, setUsername] = useState<string>();
+function OCMRolesDialog({
+  onSubmit,
+  row,
+  productId,
+  isGrantOcmRolePending,
+  isGrantOcmRoleError,
+  isGrantOcmRoleSuccess,
+  grantOcmRoleError,
+  resetGrantOcmRoleMutation,
+}: OCMRolesDialogProps) {
+  const [username, setUsername] = useState<string>(row.usernameValue || '');
   const [usernameValidationMsg, setUsernameValidationMsg] = useState('');
   const [APIErrorMsg, setAPIErrorMsg] = useState('');
-  const [roleID, setRoleID] = useState<string>('');
+  const [roleID, setRoleID] = useState<string>(ocmRoles.CLUSTER_EDITOR.id);
   const [isPrimaryDisabled, setIsPrimaryDisabled] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const isOpen = useGlobalState((state) => shouldShowModal(state, modals.OCM_ROLES));
-  const { grantOCMRoleResponse } = useGlobalState((state) => state.ocmRoles);
   const dispatch = useDispatch();
 
   // when it's opened reset username and roleID
@@ -60,28 +77,29 @@ function OCMRolesDialog({ onSubmit, row, productId }: OCMRolesDialogProps) {
 
   const handleClose = () => {
     dispatch(closeModal());
-    dispatch(OCMRolesActions.clearGrantOCMRoleResponse());
+    setIsDropdownOpen(false);
+    setUsernameValidationMsg('');
   };
 
   // close the dialog if submit is successful.
   // otherwise display the error.
   useEffect(() => {
-    if (grantOCMRoleResponse.pending) {
+    if (isGrantOcmRolePending) {
       setAPIErrorMsg('');
       setIsPrimaryDisabled(true);
-    } else if (grantOCMRoleResponse.fulfilled) {
+    } else if (isGrantOcmRoleSuccess) {
       handleClose();
-    } else if (grantOCMRoleResponse.error) {
-      if (grantOCMRoleResponse.errorCode === 404) {
+    } else if (isGrantOcmRoleError && grantOcmRoleError) {
+      if (grantOcmRoleError.error.errorCode === 404) {
         setAPIErrorMsg('This Red Hat login could not be found.');
       } else if (
-        grantOCMRoleResponse.errorCode === 400 &&
-        grantOCMRoleResponse.errorMessage &&
-        grantOCMRoleResponse.errorMessage.toString().includes('belong to different organizations')
+        grantOcmRoleError.error.errorCode === 400 &&
+        grantOcmRoleError.error.reason &&
+        grantOcmRoleError.error.reason.toString().includes('belong to different organizations')
       ) {
         setAPIErrorMsg('This Red Hat login is not part of your organization.');
       } else {
-        const errMsg = grantOCMRoleResponse.errorMessage?.toString() || 'Unknown Error';
+        const errMsg = grantOcmRoleError.error.reason?.toString() || 'Unknown Error';
         const newAPIErrorMsg = errMsg.split(/\r?\n/).pop();
         // use the shorten message if it is in the form "ACCT-MGMT-XX:\nXXX"
         setAPIErrorMsg(
@@ -91,7 +109,7 @@ function OCMRolesDialog({ onSubmit, row, productId }: OCMRolesDialogProps) {
       setIsPrimaryDisabled(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [grantOCMRoleResponse]);
+  }, [isGrantOcmRolePending, isGrantOcmRoleSuccess, isGrantOcmRoleError, grantOcmRoleError]);
 
   if (!isOpen) {
     return null;
@@ -115,10 +133,15 @@ function OCMRolesDialog({ onSubmit, row, productId }: OCMRolesDialogProps) {
     validateUsername(usernameVal);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = (username: string, role: string) => {
     if (validateUsername(username)) {
       onSubmit(row, username, roleID);
+      setIsDropdownOpen(false);
     }
+  };
+
+  const onToggle = () => {
+    setIsDropdownOpen(!isDropdownOpen);
   };
 
   // TODO OCM RBAC phase 2: add the "learn more" link of links.OCM_DOCS_ROLES_AND_ACCESS
@@ -133,87 +156,119 @@ function OCMRolesDialog({ onSubmit, row, productId }: OCMRolesDialogProps) {
     return !ocmRole.excludeProductIds.some((excludedId) => excludedId === productId);
   });
 
-  return (
-    <Modal
-      title={title}
-      onClose={handleClose}
-      primaryText={btnText}
-      secondaryText="Cancel"
-      onPrimaryClick={handleSubmit}
-      onSecondaryClick={handleClose}
-      isPrimaryDisabled={isPrimaryDisabled}
-      id="ocm-roles-access-dialog"
+  const toggle = (toggleRef: React.Ref<MenuToggleElement>) => (
+    <MenuToggle
+      ref={toggleRef}
+      onClick={onToggle}
+      isExpanded={isDropdownOpen}
+      isFullWidth
+      aria-label="roles menu"
+      className="roles-select-menu-toggle"
     >
-      <p className="pf-v5-u-mb-xl">
-        Allow users in your organization to edit or view clusters. These permissions only apply to
-        cluster management in OpenShift Cluster Manager.
-      </p>
-      <Form
-        className="control-form-cursor"
-        onSubmit={(e) => {
-          handleSubmit();
-          e.preventDefault();
-        }}
-      >
-        <FormGroup
-          label={
-            <>
-              <span>Red Hat login</span>
-              <PopoverHint
-                id="ocm-roles-section-username-tooltip"
-                hint={
-                  <TextContent>
-                    <Text component={TextVariants.p}>
-                      Your Red Hat login is the username you use to access your Red Hat account.
-                    </Text>
-                  </TextContent>
-                }
-                iconClassName="text-input-tootip-icon"
-                hasAutoWidth
-                maxWidth="20.0rem"
-              />
-            </>
-          }
-          isRequired
-          fieldId="username"
-        >
-          <TextInput
-            value={username}
-            isRequired
-            id="username"
-            type="text"
-            onChange={(_event, inputVal: string) => handleUsernameChange(inputVal)}
-            isDisabled={!row.isCreating}
-            validated={usernameValidationMsg || APIErrorMsg ? 'error' : 'default'}
-            aria-label="username"
-          />
+      {options.find((option) => option.id === roleID)?.name}
+    </MenuToggle>
+  );
 
-          <FormGroupHelperText touched error={usernameValidationMsg || APIErrorMsg} />
-        </FormGroup>
-        <FormGroup label="Role" isRequired>
-          <SelectDeprecated
-            onToggle={(_event, val) => setIsDropdownOpen(val)}
-            onSelect={(e, selection) => {
-              setRoleID(selection as string);
-              setIsDropdownOpen(false);
-            }}
-            selections={roleID}
-            isOpen={isDropdownOpen}
-            menuAppendTo={() => document.body}
-          >
-            {options.map((option) => (
-              <SelectOptionDeprecated
-                key={option.id}
-                value={option.id}
-                description={option.description}
+  return (
+    <Formik
+      enableReinitialize
+      initialValues={{
+        username,
+        role: roleID,
+      }}
+      onSubmit={async (values) => {
+        handleSubmit(values.username, values.role);
+      }}
+    >
+      {(formik) => (
+        <Modal
+          title={title}
+          onClose={() => {
+            handleClose();
+            resetGrantOcmRoleMutation();
+          }}
+          primaryText={btnText}
+          secondaryText="Cancel"
+          onPrimaryClick={formik.submitForm}
+          onSecondaryClick={() => {
+            handleClose();
+            resetGrantOcmRoleMutation();
+          }}
+          isPrimaryDisabled={isPrimaryDisabled}
+          id="ocm-roles-access-dialog"
+        >
+          <p className="pf-v5-u-mb-xl">
+            Allow users in your organization to edit or view clusters. These permissions only apply
+            to cluster management in OpenShift Cluster Manager.
+          </p>
+          <Form className="control-form-cursor">
+            <FormGroup
+              label={
+                <>
+                  <span>Red Hat login</span>
+                  <PopoverHint
+                    id="ocm-roles-section-username-tooltip"
+                    hint={
+                      <TextContent>
+                        <Text component={TextVariants.p}>
+                          Your Red Hat login is the username you use to access your Red Hat account.
+                        </Text>
+                      </TextContent>
+                    }
+                    iconClassName="text-input-tootip-icon"
+                    hasAutoWidth
+                    maxWidth="20.0rem"
+                  />
+                </>
+              }
+              isRequired
+              fieldId="username"
+            >
+              <TextInput
+                value={username}
+                isRequired
+                id="username"
+                type="text"
+                onChange={(_event, inputVal: string) => {
+                  handleUsernameChange(inputVal);
+                  formik.setFieldValue('username', inputVal);
+                }}
+                isDisabled={!row.isCreating}
+                validated={usernameValidationMsg || APIErrorMsg ? 'error' : 'default'}
+                aria-label="username"
+              />
+
+              <FormGroupHelperText touched error={usernameValidationMsg || APIErrorMsg} />
+            </FormGroup>
+            <FormGroup label="Role" isRequired>
+              <Select
+                isOpen={isDropdownOpen}
+                selected={roleID}
+                toggle={toggle}
+                onOpenChange={(isDropdownOpen) => setIsDropdownOpen(isDropdownOpen)}
+                onSelect={(e, selection) => {
+                  formik.setFieldValue('role', selection as string);
+                  setRoleID(selection as string);
+                  setIsDropdownOpen(!isDropdownOpen);
+                }}
               >
-                {option.name}
-              </SelectOptionDeprecated>
-            ))}
-          </SelectDeprecated>
-        </FormGroup>
-      </Form>
-    </Modal>
+                <SelectList aria-label="roles">
+                  {options.map((option) => (
+                    <SelectOption
+                      key={option.id}
+                      value={option.id}
+                      description={option.description}
+                    >
+                      {option.name}
+                    </SelectOption>
+                  ))}
+                </SelectList>
+              </Select>
+            </FormGroup>
+          </Form>
+        </Modal>
+      )}
+    </Formik>
   );
 }
 

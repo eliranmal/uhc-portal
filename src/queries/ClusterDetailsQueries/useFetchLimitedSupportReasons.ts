@@ -1,9 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 
 import clusterService, { getClusterServiceForRegion } from '~/services/clusterService';
-import { SubscriptionCommonFields } from '~/types/accounts_mgmt.v1';
+import { SubscriptionCommonFieldsStatus } from '~/types/accounts_mgmt.v1';
 
-import { queryConstants } from '../queriesConstants';
 import { SubscriptionResponseType } from '../types';
 
 /**
@@ -21,18 +20,17 @@ export const useFetchLimitedSupportReasons = (
   const { isLoading, data, isFetching } = useQuery({
     queryKey: [mainQueryKey, 'limitedSupportReasons', 'clusterService', clusterID, subscription],
     queryFn: async () => {
-      if (subscription?.subscription.xcm_id) {
-        const clusterService = getClusterServiceForRegion(subscription?.subscription.xcm_id);
+      if (subscription?.subscription.rh_region_id) {
+        const clusterService = getClusterServiceForRegion(subscription?.subscription.rh_region_id);
         const response = await clusterService.getLimitedSupportReasons(clusterID);
         return response;
       }
       const response = await clusterService.getLimitedSupportReasons(clusterID);
       return response;
     },
-    staleTime: queryConstants.STALE_TIME,
     enabled:
       !!subscription &&
-      subscription.subscription.status !== SubscriptionCommonFields.status.DEPROVISIONED &&
+      subscription.subscription.status !== SubscriptionCommonFieldsStatus.Deprovisioned &&
       (subscription.subscription.managed || subscription.isAROCluster),
   });
 

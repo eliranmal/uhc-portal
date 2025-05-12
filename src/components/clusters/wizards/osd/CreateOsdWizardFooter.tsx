@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { setNestedObjectValues } from 'formik';
 
 import { Button, useWizardContext, WizardFooterWrapper } from '@patternfly/react-core';
+import { WizardContextProps } from '@patternfly/react-core/dist/esm/components/Wizard/WizardContext';
 
 import { scrollToFirstField } from '~/common/helpers';
 import { getScrollErrorIds } from '~/components/clusters/wizards/form/utils';
@@ -13,18 +14,30 @@ interface CreateOsdWizardFooterProps {
   isLoading?: boolean;
   onNext?(): void | Promise<void>;
   track?(): void;
+  onWizardContextChange(context: Partial<WizardContextProps>): void;
 }
 
 export const CreateOsdWizardFooter = ({
   isLoading,
   onNext,
   track = () => {},
+  onWizardContextChange,
 }: CreateOsdWizardFooterProps) => {
-  const { goToNextStep, goToPrevStep, close, activeStep, steps } = useWizardContext();
+  const { goToNextStep, goToPrevStep, close, activeStep, steps, setStep, goToStepById } =
+    useWizardContext();
   const { values, validateForm, setTouched, isValidating, submitForm } = useFormState();
   // used to determine the actions' disabled state.
   // (as a more exclusive rule than isValidating, which relying upon would block progress to the next step)
   const [isNextDeferred, setIsNextDeferred] = useState<boolean>(false);
+
+  useEffect(() => {
+    // callback to pass updated context back up
+    onWizardContextChange({
+      steps,
+      setStep,
+      goToStepById,
+    });
+  }, [steps, setStep, goToStepById, onWizardContextChange]);
 
   const createClusterResponse = useGlobalState((state) => state.clusters.createdCluster);
   const isSubmitting = createClusterResponse.pending;

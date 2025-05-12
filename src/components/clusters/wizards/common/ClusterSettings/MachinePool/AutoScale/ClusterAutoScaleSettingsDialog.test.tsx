@@ -3,6 +3,7 @@ import { Formik } from 'formik';
 import merge from 'lodash/merge';
 
 import { getDefaultClusterAutoScaling } from '~/components/clusters/common/clusterAutoScalingValues';
+import { MAX_NODES } from '~/components/clusters/common/machinePools/constants';
 import { FieldId } from '~/components/clusters/wizards/common';
 import modals from '~/components/common/Modal/modals';
 import { checkAccessibility, screen, UserEventType, waitFor, within, withState } from '~/testUtils';
@@ -43,7 +44,7 @@ const buildTestComponent = (values?: Partial<ClusterAutoscaler>) => {
       initialTouched={{ [testInputFieldId]: true }} // so that it shows the errors if it's invalid initially
       onSubmit={() => {}}
     >
-      <ClusterAutoScaleSettingsDialog isWizard isRosa={false} />
+      <ClusterAutoScaleSettingsDialog isWizard isRosa={false} maxNodesTotalDefault={MAX_NODES} />
     </Formik>
   );
 };

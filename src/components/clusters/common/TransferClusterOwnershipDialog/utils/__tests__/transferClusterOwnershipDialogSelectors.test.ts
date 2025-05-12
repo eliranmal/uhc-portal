@@ -7,7 +7,6 @@ import { GlobalState } from '~/redux/store';
 import { ClusterFromSubscription } from '~/types/types';
 
 import {
-  canTransferClusterOwnershipListSelector,
   canTransferClusterOwnershipMultiRegion,
   canTransferClusterOwnershipSelector,
 } from '../transferClusterOwnershipDialogSelectors';
@@ -102,48 +101,6 @@ describe('Utility functions', () => {
 
       const result = canTransferClusterOwnershipMultiRegion(cluster);
       expect(result).toBe(false);
-      expect(hasCapability).toHaveBeenCalledWith(
-        { capabilities: [] },
-        subscriptionCapabilities.RELEASE_OCP_CLUSTERS,
-      );
-    });
-  });
-
-  describe('canTransferClusterOwnershipListSelector', () => {
-    it('should return an object with cluster ids as keys and true/false based on their capabilities', () => {
-      const state = {
-        clusters: {
-          clusters: {
-            clusters: [
-              {
-                id: 'cluster1',
-                subscription: {
-                  capabilities: [subscriptionCapabilities.RELEASE_OCP_CLUSTERS],
-                },
-              },
-              {
-                id: 'cluster2',
-                subscription: {
-                  capabilities: [],
-                },
-              },
-            ],
-          },
-        },
-      } as any as GlobalState;
-      hasCapabilityMock.mockImplementation((subscription, capability) =>
-        subscription.capabilities.includes(capability),
-      );
-
-      const result = canTransferClusterOwnershipListSelector(state);
-      expect(result).toEqual({
-        cluster1: true,
-        cluster2: false,
-      });
-      expect(hasCapability).toHaveBeenCalledWith(
-        { capabilities: [subscriptionCapabilities.RELEASE_OCP_CLUSTERS] },
-        subscriptionCapabilities.RELEASE_OCP_CLUSTERS,
-      );
       expect(hasCapability).toHaveBeenCalledWith(
         { capabilities: [] },
         subscriptionCapabilities.RELEASE_OCP_CLUSTERS,

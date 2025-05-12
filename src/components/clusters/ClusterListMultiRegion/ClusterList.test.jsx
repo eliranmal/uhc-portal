@@ -1,16 +1,16 @@
 import React from 'react';
 import * as reactRedux from 'react-redux';
 
-import * as usePreviousProps from '~/hooks/usePreviousProps';
+import * as useGetAccessProtection from '~/queries/AccessRequest/useGetAccessProtection';
+import * as useGetOrganizationalPendingRequests from '~/queries/AccessRequest/useGetOrganizationalPendingRequests';
 import * as useFetchClusters from '~/queries/ClusterListQueries/useFetchClusters';
-import { mockRestrictedEnv, screen, waitFor, within, withState } from '~/testUtils';
+import { mockRestrictedEnv, screen, within, withState } from '~/testUtils';
 
 import { normalizedProducts } from '../../../common/subscriptionTypes';
 import { viewConstants } from '../../../redux/constants';
+import { SET_TOTAL_ITEMS } from '../../../redux/constants/viewPaginationConstants';
 import fixtures, { funcs } from '../ClusterDetailsMultiRegion/__tests__/ClusterDetails.fixtures';
 
-import { columns } from './components/ClusterListTable';
-import { mockedClusters } from './components/mocks/clusterListTable.mock';
 import ClusterList from './ClusterList';
 
 jest.mock('react-redux', () => {
@@ -21,14 +21,24 @@ jest.mock('react-redux', () => {
   return config;
 });
 
-// Unsure why usePreviousProps isn't working - mocking for now
-jest.spyOn(usePreviousProps, 'usePreviousProps').mockImplementation((value) => value);
+const mockNavigate = jest.fn();
 
-// Mocking useFetchClusters due to the complexity of this custom hook
-// the useFetchClusters hook has its own unit tests to ensure it returns the correct values
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useNavigate: () => mockNavigate,
+}));
+
+// Mocking hooks due to the complexity of this custom hook
+// Each hook has its own unit tests to ensure it returns the correct values
 const mockedGetFetchedClusters = jest.spyOn(useFetchClusters, 'useFetchClusters');
+const mockedUseGetAccessProtection = jest.spyOn(useGetAccessProtection, 'useGetAccessProtection');
+const mockedUseGetOrganizationalPendingRequests = jest.spyOn(
+  useGetOrganizationalPendingRequests,
+  'useGetOrganizationalPendingRequests',
+);
 
-const clusterRows = () => within(screen.getByTestId('clusterListTableBody')).getAllByRole('row');
+const mockedClearGlobalError = jest.fn();
+const mockedCloseModal = jest.fn();
 
 describe('<ClusterList />', () => {
   const props = {
@@ -40,15 +50,19 @@ describe('<ClusterList />', () => {
     organization: fixtures.organization,
     pendingOrganizationAccessRequests: {},
     organizationId: 'whateverTheOrganizationId',
-    closeModal: jest.fn(),
+    closeModal: mockedCloseModal,
     openModal: jest.fn(),
-    clearGlobalError: jest.fn(),
+    clearGlobalError: mockedClearGlobalError,
     getOrganizationAndQuota: jest.fn(),
     getMachineTypes: jest.fn(),
     getCloudProviders: jest.fn(),
   };
 
   const emptyStateText = "Let's create your first cluster";
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
   it('shows skeleton while loading and no data is returned yet', () => {
     mockedGetFetchedClusters.mockReturnValue({
@@ -183,450 +197,98 @@ describe('<ClusterList />', () => {
     expect(refetch).toHaveBeenCalled();
   });
 
-  describe('Sorting', () => {
-    const checkCellValue = (expected, keyToTest, cellIndex) => {
-      const nameColumnIndex = Object.keys(columns).findIndex((column) => column === 'name');
+  it('sets new cluster total into Redux', () => {
+    const useDispatchMock = jest.spyOn(reactRedux, 'useDispatch');
+    const mockedDispatch = jest.fn();
+    useDispatchMock.mockReturnValue(mockedDispatch);
 
-      const rows = within(screen.getByTestId('clusterListTableBody')).getAllByRole('row');
-
-      expect(rows).toHaveLength(expected.length);
-
-      rows.forEach((row, index) => {
-        const cells = row.querySelectorAll('td');
-        expect(cells[nameColumnIndex]).toHaveTextContent(expected[index].name);
-        expect(cells[cellIndex]).toHaveTextContent(expected[index][keyToTest]);
-      });
-    };
-
-    it('displays clusters sorted by create date', async () => {
-      mockedGetFetchedClusters.mockReturnValue({
-        data: { items: mockedClusters, itemsCount: mockedClusters.length },
-        isLoading: false,
-        errors: [],
-        isFetched: true,
-        isFetching: false,
-      });
-
-      const { user } = withState({}, true).render(<ClusterList {...props} />);
-
-      const expected = [
-        { name: 'aCluster', date: '25 Dec 2024' },
-        { name: 'myAWSCluster', date: '20 May 2024' },
-        { name: 'zCluster', date: '25 Apr 2024' },
-      ];
-      const createDateColumnIndex = Object.keys(columns).findIndex(
-        (column) => column === 'created',
-      );
-
-      // Verify name and created cells
-      checkCellValue(expected, 'date', createDateColumnIndex);
-
-      await user.click(screen.getByRole('button', { name: 'Created' }));
-
-      // Check that the order has been reversed
-      expected.reverse();
-      checkCellValue(expected, 'date', createDateColumnIndex);
+    const refetch = jest.fn();
+    mockedGetFetchedClusters.mockReturnValue({
+      data: { items: [fixtures.clusterDetails.cluster], itemsCount: 1 },
+      refetch,
+      errors: [],
     });
+    withState({}, true).render(<ClusterList {...props} />);
 
-    it('sorts by name', async () => {
-      mockedGetFetchedClusters.mockReturnValue({
-        data: { items: mockedClusters, itemsCount: mockedClusters.length },
-        isLoading: false,
-        errors: [],
-        isFetched: true,
-        isFetching: false,
-      });
-
-      const { user } = withState({}, true).render(<ClusterList {...props} />);
-
-      const nameColumnIndex = Object.keys(columns).findIndex((column) => column === 'name');
-
-      // Sort Ascending
-      await user.click(screen.getByRole('button', { name: 'Name' }));
-
-      const expected = [{ name: 'aCluster' }, { name: 'myAWSCluster' }, { name: 'zCluster' }];
-
-      checkCellValue(expected, 'name', nameColumnIndex);
-
-      // Check that the order has been reversed
-      await user.click(screen.getByRole('button', { name: 'Name' }));
-      expected.reverse();
-      checkCellValue(expected, 'name', nameColumnIndex);
-    });
-
-    it('uses natural sorting for name', async () => {
-      const mockedNames = ['myCluster-10', 'myCluster-5', 'myCluster-1'];
-      const newMockedClusters = mockedClusters.map((cluster, index) => ({
-        ...cluster,
-        subscription: { ...cluster.subscription, display_name: mockedNames[index] },
-      }));
-
-      mockedGetFetchedClusters.mockReturnValue({
-        data: { items: newMockedClusters, itemsCount: newMockedClusters.length },
-        isLoading: false,
-        errors: [],
-        isFetched: true,
-        isFetching: false,
-      });
-
-      const { user } = withState({}, true).render(<ClusterList {...props} />);
-
-      const nameColumnIndex = Object.keys(columns).findIndex((column) => column === 'name');
-
-      // Sort Ascending
-      await user.click(screen.getByRole('button', { name: 'Name' }));
-
-      const expected = [{ name: 'myCluster-1' }, { name: 'myCluster-5' }, { name: 'myCluster-10' }];
-
-      checkCellValue(expected, 'name', nameColumnIndex);
-
-      // Check that the order has been reversed
-      await user.click(screen.getByRole('button', { name: 'Name' }));
-      expected.reverse();
-      checkCellValue(expected, 'name', nameColumnIndex);
-    });
-
-    it('sorts by status', async () => {
-      mockedGetFetchedClusters.mockReturnValue({
-        data: { items: mockedClusters, itemsCount: mockedClusters.length },
-        isLoading: false,
-        errors: [],
-        isFetched: true,
-        isFetching: false,
-      });
-
-      const { user } = withState({}, true).render(<ClusterList {...props} />);
-
-      const statusColumnIndex = Object.keys(columns).findIndex((column) => column === 'status');
-
-      // Sort Ascending
-      await user.click(screen.getByRole('button', { name: 'Status' }));
-
-      const expected = [
-        { name: 'aCluster', status: 'Installing' },
-        { name: 'myAWSCluster', status: 'Ready' },
-        { name: 'zCluster', status: 'Ready' },
-      ];
-
-      checkCellValue(expected, 'status', statusColumnIndex);
-
-      // Check that the order has been reversed
-      await user.click(screen.getByRole('button', { name: 'Status' }));
-      expected.reverse();
-      checkCellValue(expected, 'status', statusColumnIndex);
-    });
-
-    it('sorts by type', async () => {
-      mockedGetFetchedClusters.mockReturnValue({
-        data: { items: mockedClusters, itemsCount: mockedClusters.length },
-        isLoading: false,
-        errors: [],
-        isFetched: true,
-        isFetching: false,
-      });
-
-      const { user } = withState({}, true).render(<ClusterList {...props} />);
-
-      const typeColumnIndex = Object.keys(columns).findIndex((column) => column === 'type');
-
-      // Sort Ascending
-      await user.click(screen.getByRole('button', { name: 'Type' }));
-
-      const expected = [
-        { name: 'aCluster', type: 'OSD' },
-        { name: 'myAWSCluster', type: 'ROSA' },
-        { name: 'zCluster', type: 'ROSA' },
-      ];
-
-      checkCellValue(expected, 'type', typeColumnIndex);
-
-      // Check that the order has been reversed
-      await user.click(screen.getByRole('button', { name: 'Type' }));
-      expected.reverse();
-      checkCellValue(expected, 'type', typeColumnIndex);
-    });
-
-    it('sorts by version', async () => {
-      mockedGetFetchedClusters.mockReturnValue({
-        data: { items: mockedClusters, itemsCount: mockedClusters.length },
-        isLoading: false,
-        errors: [],
-        isFetched: true,
-        isFetching: false,
-      });
-
-      const { user } = withState({}, true).render(<ClusterList {...props} />);
-
-      const versionColumnIndex = Object.keys(columns).findIndex((column) => column === 'version');
-
-      // Sort Ascending
-      await user.click(screen.getByRole('button', { name: 'Version' }));
-
-      const expected = [
-        { name: 'myAWSCluster', version: '4.15.7' },
-        { name: 'zCluster', version: '4.15.8' },
-        { name: 'aCluster', version: '4.16.8' },
-      ];
-
-      checkCellValue(expected, 'version', versionColumnIndex);
-
-      // Check that the order has been reversed
-      await user.click(screen.getByRole('button', { name: 'Version' }));
-      expected.reverse();
-      checkCellValue(expected, 'version', versionColumnIndex);
-    });
-
-    it('sorts by version when version is N/A', async () => {
-      const noVersionClusterA = {
-        ...mockedClusters[0],
-        id: 'aMyNACluster',
-        openshift_version: undefined,
-        subscription: { ...mockedClusters[0].subscription, display_name: 'aMyNACluster' },
-      };
-
-      const noVersionClusterB = {
-        ...mockedClusters[0],
-        id: 'zMyNACluster',
-        openshift_version: undefined,
-        subscription: { ...mockedClusters[0].subscription, display_name: 'zMyNACluster' },
-      };
-
-      const newClusters = [noVersionClusterB, ...mockedClusters, noVersionClusterA];
-
-      mockedGetFetchedClusters.mockReturnValue({
-        data: { items: newClusters, itemsCount: newClusters.length },
-        isLoading: false,
-        errors: [],
-        isFetched: true,
-        isFetching: false,
-      });
-
-      const { user } = withState({}, true).render(<ClusterList {...props} />);
-
-      const versionColumnIndex = Object.keys(columns).findIndex((column) => column === 'version');
-
-      // Sort Ascending
-      await user.click(screen.getByRole('button', { name: 'Version' }));
-
-      const expected = [
-        { name: 'aMyNACluster', version: 'N/A' },
-        { name: 'zMyNACluster', version: 'N/A' },
-        { name: 'myAWSCluster', version: '4.15.7' },
-        { name: 'zCluster', version: '4.15.8' },
-        { name: 'aCluster', version: '4.16.8' },
-      ];
-
-      checkCellValue(expected, 'version', versionColumnIndex);
-
-      // Check that the order has been reversed
-      await user.click(screen.getByRole('button', { name: 'Version' }));
-      expected.reverse();
-
-      await waitFor(() => {
-        expect(screen.getAllByText('aMyNACluster')).toHaveLength(1);
-      });
-      checkCellValue(expected, 'version', versionColumnIndex);
-    });
-
-    it('sorts by provider', async () => {
-      mockedGetFetchedClusters.mockReturnValue({
-        data: { items: mockedClusters, itemsCount: mockedClusters.length },
-        isLoading: false,
-        errors: [],
-        isFetched: true,
-        isFetching: false,
-      });
-
-      const { user } = withState({}, true).render(<ClusterList {...props} />);
-
-      const providerColumnIndex = Object.keys(columns).findIndex((column) => column === 'provider');
-
-      // Sort Ascending
-      await user.click(screen.getByRole('button', { name: 'Provider (Region)' }));
-
-      const expected = [
-        { name: 'zCluster', provider: 'AWS (aa-my-region)' },
-        { name: 'myAWSCluster', provider: 'AWS (us-west-2)' },
-        { name: 'aCluster', provider: 'GCP (us-east-1)' },
-      ];
-
-      checkCellValue(expected, 'provider', providerColumnIndex);
-
-      // Check that the order has been reversed
-      await user.click(screen.getByRole('button', { name: 'Provider (Region)' }));
-      expected.reverse();
-      checkCellValue(expected, 'provider', providerColumnIndex);
+    expect(mockedDispatch).toHaveBeenCalled();
+    expect(mockedDispatch.mock.calls[0][0].type).toEqual(SET_TOTAL_ITEMS);
+    expect(mockedDispatch.mock.calls[0][0].payload).toEqual({
+      totalCount: 1,
+      viewType: 'CLUSTERS_VIEW',
     });
   });
 
-  describe('Pagination', () => {
-    const initialResultsPerPage = 50;
-    const pageInformationQuerySelector = () =>
-      within(screen.getAllByTestId('page_drop_down')[0]).getAllByRole('button')[0];
+  it('sets new cluster total when total is changed to 0', () => {
+    const useDispatchMock = jest.spyOn(reactRedux, 'useDispatch');
+    const mockedDispatch = jest.fn();
+    useDispatchMock.mockReturnValue(mockedDispatch);
 
-    // Create a list of 200 clusters
-    const mockClusters = [];
-    const mockStartingCluster = fixtures.clusterDetails.cluster;
-    for (let i = 1; i <= 200; i += 1) {
-      const creationDate = new Date('2024-06-01T01:11:00Z');
-      creationDate.setSeconds(creationDate.getSeconds() - i);
+    const refetch = jest.fn();
+    mockedGetFetchedClusters.mockReturnValue({
+      data: { items: [], itemsCount: 0 },
+      refetch,
+      errors: [],
+    });
+    withState({ viewOptions: { CLUSTERS_VIEW: { totalCount: 1 } } }, true).render(
+      <ClusterList {...props} />,
+    );
 
-      mockClusters.push({
-        ...mockStartingCluster,
-        id: `cluster${i}`,
-        subscription: { ...mockStartingCluster.subscription, display_name: `cluster${i}` },
-        openshift_version: `4.14.${i}`,
-        creation_timestamp: creationDate.toISOString(),
-      });
-    }
+    expect(mockedDispatch).toHaveBeenCalled();
+    expect(mockedDispatch.mock.calls[0][0].type).toEqual(SET_TOTAL_ITEMS);
+    expect(mockedDispatch.mock.calls[0][0].payload).toEqual({
+      totalCount: 0,
+      viewType: 'CLUSTERS_VIEW',
+    });
+  });
 
-    it('shows 0 of 0 when no clusters are returned but is still loading', () => {
+  describe('Access Request Pending Alert', () => {
+    it('shows access alert if there are pending requests', () => {
       mockedGetFetchedClusters.mockReturnValue({
-        data: undefined,
-        isLoading: true,
+        data: { items: [fixtures.clusterDetails.cluster], itemsCount: 1 },
+        isLoading: false,
+        isFetching: false,
         errors: [],
+      });
+
+      mockedUseGetAccessProtection.mockReturnValue({
+        enabled: true,
+      });
+
+      mockedUseGetOrganizationalPendingRequests.mockReturnValue({
+        total: 3,
+        items: [
+          { id: 'myRequest1', subscription_id: 'mySubscriptionId1' },
+          { id: 'myRequest2', subscription_id: 'mySubscriptionId2' },
+          { id: 'myRequest3', subscription_id: 'mySubscriptionId3' },
+        ],
       });
 
       withState({}, true).render(<ClusterList {...props} />);
 
-      expect(pageInformationQuerySelector()).toHaveTextContent('0 - 0 of 0');
+      expect(screen.getByText('Pending Access Requests')).toBeInTheDocument();
     });
 
-    it('The correct number of results on a page', () => {
+    it('hides access alert if no pending requests', () => {
       mockedGetFetchedClusters.mockReturnValue({
-        data: { items: mockClusters, itemsCount: mockClusters.length },
+        data: { items: [fixtures.clusterDetails.cluster], itemsCount: 1 },
         isLoading: false,
-        errors: [],
-        isFetched: true,
         isFetching: false,
+        errors: [],
+      });
+
+      mockedUseGetAccessProtection.mockReturnValue({
+        enabled: false,
+      });
+
+      mockedUseGetOrganizationalPendingRequests.mockReturnValue({
+        total: 0,
+        items: [],
       });
 
       withState({}, true).render(<ClusterList {...props} />);
 
-      expect(clusterRows()).toHaveLength(initialResultsPerPage);
-      expect(screen.getByText('cluster1')).toBeInTheDocument();
-      expect(screen.getByText('cluster50')).toBeInTheDocument();
-
-      expect(pageInformationQuerySelector()).toHaveTextContent('1 - 50 of 200');
+      expect(screen.queryByText('Pending Access Requests')).not.toBeInTheDocument();
     });
-
-    it('Clicking on the next page link changes the results', async () => {
-      mockedGetFetchedClusters.mockReturnValue({
-        data: { items: mockClusters, itemsCount: mockClusters.length },
-        isLoading: false,
-        errors: [],
-        isFetched: true,
-        isFetching: false,
-      });
-
-      const { user } = withState({}, true).render(<ClusterList {...props} />);
-
-      // Ensure that the "back" button is disabled:
-      screen.getAllByRole('button', { name: 'Go to previous page' }).forEach((button) => {
-        expect(button).toBeDisabled();
-      });
-
-      // Click on the "next" button above the table:
-      await user.click(screen.getAllByRole('button', { name: 'Go to next page' })[0]);
-      expect(clusterRows()).toHaveLength(initialResultsPerPage);
-      expect(screen.getByText('cluster51')).toBeInTheDocument();
-      expect(screen.getByText('cluster100')).toBeInTheDocument();
-      expect(pageInformationQuerySelector()).toHaveTextContent('51 - 100 of 200');
-
-      // Ensure that the "back" button is enabled:
-      screen.getAllByRole('button', { name: 'Go to previous page' }).forEach((button) => {
-        expect(button).not.toBeDisabled();
-      });
-
-      // Click on the "next" button below the table:
-      await user.click(screen.getAllByRole('button', { name: 'Go to next page' })[0]);
-      expect(clusterRows()).toHaveLength(initialResultsPerPage);
-      expect(screen.getByText('cluster101')).toBeInTheDocument();
-      expect(screen.getByText('cluster150')).toBeInTheDocument();
-      expect(pageInformationQuerySelector()).toHaveTextContent('101 - 150 of 200');
-    });
-
-    it('Clicking on the previous link changes the results', async () => {
-      mockedGetFetchedClusters.mockReturnValue({
-        data: { items: mockClusters, itemsCount: mockClusters.length },
-        isLoading: false,
-        errors: [],
-        isFetched: true,
-        isFetching: false,
-      });
-
-      const { user } = withState({}, true).render(<ClusterList {...props} />);
-
-      // Go to last page:
-      await user.click(screen.getByRole('button', { name: 'Go to last page' }));
-
-      expect(clusterRows()).toHaveLength(initialResultsPerPage);
-
-      expect(screen.getByText('cluster200')).toBeInTheDocument();
-
-      screen.getAllByRole('button', { name: 'Go to next page' }).forEach((button) => {
-        expect(button).toBeDisabled();
-      });
-      expect(pageInformationQuerySelector()).toHaveTextContent('151 - 200 of 200');
-
-      await user.click(screen.getAllByRole('button', { name: 'Go to previous page' })[0]);
-      expect(screen.getByText('cluster101')).toBeInTheDocument();
-      expect(screen.getByText('cluster150')).toBeInTheDocument();
-      expect(pageInformationQuerySelector()).toHaveTextContent('101 - 150 of 200');
-
-      await user.click(screen.getAllByRole('button', { name: 'Go to previous page' })[1]);
-      expect(screen.getByText('cluster51')).toBeInTheDocument();
-      expect(screen.getByText('cluster100')).toBeInTheDocument();
-      expect(pageInformationQuerySelector()).toHaveTextContent('51 - 100 of 200');
-    }, 80000);
-
-    it('Changing the "per page" results changes the number of results', async () => {
-      mockedGetFetchedClusters.mockReturnValue({
-        data: { items: mockClusters, itemsCount: mockClusters.length },
-        isLoading: false,
-        errors: [],
-        isFetched: true,
-        isFetching: false,
-      });
-
-      const { container, user } = withState({}, true).render(<ClusterList {...props} />);
-      expect(clusterRows()).toHaveLength(initialResultsPerPage);
-      await user.click(container.querySelector('#options-menu-bottom-toggle'));
-      await user.click(screen.getByText('100 per page'));
-      expect(clusterRows()).toHaveLength(100);
-      expect(pageInformationQuerySelector()).toHaveTextContent('1 - 100 of 200');
-    });
-
-    it('keeps current page when sorted', async () => {
-      mockedGetFetchedClusters.mockReturnValue({
-        data: { items: mockClusters, itemsCount: mockClusters.length },
-        isLoading: false,
-        errors: [],
-        isFetched: true,
-        isFetching: false,
-      });
-
-      const { user } = withState({}, true).render(<ClusterList {...props} />);
-
-      await user.click(screen.getAllByRole('button', { name: 'Go to next page' })[0]);
-
-      expect(screen.getByLabelText('Current page')).toHaveValue(2);
-
-      // sort ascending
-      await user.click(screen.getByRole('button', { name: 'Version' }));
-      expect(screen.getByText('4.14.51')).toBeInTheDocument();
-      expect(screen.getByText('4.14.100')).toBeInTheDocument();
-      expect(pageInformationQuerySelector()).toHaveTextContent('51 - 100 of 200');
-      expect(screen.getByLabelText('Current page')).toHaveValue(2);
-
-      // sort descending
-      await user.click(screen.getByRole('button', { name: 'Version' }));
-
-      expect(screen.getByText('4.14.101')).toBeInTheDocument();
-      expect(screen.getByText('4.14.150')).toBeInTheDocument();
-      expect(pageInformationQuerySelector()).toHaveTextContent('51 - 100 of 200');
-      expect(screen.getByLabelText('Current page')).toHaveValue(2);
-    }, 80000);
   });
 
   describe('Errors', () => {
@@ -640,6 +302,7 @@ describe('<ClusterList />', () => {
         isError: true,
         errors: [{ reason: 'There was an error', operation_id: '1234' }],
       });
+
       withState({}, true).render(<ClusterList {...props} />);
       expect(screen.getByTestId('error-triangle-icon')).toBeInTheDocument();
     });
@@ -756,12 +419,12 @@ describe('<ClusterList />', () => {
       isRestrictedEnv.mockReturnValue(true);
       withState({}, true).render(<ClusterList {...props} />);
       expect(mockedDispatch).toHaveBeenCalled();
-      expect(mockedDispatch.mock.calls).toHaveLength(2);
-      const args = mockedDispatch.mock.calls[1];
+
+      const args = mockedDispatch.mock.calls[0];
 
       expect(args[0].type).toEqual('VIEW_SET_LIST_FLAGS');
 
-      expect(args[0].payload.key).toBe('subscriptionFilter'); // KKD - it fails here (key is undefined)
+      expect(args[0].payload.key).toBe('subscriptionFilter');
       expect(args[0].payload.value).toStrictEqual({ plan_id: [normalizedProducts.ROSA] });
       expect(args[0].payload.viewType).toBe(viewConstants.CLUSTERS_VIEW);
 
@@ -777,6 +440,71 @@ describe('<ClusterList />', () => {
       expect(screen.queryByTestId('cluster-list-filter-dropdown')).not.toBeInTheDocument();
 
       expect(await screen.findByRole('button', { name: 'Create cluster' })).toBeInTheDocument();
+    });
+  });
+
+  describe('cluster filter', () => {
+    beforeEach(() => {
+      mockNavigate.mockClear();
+    });
+
+    it('filter by clicking on cluster type', async () => {
+      // Arrange
+      mockedGetFetchedClusters.mockReturnValue({
+        data: { items: [fixtures.clusterDetails.cluster] },
+        errors: [],
+      });
+
+      const { user } = withState({}, true).render(<ClusterList {...props} />);
+
+      // Act
+      await user.click(screen.getByRole('button', { name: 'Cluster type' }));
+      await user.click(screen.getByText('ARO'));
+      await user.click(screen.getByText('RHOIC'));
+
+      // Assert
+      expect(mockNavigate).toHaveBeenLastCalledWith(
+        { search: 'plan_id=ARO,RHOIC' },
+        { replace: true },
+      );
+    });
+
+    it('filter by already set state and URL param reacts accordingly', async () => {
+      // Arrange
+      mockedGetFetchedClusters.mockReturnValue({
+        data: { items: [fixtures.clusterDetails.cluster] },
+        errors: [],
+      });
+
+      // Act
+      withState(
+        { viewOptions: { CLUSTERS_VIEW: { flags: { subscriptionFilter: { plan_id: ['OSD'] } } } } },
+        true,
+      ).render(<ClusterList {...props} />);
+
+      // Assert
+      expect(mockNavigate).toHaveBeenLastCalledWith({ search: 'plan_id=OSD' }, { replace: true });
+    });
+  });
+
+  describe('unmount', () => {
+    it('Clears global errors and closes modals', () => {
+      mockedGetFetchedClusters.mockReturnValue({
+        data: { items: [] },
+        isLoading: false,
+        isFetching: false,
+        errors: [],
+      });
+      const { unmount } = withState({}, true).render(<ClusterList {...props} />);
+
+      jest.clearAllMocks();
+
+      expect(mockedClearGlobalError).not.toHaveBeenCalled();
+      expect(mockedCloseModal).not.toHaveBeenCalled();
+      unmount();
+
+      expect(mockedClearGlobalError.mock.calls).toEqual([['clusterList'], ['clusterDetails']]);
+      expect(mockedCloseModal).toHaveBeenCalled();
     });
   });
 });

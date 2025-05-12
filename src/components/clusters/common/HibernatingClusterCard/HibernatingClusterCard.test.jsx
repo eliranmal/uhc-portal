@@ -14,7 +14,7 @@ describe('<HibernateClusterModal />', () => {
     subscription: {
       id: 'subscription-id',
     },
-    state: clusterStates.HIBERNATING,
+    state: clusterStates.hibernating,
   };
   const defaultProps = {
     cluster,

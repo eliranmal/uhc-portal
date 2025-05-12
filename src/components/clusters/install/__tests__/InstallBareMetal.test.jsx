@@ -18,24 +18,24 @@ describe('BareMetal install', () => {
 
     expect(screen.getByRole('link', { name: /Learn more about interactive/ })).toHaveAttribute(
       'href',
-      `https://docs.openshift.com/container-platform/${version}/installing/installing_on_prem_assisted/installing-on-prem-assisted.html`,
+      `https://docs.redhat.com/en/documentation/openshift_container_platform/${version}/html/installing_on-premise_with_assisted_installer/installing-on-prem-assisted`,
     );
 
     expect(
       screen.getByRole('link', { name: /Learn more about local agent-based/ }),
     ).toHaveAttribute(
       'href',
-      `https://docs.openshift.com/container-platform/${version}/installing/installing_with_agent_based_installer/preparing-to-install-with-agent-based-installer.html`,
+      `https://docs.redhat.com/en/documentation/openshift_container_platform/${version}/html/installing_an_on-premise_cluster_with_the_agent-based_installer/preparing-to-install-with-agent-based-installer`,
     );
 
     expect(screen.getByRole('link', { name: /Learn more about automated/ })).toHaveAttribute(
       'href',
-      `https://docs.openshift.com/container-platform/${version}/installing/installing_bare_metal_ipi/ipi-install-overview.html`,
+      `https://docs.redhat.com/en/documentation/openshift_container_platform/${version}/html/installing_on_bare_metal/installer-provisioned-infrastructure#ipi-install-overview`,
     );
 
     expect(screen.getByRole('link', { name: /Learn more about full control/ })).toHaveAttribute(
       'href',
-      `https://docs.openshift.com/container-platform/${version}/installing/installing_bare_metal/installing-bare-metal.html`,
+      `https://docs.redhat.com/en/documentation/openshift_container_platform/${version}/html/installing_on_bare_metal/user-provisioned-infrastructure#installing-bare-metal`,
     );
   });
 });

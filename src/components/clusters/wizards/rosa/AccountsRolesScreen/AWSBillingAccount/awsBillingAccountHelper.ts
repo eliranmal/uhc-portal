@@ -1,6 +1,4 @@
-import { Contract } from '~/types/accounts_mgmt.v1';
-import { CloudAccount } from '~/types/accounts_mgmt.v1/models/CloudAccount';
-import { ContractDimension } from '~/types/accounts_mgmt.v1/models/ContractDimension';
+import { CloudAccount, Contract, ContractDimension } from '~/types/accounts_mgmt.v1';
 
 const resources = ['control_plane', 'four_vcpu_hour'];
 

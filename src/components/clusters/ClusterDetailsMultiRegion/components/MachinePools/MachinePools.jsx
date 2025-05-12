@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import get from 'lodash/get';
 import isEmpty from 'lodash/isEmpty';
 import PropTypes from 'prop-types';
@@ -8,11 +8,10 @@ import {
   ButtonVariant,
   Card,
   CardBody,
-  CardFooter,
-  CardTitle,
   Divider,
   EmptyState,
   Label,
+  Skeleton,
   Toolbar,
   ToolbarContent,
   ToolbarItem,
@@ -23,14 +22,15 @@ import {
   TableBody as TableBodyDeprecated,
   TableHeader as TableHeaderDeprecated,
 } from '@patternfly/react-table/deprecated';
-import Skeleton from '@redhat-cloud-services/frontend-components/Skeleton';
 
 import { noQuotaTooltip } from '~/common/helpers';
 import { versionFormatter } from '~/common/versionHelpers';
 import { isMultiAZ } from '~/components/clusters/ClusterDetailsMultiRegion/clusterDetailsHelper';
 import { getDefaultClusterAutoScaling } from '~/components/clusters/common/clusterAutoScalingValues';
+import { LoadingSkeletonCard } from '~/components/clusters/common/LoadingSkeletonCard/LoadingSkeletonCard';
 import { MachineConfiguration } from '~/components/clusters/common/MachineConfiguration';
-import { useFeatureGate } from '~/hooks/useFeatureGate';
+import { MAX_NODES_INSUFFICIEN_VERSION as MAX_NODES_180 } from '~/components/clusters/common/machinePools/constants';
+import { getMaxNodesTotalDefaultAutoscaler } from '~/components/clusters/common/machinePools/utils';
 import {
   refetchClusterAutoscalerData,
   useFetchClusterAutoscaler,
@@ -38,7 +38,11 @@ import {
 import { useFetchMachineTypes } from '~/queries/ClusterDetailsQueries/MachinePoolTab/MachineTypes/useFetchMachineTypes';
 import { useDeleteMachinePool } from '~/queries/ClusterDetailsQueries/MachinePoolTab/useDeleteMachinePool';
 import { useFetchMachineOrNodePools } from '~/queries/ClusterDetailsQueries/MachinePoolTab/useFetchMachineOrNodePools';
-import { ENABLE_MACHINE_CONFIGURATION } from '~/redux/constants/featureConstants';
+import {
+  ENABLE_MACHINE_CONFIGURATION,
+  MAX_NODES_TOTAL_249,
+} from '~/queries/featureGates/featureConstants';
+import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 import { useGlobalState } from '~/redux/hooks';
 import { clusterService } from '~/services';
 import { getClusterServiceForRegion } from '~/services/clusterService';
@@ -81,8 +85,15 @@ import {
 
 import './MachinePools.scss';
 
-const getOpenShiftVersion = (machinePool, isDisabled, isMachinePoolError, isHypershift) => {
+const getOpenShiftVersion = (
+  machinePool,
+  isDisabled,
+  isMachinePoolError,
+  isHypershift,
+  clusterVersionID,
+) => {
   const extractedVersion = get(machinePool, 'version.id', '');
+
   if (!extractedVersion) {
     return 'N/A';
   }
@@ -94,6 +105,7 @@ const getOpenShiftVersion = (machinePool, isDisabled, isMachinePoolError, isHype
           machinePool={machinePool}
           isMachinePoolError={isMachinePoolError}
           isHypershift={isHypershift}
+          controlPlaneVersion={clusterVersionID}
         />
       ) : null}
     </>
@@ -102,6 +114,7 @@ const getOpenShiftVersion = (machinePool, isDisabled, isMachinePoolError, isHype
 
 const MachinePools = ({ cluster }) => {
   const dispatch = useDispatch();
+  const allow249NodesOSDCCSROSA = useFeatureGate(MAX_NODES_TOTAL_249);
 
   const isDeleteMachinePoolModalOpen = useGlobalState((state) =>
     shouldShowModal(state, modals.DELETE_MACHINE_POOL),
@@ -117,7 +130,7 @@ const MachinePools = ({ cluster }) => {
 
   const canBypassPIDsLimit = hasOrgLevelBypassPIDsLimitCapability(organization?.details);
   const isHypershift = isHypershiftCluster(cluster);
-  const region = cluster?.subscription?.xcm_id;
+  const region = cluster?.subscription?.rh_region_id;
   const clusterID = cluster?.id;
   const clusterVersionID = cluster?.version?.id;
   // Initial state
@@ -200,6 +213,14 @@ const MachinePools = ({ cluster }) => {
     refetchClusterAutoscalerData,
   ]);
 
+  const maxNodesTotalDefault = useMemo(
+    () =>
+      allow249NodesOSDCCSROSA
+        ? getMaxNodesTotalDefaultAutoscaler(cluster.version?.raw_id, cluster.multi_az)
+        : MAX_NODES_180,
+    [allow249NodesOSDCCSROSA, cluster.version?.raw_id, cluster.multi_az],
+  );
+
   const onCollapse = (event, rowKey, isOpen, rowData) => {
     let rows = [];
     if (isOpen) {
@@ -235,7 +256,7 @@ const MachinePools = ({ cluster }) => {
     hasMachineConfiguration && ((isRosa && !isHypershift) || (isOsd && isCcs && isAws));
   const canEditMachineConfiguration = kubeletConfigActions.create && kubeletConfigActions.update;
   const isMachineConfigurationActionDisabled =
-    cluster?.state !== clusterStates.READY || !canEditMachineConfiguration;
+    cluster?.state !== clusterStates.ready || !canEditMachineConfiguration;
   const isMachineConfigurationActionDisabledReason =
     isMachineConfigurationActionDisabled &&
     (!canEditMachineConfiguration
@@ -318,9 +339,10 @@ const MachinePools = ({ cluster }) => {
         ? {
             title: getOpenShiftVersion(
               machinePool,
+              tableActionsDisabled,
               isMachinePoolError,
               isHypershift,
-              tableActionsDisabled,
+              clusterVersionID,
             ),
           }
         : null,
@@ -412,7 +434,7 @@ const MachinePools = ({ cluster }) => {
     cells: [
       {
         props: { colSpan: 4 },
-        title: <Skeleton size="lg" />,
+        title: <Skeleton fontSize="lg" screenreaderText="Loading..." />,
       },
     ],
   };
@@ -430,27 +452,23 @@ const MachinePools = ({ cluster }) => {
     rows[deletedRowIndex] = skeletonRow;
   }
   const openAutoScalingModal = () => dispatch(openModal(modals.EDIT_CLUSTER_AUTOSCALING_V2));
-  const initialValues = getDefaultClusterAutoScaling();
+  const initialValues = getDefaultClusterAutoScaling(maxNodesTotalDefault);
+
   return (
     <>
       {showSkeleton ? (
-        <Card>
-          <CardTitle>
-            <Skeleton size="lg" />
-          </CardTitle>
-          <CardBody>
-            <Skeleton size="lg" />
-          </CardBody>
-          <CardFooter>
-            <Skeleton size="lg" />
-          </CardFooter>
-        </Card>
+        <LoadingSkeletonCard />
       ) : (
         <>
           {!tableActionsDisabled && (
             <UpdateAllMachinePools
               isMachinePoolError={isMachinePoolError}
+              clusterId={clusterID}
               isHypershift={isHypershift}
+              controlPlaneVersion={clusterVersionID}
+              machinePoolData={machinePoolData}
+              region={region}
+              refreshMachinePools={refreshMachinePools}
             />
           )}
           <Card className="ocm-c-machine-pools__card">
@@ -569,7 +587,13 @@ const MachinePools = ({ cluster }) => {
           machineTypesErrorResponse={machineTypesError}
         />
       )}
-      <UpdateMachinePoolModal region={region} />
+      <UpdateMachinePoolModal
+        isHypershift={isHypershift}
+        clusterId={clusterID}
+        refreshMachinePools={refreshMachinePools}
+        controlPlaneVersion={clusterVersionID}
+        region={region}
+      />
       {isClusterAutoscalingModalOpen && (
         <ClusterAutoscalerForm
           clusterAutoscalerData={clusterAutoscalerData}
@@ -579,6 +603,7 @@ const MachinePools = ({ cluster }) => {
           isWizard={false}
           hasAutoscalingMachinePools={hasAutoscalingMachinePools}
           isClusterAutoscalerRefetching={isClusterAutoscalerRefetching}
+          maxNodesTotalDefault={maxNodesTotalDefault}
         />
       )}
       {showMachinePoolsConfigModal && (

@@ -19,14 +19,37 @@ type Props = {
 // OSD and ROSA Classic
 export function ClassicEtcdFipsSection({ isRosa }: Props) {
   const {
-    values: {
-      [FieldId.EtcdEncryption]: etcdEncryption,
-      [FieldId.FipsCryptography]: fipsCryptography,
-    },
+    values: { [FieldId.FipsCryptography]: fipsCryptography },
+    getFieldProps,
+    setFieldValue,
   } = useFormState();
 
   return (
     <Grid hasGutter>
+      <GridItem>
+        <FormGroup label="FIPS cryptography">
+          <CheckboxField
+            name={FieldId.FipsCryptography}
+            label="Enable FIPS cryptography"
+            isDisabled={isRestrictedEnv() /* TODO: what about OSD? TODO: tooltip? */}
+            input={{
+              ...getFieldProps(FieldId.FipsCryptography),
+              onChange: async (event, checked: boolean) => {
+                setFieldValue(FieldId.FipsCryptography, checked, false);
+                if (checked) {
+                  // force etcd encryption checked
+                  setFieldValue(FieldId.EtcdEncryption, true, false);
+                }
+              },
+            }}
+          />
+          <CheckboxDescription>
+            Install a cluster that uses FIPS Validated / Modules in Process cryptographic libraries
+            on the x86_64 architecture.
+          </CheckboxDescription>
+        </FormGroup>
+      </GridItem>
+
       <GridItem>
         <FormGroup label="etcd encryption">
           <Split hasGutter>
@@ -52,27 +75,14 @@ export function ClassicEtcdFipsSection({ isRosa }: Props) {
               />
             </SplitItem>
           </Split>
+          {fipsCryptography && (
+            <CheckboxDescription>Required when FIPS cryptography is enabled.</CheckboxDescription>
+          )}
           <CheckboxDescription>
             Add more encryption for OpenShift and Kubernetes API resources.
           </CheckboxDescription>
         </FormGroup>
       </GridItem>
-
-      {etcdEncryption && (
-        <GridItem>
-          <FormGroup label="FIPS cryptography">
-            <CheckboxField
-              name={FieldId.FipsCryptography}
-              label="Enable FIPS cryptography"
-              isDisabled={isRestrictedEnv() /* TODO: what about OSD? TODO: tooltip? */}
-            />
-            <CheckboxDescription>
-              Install a cluster that uses FIPS Validated / Modules in Process cryptographic
-              libraries on the x86_64 architecture.
-            </CheckboxDescription>
-          </FormGroup>
-        </GridItem>
-      )}
     </Grid>
   );
 }

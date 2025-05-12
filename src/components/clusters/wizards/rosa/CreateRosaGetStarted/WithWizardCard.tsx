@@ -15,12 +15,19 @@ import {
 import { DesktopIcon } from '@patternfly/react-icons/dist/esm/icons/desktop-icon';
 
 import { Link } from '~/common/routing';
+import CreateManagedClusterTooltip from '~/components/common/CreateManagedClusterTooltip';
+import { useCanCreateManagedCluster } from '~/queries/ClusterDetailsQueries/useFetchActionsPermissions';
 
 const WithWizard = () => {
-  const LinkComponent = useCallback((props) => <Link {...props} to="/create/rosa/wizard" />, []);
+  const LinkComponent = useCallback(
+    (props: any) => <Link {...props} to="/create/rosa/wizard" />,
+    [],
+  );
+
+  const { canCreateManagedCluster } = useCanCreateManagedCluster();
 
   return (
-    <Card isFlat isFullHeight>
+    <Card isFlat isFullHeight data-testid="deploy-with-webinterface-card">
       <CardTitle>
         <Title headingLevel="h3" size="lg">
           <DesktopIcon className="ocm-c-wizard-get-started--card-icon" />
@@ -40,9 +47,15 @@ const WithWizard = () => {
         />
       </CardBody>
       <CardFooter>
-        <Button variant={ButtonVariant.secondary} component={LinkComponent}>
-          <DesktopIcon /> Create with web interface
-        </Button>
+        <CreateManagedClusterTooltip>
+          <Button
+            variant={ButtonVariant.secondary}
+            component={LinkComponent}
+            isAriaDisabled={!canCreateManagedCluster}
+          >
+            <DesktopIcon /> Create with web interface
+          </Button>
+        </CreateManagedClusterTooltip>
       </CardFooter>
     </Card>
   );

@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import axios from 'axios';
+
 import { produce } from 'immer';
 import merge from 'lodash/merge';
 
@@ -27,7 +27,7 @@ import type {
   Version,
   VersionGate,
 } from '../../types/clusters_mgmt.v1';
-import type { AugmentedCluster, ClusterWithPermissions, ErrorState } from '../../types/types';
+import type { AugmentedCluster } from '../../types/types';
 import type { ClusterAction } from '../actions/clustersActions';
 import type { TechPreviewActions } from '../actions/techPreviewActions';
 import type { UpgradeGateAction } from '../actions/upgradeGateActions';
@@ -35,27 +35,12 @@ import { clustersConstants } from '../constants';
 import {
   baseRequestState,
   FULFILLED_ACTION,
-  INVALIDATE_ACTION,
   PENDING_ACTION,
   REJECTED_ACTION,
 } from '../reduxHelpers';
 import type { PromiseActionType, PromiseReducerState } from '../types';
 
 type State = {
-  clusters: PromiseReducerState & {
-    valid: boolean;
-    meta: {
-      clustersServiceError?: ErrorState;
-    };
-    clusters: ClusterWithPermissions[];
-    queryParams?: {
-      page: number;
-      ['page_size']: number;
-      filter?: string | undefined;
-      fields?: string | undefined;
-      order?: string | undefined;
-    };
-  };
   clusterStatus: PromiseReducerState & {
     status: ClusterStatus;
   };
@@ -65,6 +50,7 @@ type State = {
   clusterVersions: PromiseReducerState & {
     versions: Version[];
     params?: { [key: string]: string } | undefined;
+    meta?: { [key: string]: boolean };
   };
   details: PromiseReducerState & {
     cluster: AugmentedCluster;
@@ -108,16 +94,6 @@ const emptyCluster = {
 };
 
 const initialState: State = {
-  clusters: {
-    ...baseState,
-    valid: false,
-    meta: {},
-    clusters: [],
-    queryParams: {
-      page: 0,
-      page_size: 0,
-    },
-  },
   clusterStatus: {
     ...baseState,
     status: {},
@@ -175,15 +151,14 @@ const initialState: State = {
 
 const filterAndSortClusterVersions = (versions: Version[]) => {
   const now = Date.now();
-  const filteredVersions = versions.filter((version) => {
-    if (!version.end_of_life_timestamp) {
-      return true;
-    }
-    const eolTimestamp = new Date(version.end_of_life_timestamp).getTime();
-    return eolTimestamp > now;
-  });
   // descending version numbers
-  return filteredVersions.sort((e1, e2) => versionComparator(e2.raw_id!, e1.raw_id!));
+  return versions
+    .filter((e) => e)
+    .filter(
+      (version) =>
+        !version.end_of_life_timestamp || new Date(version.end_of_life_timestamp).getTime() > now,
+    )
+    .sort((e1, e2) => versionComparator(e2.raw_id!, e1.raw_id!));
 };
 
 const clustersReducer = (
@@ -193,48 +168,6 @@ const clustersReducer = (
   // eslint-disable-next-line consistent-return
   produce(state, (draft) => {
     switch (action.type) {
-      // GET_CLUSTERS
-      case INVALIDATE_ACTION(clustersConstants.GET_CLUSTERS):
-        draft.clusters = { ...initialState.clusters };
-        break;
-      case REJECTED_ACTION(clustersConstants.GET_CLUSTERS):
-        draft.clusters = {
-          ...initialState.clusters,
-          ...getErrorState(action),
-          valid: true,
-          clusters: state.clusters.clusters,
-        };
-        break;
-      case PENDING_ACTION(clustersConstants.GET_CLUSTERS):
-        draft.clusters = {
-          ...initialState.clusters,
-          pending: true,
-          valid: true,
-          clusters: state.clusters.clusters,
-        };
-        break;
-      case FULFILLED_ACTION(clustersConstants.GET_CLUSTERS): {
-        const { data } = action.payload;
-        const clustersServiceError =
-          'meta' in data && !!data.meta?.clustersServiceError
-            ? getErrorState({
-                payload: axios.isAxiosError(data.meta.clustersServiceError)
-                  ? data.meta.clustersServiceError
-                  : undefined,
-              })
-            : undefined;
-        draft.clusters = {
-          ...baseState,
-          clusters: data.items,
-          queryParams: data.queryParams,
-          meta: {
-            clustersServiceError:
-              clustersServiceError?.error === true ? clustersServiceError : undefined,
-          },
-          fulfilled: true,
-        };
-        break;
-      }
       case clustersConstants.SET_CLUSTER_DETAILS: {
         const { cluster, mergeDetails } = action.payload;
         draft.details = {
@@ -297,179 +230,6 @@ const clustersReducer = (
         };
         break;
 
-      // EDIT_CLUSTER
-      case REJECTED_ACTION(clustersConstants.EDIT_CLUSTER):
-        draft.editedCluster = {
-          ...initialState.editedCluster,
-          ...getErrorState(action),
-        };
-        break;
-      case PENDING_ACTION(clustersConstants.EDIT_CLUSTER):
-        draft.editedCluster = {
-          ...initialState.editedCluster,
-          pending: true,
-        };
-        break;
-      case FULFILLED_ACTION(clustersConstants.EDIT_CLUSTER):
-        draft.editedCluster = {
-          ...baseState,
-          fulfilled: true,
-        };
-        break;
-      case clustersConstants.CLEAR_DISPLAY_NAME_RESPONSE:
-        draft.editedCluster = {
-          ...initialState.editedCluster,
-        };
-        break;
-
-      // Archive cluster
-      case FULFILLED_ACTION(clustersConstants.ARCHIVE_CLUSTER):
-        draft.archivedCluster = {
-          ...baseState,
-          fulfilled: true,
-        };
-        break;
-      case REJECTED_ACTION(clustersConstants.ARCHIVE_CLUSTER):
-        draft.archivedCluster = {
-          ...initialState.archivedCluster,
-          ...getErrorState(action),
-        };
-        break;
-      case PENDING_ACTION(clustersConstants.ARCHIVE_CLUSTER):
-        draft.archivedCluster = {
-          ...initialState.archivedCluster,
-          pending: true,
-        };
-        break;
-      case clustersConstants.CLEAR_CLUSTER_ARCHIVE_RESPONSE:
-        draft.archivedCluster = {
-          ...initialState.archivedCluster,
-        };
-        break;
-
-      // Hibernate cluster
-      case FULFILLED_ACTION(clustersConstants.HIBERNATE_CLUSTER):
-        draft.hibernatingCluster = {
-          ...baseState,
-          fulfilled: true,
-        };
-        break;
-      case REJECTED_ACTION(clustersConstants.HIBERNATE_CLUSTER):
-        draft.hibernatingCluster = {
-          ...initialState.hibernatingCluster,
-          ...getErrorState(action),
-        };
-        break;
-      case PENDING_ACTION(clustersConstants.HIBERNATE_CLUSTER):
-        draft.hibernatingCluster = {
-          ...initialState.hibernatingCluster,
-          pending: true,
-        };
-        break;
-      case clustersConstants.CLEAR_CLUSTER_HIBERNATE_RESPONSE:
-        draft.hibernatingCluster = {
-          ...initialState.hibernatingCluster,
-        };
-        break;
-
-      // Resume cluster
-      case FULFILLED_ACTION(clustersConstants.RESUME_CLUSTER):
-        draft.resumeHibernatingCluster = {
-          ...baseState,
-          fulfilled: true,
-        };
-        break;
-      case REJECTED_ACTION(clustersConstants.RESUME_CLUSTER):
-        draft.resumeHibernatingCluster = {
-          ...initialState.resumeHibernatingCluster,
-          ...getErrorState(action),
-        };
-        break;
-      case PENDING_ACTION(clustersConstants.RESUME_CLUSTER):
-        draft.resumeHibernatingCluster = {
-          ...initialState.resumeHibernatingCluster,
-          pending: true,
-        };
-        break;
-      case clustersConstants.CLEAR_RESUME_CLUSTER_RESPONSE:
-        draft.resumeHibernatingCluster = {
-          ...initialState.resumeHibernatingCluster,
-        };
-        break;
-
-      // UnArchive cluster
-      case FULFILLED_ACTION(clustersConstants.UNARCHIVE_CLUSTER):
-        draft.unarchivedCluster = {
-          ...baseState,
-          fulfilled: true,
-        };
-        break;
-      case REJECTED_ACTION(clustersConstants.UNARCHIVE_CLUSTER):
-        draft.unarchivedCluster = {
-          ...initialState.unarchivedCluster,
-          ...getErrorState(action),
-        };
-        break;
-      case PENDING_ACTION(clustersConstants.UNARCHIVE_CLUSTER):
-        draft.unarchivedCluster = {
-          ...initialState.unarchivedCluster,
-          pending: true,
-        };
-        break;
-      case clustersConstants.CLEAR_CLUSTER_UNARCHIVE_RESPONSE:
-        draft.unarchivedCluster = {
-          ...initialState.unarchivedCluster,
-        };
-        break;
-
-      // Upgrade trial cluster
-      case FULFILLED_ACTION(clustersConstants.UPGRADE_TRIAL_CLUSTER):
-        draft.upgradedCluster = {
-          ...baseState,
-          cluster: action.payload.data,
-          fulfilled: true,
-        };
-        break;
-      case REJECTED_ACTION(clustersConstants.UPGRADE_TRIAL_CLUSTER):
-        draft.upgradedCluster = {
-          ...initialState.upgradedCluster,
-          ...getErrorState(action),
-        };
-        break;
-      case PENDING_ACTION(clustersConstants.UPGRADE_TRIAL_CLUSTER):
-        draft.upgradedCluster = {
-          ...initialState.upgradedCluster,
-          pending: true,
-        };
-        break;
-      case clustersConstants.CLEAR_UPGRADE_TRIAL_CLUSTER_RESPONSE:
-        draft.upgradedCluster = {
-          ...initialState.upgradedCluster,
-        };
-        break;
-
-      // GET_CLUSTER_STATUS
-      case REJECTED_ACTION(clustersConstants.GET_CLUSTER_STATUS):
-        draft.clusterStatus = {
-          ...initialState.clusterStatus,
-          ...getErrorState(action),
-        };
-        break;
-      case PENDING_ACTION(clustersConstants.GET_CLUSTER_STATUS):
-        draft.clusterStatus = {
-          ...initialState.clusterStatus,
-          pending: true,
-          status: state.clusterStatus.status,
-        };
-        break;
-      case FULFILLED_ACTION(clustersConstants.GET_CLUSTER_STATUS):
-        draft.clusterStatus = {
-          ...baseState,
-          fulfilled: true,
-          status: action.payload.data,
-        };
-        break;
-
       // GET_INFLIGHT_CHECKS
       case REJECTED_ACTION(clustersConstants.GET_INFLIGHT_CHECKS):
         draft.inflightChecks = {
@@ -489,63 +249,6 @@ const clustersReducer = (
           ...baseState,
           fulfilled: true,
           checks: action.payload.data.items || [],
-        };
-        break;
-
-      // RERUN INFLIGHT_CHECKS
-      case FULFILLED_ACTION(clustersConstants.RERUN_INFLIGHT_CHECKS):
-        draft.rerunInflightCheckReq = {
-          ...baseState,
-          fulfilled: true,
-        };
-        break;
-      case REJECTED_ACTION(clustersConstants.RERUN_INFLIGHT_CHECKS):
-        draft.rerunInflightCheckReq = {
-          ...initialState.rerunInflightCheckReq,
-          ...getErrorState(action),
-        };
-        break;
-      case PENDING_ACTION(clustersConstants.RERUN_INFLIGHT_CHECKS):
-        draft.rerunInflightCheckRes = {
-          ...initialState.rerunInflightCheckRes,
-        };
-        draft.rerunInflightCheckReq = {
-          ...initialState.rerunInflightCheckReq,
-          pending: true,
-        };
-        break;
-
-      // GET STATES OF SUBNETS WHICH THE VALIDATOR IS BEING RERUN ON
-      case FULFILLED_ACTION(clustersConstants.GET_RERUN_INFLIGHT_CHECKS):
-        draft.rerunInflightCheckRes = {
-          ...baseState,
-          checks: action.payload.data.items || [],
-          fulfilled: true,
-        };
-        break;
-      case REJECTED_ACTION(clustersConstants.GET_RERUN_INFLIGHT_CHECKS):
-        draft.rerunInflightCheckRes = {
-          ...initialState.rerunInflightCheckRes,
-          ...getErrorState(action),
-        };
-        break;
-      case PENDING_ACTION(clustersConstants.GET_RERUN_INFLIGHT_CHECKS):
-        draft.rerunInflightCheckRes = {
-          ...initialState.rerunInflightCheckRes,
-          pending: true,
-          checks: state.rerunInflightCheckRes.checks, // preserve previous checks to avoid blips
-        };
-        break;
-
-      case clustersConstants.CLEAR_INFLIGHT_CHECKS:
-        draft.inflightChecks = {
-          ...initialState.inflightChecks,
-        };
-        draft.rerunInflightCheckReq = {
-          ...initialState.rerunInflightCheckReq,
-        };
-        draft.rerunInflightCheckRes = {
-          ...initialState.rerunInflightCheckRes,
         };
         break;
 
@@ -570,6 +273,7 @@ const clustersReducer = (
           versions: action.payload.data.items
             ? filterAndSortClusterVersions(action.payload.data.items)
             : [],
+          meta: action.meta,
         };
         break;
 

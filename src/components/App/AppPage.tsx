@@ -7,8 +7,6 @@ import config from '../../config';
 import { AppDrawer } from './AppDrawer';
 import EnvOverrideMessage from './EnvOverrideMessage';
 import ErrorBoundary from './ErrorBoundary';
-import MultiRegionOverrideMessage from './MultiregionOverrideMessage';
-import NewClusterListOverrideMessage from './NewClusterListOverrideMessage';
 import RestrictedEnvOverrideMessage from './RestrictedEnvOverrideMessage';
 
 export const AppPage: React.FC<PropsWithChildren<{ title?: string }>> = ({ children, title }) => {
@@ -24,8 +22,6 @@ export const AppPage: React.FC<PropsWithChildren<{ title?: string }>> = ({ child
       <div className="pf-v5-u-display-flex pf-v5-u-flex-direction-row">
         {restrictedEnvOverride && <RestrictedEnvOverrideMessage />}
         {config.envOverride && <EnvOverrideMessage env={config.envOverride} />}
-        {config.multiRegion && <MultiRegionOverrideMessage />}
-        {config.newClusterList && <NewClusterListOverrideMessage />}
       </div>
       <ErrorBoundary>{children}</ErrorBoundary>
     </AppDrawer>

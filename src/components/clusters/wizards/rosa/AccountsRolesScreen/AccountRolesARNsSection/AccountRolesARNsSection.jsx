@@ -10,6 +10,7 @@ import {
   Grid,
   GridItem,
   Label,
+  Spinner,
   Text,
   TextContent,
   TextList,
@@ -18,7 +19,6 @@ import {
   TextVariants,
   Title,
 } from '@patternfly/react-core';
-import { Spinner } from '@redhat-cloud-services/frontend-components/Spinner';
 
 import { trackEvents } from '~/common/analytics';
 import { formatMinorVersion, isSupportedMinorVersion } from '~/common/helpers';
@@ -28,12 +28,13 @@ import { useFormState } from '~/components/clusters/wizards/hooks';
 import { MIN_MANAGED_POLICY_VERSION } from '~/components/clusters/wizards/rosa/rosaConstants';
 import ExternalLink from '~/components/common/ExternalLink';
 import InstructionCommand from '~/components/common/InstructionCommand';
-import { ReduxSelectDropdown } from '~/components/common/ReduxFormComponents';
-import ReduxVerticalFormGroup from '~/components/common/ReduxFormComponents/ReduxVerticalFormGroup';
+import { ReduxSelectDropdown } from '~/components/common/ReduxFormComponents_deprecated';
+import ReduxVerticalFormGroup from '~/components/common/ReduxFormComponents_deprecated/ReduxVerticalFormGroup';
 import { useOCPLatestVersion } from '~/components/releases/hooks';
 import useAnalytics from '~/hooks/useAnalytics';
-import { useFeatureGate } from '~/hooks/useFeatureGate';
-import { HCP_USE_UNMANAGED } from '~/redux/constants/featureConstants';
+import { usePreviousProps } from '~/hooks/usePreviousProps';
+import { HCP_USE_UNMANAGED } from '~/queries/featureGates/featureConstants';
+import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 
 import { FieldId } from '../../constants';
 import { RosaCliCommand } from '../constants/cliCommands';
@@ -93,14 +94,8 @@ function AccountRolesARNsSection({
   isHypershiftSelected,
   onAccountChanged,
 }) {
-  const {
-    setFieldValue,
-    getFieldProps,
-    getFieldMeta,
-    setFieldTouched,
-    validateForm,
-    values: { [FieldId.AssociatedAwsId]: previouslySelectedAWSAccountID },
-  } = useFormState();
+  const { setFieldValue, getFieldProps, getFieldMeta, setFieldTouched, validateForm } =
+    useFormState();
   const track = useAnalytics();
   const [isExpanded, setIsExpanded] = useState(true);
   const [accountRoles, setAccountRoles] = useState([]);
@@ -113,6 +108,8 @@ function AccountRolesARNsSection({
   const isMissingOCMRole = hasNoTrustedRelationshipOnClusterRoleError(
     getAWSAccountRolesARNsResponse,
   );
+
+  const prevSelected = usePreviousProps(selectedAWSAccountID);
 
   useEffect(() => {
     // this is required to show any validation error messages for the 4 disabled ARNs fields
@@ -144,7 +141,8 @@ function AccountRolesARNsSection({
   };
 
   useEffect(() => {
-    if (selectedAWSAccountID !== previouslySelectedAWSAccountID) {
+    // Skips first render since prevSelected is undefined
+    if (prevSelected && selectedAWSAccountID !== prevSelected) {
       updateRoleArns(null);
     }
     setSelectedInstallerRole(NO_ROLE_DETECTED);
@@ -333,7 +331,7 @@ function AccountRolesARNsSection({
       {!hasFinishedLoadingRoles && (
         <GridItem>
           <div className="spinner-fit-container">
-            <Spinner />
+            <Spinner size="lg" aria-label="Loading..." />
           </div>
           <div className="spinner-loading-text" data-testid="spinner-loading-arn-text">
             Loading account roles ARNs...
@@ -390,13 +388,9 @@ function AccountRolesARNsSection({
                   helpText=""
                   extendedHelpText={
                     <>
-                      An IAM role used by the ROSA installer.
-                      <br />
-                      For more information see{' '}
-                      <ExternalLink href={links.ROSA_AWS_IAM_ROLES}>
-                        Table 1 about the installer role policy
-                      </ExternalLink>
-                      .
+                      An IAM role used by the ROSA installer. The role is used with the
+                      corresponding policy resource to provide the installer with the permissions
+                      required to complete cluster installation tasks.
                     </>
                   }
                 />
@@ -418,13 +412,9 @@ function AccountRolesARNsSection({
                   extendedHelpText={
                     <>
                       An IAM role used by the Red Hat Site Reliability Engineering (SRE) support
-                      team.
-                      <br />
-                      For more information see{' '}
-                      <ExternalLink href={links.ROSA_AWS_IAM_ROLES}>
-                        Table 4 about the support role policy
-                      </ExternalLink>
-                      .
+                      team. The role is used with the corresponding policy resource to provide the
+                      Red Hat SRE support team with the permissions required to support ROSA
+                      clusters.
                     </>
                   }
                   isDisabled
@@ -445,13 +435,9 @@ function AccountRolesARNsSection({
                   isRequired
                   extendedHelpText={
                     <>
-                      An IAM role used by the ROSA compute instances.
-                      <br />
-                      For more information see{' '}
-                      <ExternalLink href={links.ROSA_AWS_IAM_ROLES}>
-                        Table 3 about the worker/compute role policy
-                      </ExternalLink>
-                      .
+                      An IAM role used by the ROSA compute instances. The role is used with the
+                      corresponding policy resource to provide the compute instances with the
+                      permissions required to manage their components.
                     </>
                   }
                   isDisabled
@@ -475,13 +461,9 @@ function AccountRolesARNsSection({
                       isRequired
                       extendedHelpText={
                         <>
-                          An IAM role used by the ROSA control plane.
-                          <br />
-                          For more information see{' '}
-                          <ExternalLink href={links.ROSA_AWS_IAM_ROLES}>
-                            Table 2 about the control plane role policy
-                          </ExternalLink>
-                          .
+                          An IAM role used by the ROSA control plane. The role is used with the
+                          corresponding policy resource to provide the control plane with the
+                          permissions required to manage its components.
                         </>
                       }
                       isDisabled

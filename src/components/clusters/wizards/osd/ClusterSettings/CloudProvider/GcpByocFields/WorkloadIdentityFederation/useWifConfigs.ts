@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 import { AxiosError, AxiosResponse } from 'axios';
 
-import { WifConfig } from '~/components/clusters/wizards/osd/ClusterSettings/CloudProvider/tempWifTypes/WifConfig';
 import { WifConfigList } from '~/components/clusters/wizards/osd/ClusterSettings/CloudProvider/types';
+import { WifConfig } from '~/types/clusters_mgmt.v1';
 
 export function useGetWifConfigs(
   getWifConfigService: (query: string) => Promise<AxiosResponse<WifConfigList>>,

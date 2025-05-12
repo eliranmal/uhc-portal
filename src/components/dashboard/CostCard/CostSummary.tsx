@@ -3,6 +3,7 @@ import React from 'react';
 import {
   Grid,
   GridItem,
+  Skeleton,
   TextContent,
   TextList,
   TextListItem,
@@ -10,7 +11,6 @@ import {
   TextListVariants,
   Title,
 } from '@patternfly/react-core';
-import Skeleton from '@redhat-cloud-services/frontend-components/Skeleton';
 
 import { PromiseReducerState } from '~/redux/types';
 
@@ -26,7 +26,7 @@ type CostSummaryProps = {
 
 const CostSummary = ({ report }: CostSummaryProps) =>
   !report.fulfilled ? (
-    <Skeleton size="md" />
+    <Skeleton fontSize="md" screenreaderText="Loading..." />
   ) : (
     <Grid hasGutter>
       <GridItem lg={5} md={12}>

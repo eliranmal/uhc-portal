@@ -1,5 +1,7 @@
 import { ClusterFromSubscription } from '../types/types';
 
+export const UNNAMED_CLUSTER = 'Unnamed Cluster';
+
 /**
  * Get the display name for the cluster (from the subscription), with fallbacks to name, UUID,
  * or the string "Unnamed Cluster".
@@ -22,7 +24,7 @@ const getClusterName = (cluster: ClusterFromSubscription): string => {
         return subscriptionId;
       }
     }
-    return 'Unnamed Cluster';
+    return UNNAMED_CLUSTER;
   }
   return clusterName;
 };

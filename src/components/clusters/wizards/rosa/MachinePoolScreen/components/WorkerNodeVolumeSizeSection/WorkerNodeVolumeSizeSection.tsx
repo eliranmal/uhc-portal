@@ -4,10 +4,7 @@ import { Field } from 'formik';
 import { FormGroup } from '@patternfly/react-core';
 
 import { validateWorkerVolumeSize } from '~/common/validators';
-import {
-  defaultWorkerNodeVolumeSizeGiB,
-  workerNodeVolumeSizeMinGiB,
-} from '~/components/clusters/common/machinePools/constants';
+import { defaultWorkerNodeVolumeSizeGiB } from '~/components/clusters/common/machinePools/constants';
 import { useFormState } from '~/components/clusters/wizards/hooks';
 import { FieldId } from '~/components/clusters/wizards/rosa/constants';
 import FormNumberInput from '~/components/common/FormComponents/FormNumberInput';
@@ -16,10 +13,12 @@ import PopoverHint from '~/components/common/PopoverHint';
 import './WorkerNodeVolumeSizeSection.scss';
 
 type WorkerNodeVolumeSizeSectionProps = {
+  minWorkerVolumeSizeGiB: number;
   maxWorkerVolumeSizeGiB: number;
 };
 
 const WorkerNodeVolumeSizeSection = ({
+  minWorkerVolumeSizeGiB,
   maxWorkerVolumeSizeGiB,
 }: WorkerNodeVolumeSizeSectionProps) => {
   const {
@@ -44,7 +43,7 @@ const WorkerNodeVolumeSizeSection = ({
       fieldId={FieldId.WorkerVolumeSizeGib}
       labelIcon={
         <PopoverHint
-          hint={`Root disks are AWS EBS volumes attached as the primary disk for AWS EC2 instances. The root disk size for this machine pool group of nodes must be between ${workerNodeVolumeSizeMinGiB}GiB and ${maxWorkerVolumeSizeGiB}GiB.`}
+          hint={`Root disks are AWS EBS volumes attached as the primary disk for AWS EC2 instances. The root disk size for this machine pool group of nodes must be between ${minWorkerVolumeSizeGiB}GiB and ${maxWorkerVolumeSizeGiB}GiB.`}
         />
       }
     >
@@ -54,9 +53,9 @@ const WorkerNodeVolumeSizeSection = ({
         inputName={FieldId.WorkerVolumeSizeGib}
         inputAriaLabel="Worker root disk size"
         validate={(value: number) =>
-          validateWorkerVolumeSize(value, {}, { maxWorkerVolumeSizeGiB })
+          validateWorkerVolumeSize(value, {}, { minWorkerVolumeSizeGiB, maxWorkerVolumeSizeGiB })
         }
-        min={workerNodeVolumeSizeMinGiB}
+        min={minWorkerVolumeSizeGiB}
         max={maxWorkerVolumeSizeGiB}
         widthChars={5}
         unit="GiB"

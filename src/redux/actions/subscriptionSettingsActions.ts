@@ -15,8 +15,9 @@ limitations under the License.
 */
 import { action, ActionType } from 'typesafe-actions';
 
+import { SubscriptionPatchRequest } from '~/types/accounts_mgmt.v1';
+
 import { accountsService } from '../../services';
-import type { SubscriptionPatchRequest } from '../../types/accounts_mgmt.v1/models/SubscriptionPatchRequest';
 import { subscriptionSettingsConstants } from '../constants';
 
 const editSubscriptionSettings = (subscriptionID: string, data: SubscriptionPatchRequest) =>

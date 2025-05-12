@@ -1,8 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { Bullseye } from '@patternfly/react-core';
-import { Spinner } from '@redhat-cloud-services/frontend-components/Spinner';
+import { Bullseye, Spinner } from '@patternfly/react-core';
 
 class ExternalRedirect extends React.Component {
   componentDidMount() {
@@ -13,7 +12,9 @@ class ExternalRedirect extends React.Component {
   render() {
     return (
       <Bullseye>
-        <Spinner size="lg" centered />
+        <div className="pf-v5-u-text-align-center">
+          <Spinner size="lg" aria-label="Loading..." />
+        </div>
       </Bullseye>
     );
   }

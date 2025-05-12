@@ -3,7 +3,7 @@ import isEmpty from 'lodash/isEmpty';
 
 import type { Cluster as AICluster } from '@openshift-assisted/types/assisted-installer-service';
 
-import { type Subscription, SubscriptionCommonFields } from '~/types/accounts_mgmt.v1';
+import { type Subscription, SubscriptionCommonFieldsStatus } from '~/types/accounts_mgmt.v1';
 import type { Cluster } from '~/types/clusters_mgmt.v1';
 import { ClusterWithPermissions } from '~/types/types';
 
@@ -14,11 +14,16 @@ import {
   normalizeCluster,
   normalizeMetrics,
 } from '../../../common/normalize';
-import { Region } from '../types/types';
 
-export type MapEntry = { aiCluster?: AICluster; cluster?: Cluster; subscription: Subscription };
+export type SubscriptionMapEntry = {
+  aiCluster?: AICluster;
+  cluster?: Cluster;
+  subscription: Subscription;
+};
 
-export const createResponseForFetchClusters = (subscriptionMap: Map<string, MapEntry>) => {
+export const createResponseForFetchClusters = (
+  subscriptionMap: Map<string, SubscriptionMapEntry>,
+) => {
   const result: (ClusterWithPermissions | Cluster)[] = [];
   subscriptionMap.forEach((entry) => {
     let cluster: ClusterWithPermissions | Cluster;
@@ -33,7 +38,7 @@ export const createResponseForFetchClusters = (subscriptionMap: Map<string, MapE
       };
     } else if (
       entry.subscription.managed &&
-      entry.subscription.status !== SubscriptionCommonFields.status.DEPROVISIONED &&
+      entry.subscription.status !== SubscriptionCommonFieldsStatus.Deprovisioned &&
       !!entry?.cluster &&
       !isEmpty(entry?.cluster)
     ) {
@@ -65,15 +70,18 @@ export type ErrorResponse = AxiosError & {
 };
 
 export const formatClusterListError = (
-  response: { error: ErrorResponse | null },
-  region?: Region,
+  response: { error: ErrorResponse | null | undefined },
+  region?: String,
 ) => {
   if (!response.error || (!response.error?.response?.data?.reason && !response.error?.message)) {
     return null;
   }
-  return {
+  const returnValue = {
     reason: response.error?.response?.data?.reason || response.error?.message,
     operation_id: response.error?.response?.data?.operation_id,
-    region,
   };
+  if (region) {
+    return { ...returnValue, region };
+  }
+  return returnValue;
 };

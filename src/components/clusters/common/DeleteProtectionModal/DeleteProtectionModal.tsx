@@ -3,38 +3,41 @@ import { useDispatch } from 'react-redux';
 
 import { Flex } from '@patternfly/react-core';
 
+import { useUpdateDeleteProtections } from '~/queries/ClusterDetailsQueries/useUpdateDeleteProtection';
 import { useGlobalState } from '~/redux/hooks';
 
 import ErrorBox from '../../../common/ErrorBox';
 import Modal from '../../../common/Modal/Modal';
 import { closeModal } from '../../../common/Modal/ModalActions';
 import modals from '../../../common/Modal/modals';
-import {
-  clearUpdateDeleteProtection,
-  updateDeleteProtection as updateDeleteProtectionAction,
-} from '../../ClusterDetails/components/Overview/DetailsRight/DeleteProtection/deleteProtectionActions';
 
 const DeleteProtectionModal = ({ onClose }: { onClose: () => void }) => {
-  const modalData = useGlobalState((state) => state.modal.data) as any;
+  const {
+    mutate: updateDeleteProtection,
+    isSuccess,
+    isPending,
+    error,
+    isError,
+  } = useUpdateDeleteProtections();
   const dispatch = useDispatch();
-  const { updateDeleteProtection } = useGlobalState((state) => state.deleteProtection);
-  const { protectionEnabled } = modalData;
+
+  const modalData = useGlobalState((state) => state.modal.data) as any;
+  const { clusterID, protectionEnabled, region } = modalData;
 
   const handleClose = useCallback(() => {
     dispatch(closeModal());
-    dispatch(clearUpdateDeleteProtection());
   }, [dispatch]);
 
   const handlePrimaryClick = () => {
-    dispatch(updateDeleteProtectionAction(modalData.clusterID, !protectionEnabled));
+    updateDeleteProtection({ clusterID, region, isProtected: !protectionEnabled });
   };
 
   useEffect(() => {
-    if (updateDeleteProtection.fulfilled) {
+    if (isSuccess) {
       onClose();
       handleClose();
     }
-  }, [updateDeleteProtection, onClose, handleClose]);
+  }, [handleClose, isSuccess, onClose]);
 
   return (
     <Modal
@@ -46,13 +49,13 @@ const DeleteProtectionModal = ({ onClose }: { onClose: () => void }) => {
       onSecondaryClick={handleClose}
       data-testid="delete-protection-dialog"
       titleIconVariant="warning"
-      isPending={updateDeleteProtection.pending}
+      isPending={isPending}
     >
       <Flex direction={{ default: 'column' }}>
-        {updateDeleteProtection.error ? (
+        {isError ? (
           <ErrorBox
             message={`Error ${protectionEnabled ? 'disabling' : 'enabling'} Delete Protection`}
-            response={updateDeleteProtection}
+            response={error || {}}
           />
         ) : null}
         <p>

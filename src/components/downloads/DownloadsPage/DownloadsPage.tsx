@@ -3,6 +3,7 @@ import { produce } from 'immer';
 import { useDispatch } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 
+import PageHeader from '@patternfly/react-component-groups/dist/dynamic/PageHeader';
 import {
   ExpandableSectionToggle,
   PageSection,
@@ -12,7 +13,6 @@ import {
 } from '@patternfly/react-core';
 import { Th, Thead, Tr } from '@patternfly/react-table';
 import { Table as TableDeprecated } from '@patternfly/react-table/deprecated';
-import { PageHeader, PageHeaderTitle } from '@redhat-cloud-services/frontend-components/PageHeader';
 
 import { hasRestrictTokensCapability } from '~/common/restrictTokensHelper';
 import { Link, useNavigate } from '~/common/routing';
@@ -181,12 +181,7 @@ const DownloadsPage = () => {
 
   return (
     <AppPage title="Downloads | Red Hat OpenShift Cluster Manager">
-      <PageHeader className="downloads-page-header">
-        <Split>
-          <SplitItem isFilled>
-            <PageHeaderTitle className="ocm-page-title" title="Downloads" />
-          </SplitItem>
-        </Split>
+      <PageHeader title="Downloads" subtitle="">
         <Split className="subheader">
           <SplitItem>
             <DownloadsCategoryDropdown

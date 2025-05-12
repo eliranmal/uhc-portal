@@ -1,5 +1,5 @@
 import { GlobalState } from '~/redux/store';
-import { ClusterFromSubscription } from '~/types/types';
+import { ClusterFromSubscription, ClusterWithPermissions } from '~/types/types';
 
 import {
   hasCapability,
@@ -20,8 +20,8 @@ const canTransferClusterOwnershipSelector = (state: GlobalState) =>
 const canTransferClusterOwnershipMultiRegion = (cluster: ClusterFromSubscription) =>
   hasCapability(cluster?.subscription, subscriptionCapabilities.RELEASE_OCP_CLUSTERS);
 
-const canTransferClusterOwnershipListSelector = (state: GlobalState) =>
-  (state?.clusters?.clusters?.clusters ?? []).reduce(
+const canTransferClusterOwnershipListFromClusters = (clusters: ClusterWithPermissions[] = []) =>
+  clusters.reduce(
     (acc, cluster) => ({
       ...acc,
       [`${cluster.id}`]: hasCapability(
@@ -33,7 +33,7 @@ const canTransferClusterOwnershipListSelector = (state: GlobalState) =>
   );
 
 export {
-  canTransferClusterOwnershipListSelector,
   canTransferClusterOwnershipMultiRegion,
   canTransferClusterOwnershipSelector,
+  canTransferClusterOwnershipListFromClusters,
 };

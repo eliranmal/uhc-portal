@@ -66,7 +66,7 @@ describe('<FeaturedProductsCards />', () => {
     const readMoreBtns = screen.getAllByTestId(`product-overview-card__learn-more-button-${TITLE}`);
 
     const productCardLogos = screen.getAllByTestId('product-overview-card__logo');
-    expect(productCardLogos).toHaveLength(2);
+    expect(productCardLogos).toHaveLength(3);
 
     const productOverviewCards = screen.getAllByTestId('product-overview-card');
 
@@ -82,7 +82,7 @@ describe('<FeaturedProductsCards />', () => {
     expect(labelTexts).toHaveLength(2);
 
     const openRightDrawerIcons = screen.getAllByTestId('open-right-drawer-icon');
-    expect(openRightDrawerIcons).toHaveLength(2);
+    expect(openRightDrawerIcons).toHaveLength(3);
 
     await checkAccessibility(container);
   });

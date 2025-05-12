@@ -2,7 +2,7 @@ import React from 'react';
 
 import { checkAccessibility, render, screen } from '~/testUtils';
 
-import ClusterNonEditableAlert from '../ClusterNonEditableAlert';
+import ClusterNonEditableAlert from '../ClusterDetailsTop/components/ClusterNonEditableAlert';
 
 describe('<ClusterNonEditableAlert />', () => {
   it('properly renders', async () => {

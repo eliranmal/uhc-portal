@@ -2,8 +2,8 @@ import React from 'react';
 
 import { checkAccessibility, mockRestrictedEnv, render, screen, within } from '~/testUtils';
 
-import { useGlobalState } from '../../../../../../redux/hooks/useGlobalState';
-import { SubscriptionCommonFields } from '../../../../../../types/accounts_mgmt.v1';
+import { useFetchMachineOrNodePools } from '../../../../../../queries/ClusterDetailsQueries/MachinePoolTab/useFetchMachineOrNodePools';
+import { SubscriptionCommonFieldsStatus } from '../../../../../../types/accounts_mgmt.v1';
 import fixtures from '../../../__tests__/ClusterDetails.fixtures';
 
 import DetailsRight from './DetailsRight';
@@ -17,7 +17,9 @@ const defaultProps = {
   isDeprovisioned: false,
 };
 
-jest.mock('../../../../../../redux/hooks/useGlobalState');
+jest.mock(
+  '../../../../../../queries/ClusterDetailsQueries/MachinePoolTab/useFetchMachineOrNodePools',
+);
 
 const componentText = {
   STATUS: { label: 'Status', limitedSupport: '- Limited support' },
@@ -78,6 +80,7 @@ describe('<DetailsRight />', () => {
   it('is accessible on initial render', async () => {
     // Arrange
     const newProps = { ...defaultProps };
+    useFetchMachineOrNodePools.mockReturnValue({ data: [] });
     const { container } = render(<DetailsRight {...newProps} />);
 
     // Assert
@@ -92,6 +95,7 @@ describe('<DetailsRight />', () => {
         subscription: { ...fixtures.AIClusterDetails.cluster.subscription, metrics: [] },
       };
       const newProps = { ...defaultProps, cluster: AIClusterFixture };
+      useFetchMachineOrNodePools.mockReturnValue({ data: [] });
       render(<DetailsRight {...newProps} />);
 
       // Assert
@@ -105,6 +109,7 @@ describe('<DetailsRight />', () => {
       expect(AIClusterFixture.subscription.metrics.length).toBeGreaterThan(0);
 
       const newProps = { ...defaultProps, cluster: AIClusterFixture };
+      useFetchMachineOrNodePools.mockReturnValue({ data: [] });
       render(<DetailsRight {...newProps} />);
 
       // Assert
@@ -124,6 +129,7 @@ describe('<DetailsRight />', () => {
           },
         },
       };
+      useFetchMachineOrNodePools.mockReturnValue({ data: [] });
       render(<DetailsRight {...newProps} />);
 
       // Assert
@@ -142,6 +148,7 @@ describe('<DetailsRight />', () => {
           },
         },
       };
+      useFetchMachineOrNodePools.mockReturnValue({ data: [] });
       render(<DetailsRight {...newProps} />);
 
       // Assert
@@ -159,7 +166,7 @@ describe('<DetailsRight />', () => {
         },
       };
       const newProps = { ...defaultProps, cluster: clusterErrorFixture };
-
+      useFetchMachineOrNodePools.mockReturnValue({ data: [] });
       render(<DetailsRight {...newProps} />);
 
       // Assert
@@ -169,6 +176,7 @@ describe('<DetailsRight />', () => {
     it('hides error if cluster does not have a provision error', () => {
       // Arrange
       expect(defaultProps.cluster.status.provision_error_code).toBeFalsy();
+      useFetchMachineOrNodePools.mockReturnValue({ data: [] });
       render(<DetailsRight {...defaultProps} />);
 
       // Assert
@@ -187,7 +195,7 @@ describe('<DetailsRight />', () => {
         },
       };
       const newProps = { ...defaultProps, cluster: clusterErrorFixture };
-
+      useFetchMachineOrNodePools.mockReturnValue({ data: [] });
       render(<DetailsRight {...newProps} />);
 
       // Assert
@@ -202,6 +210,7 @@ describe('<DetailsRight />', () => {
     });
 
     it('shows delete protection', () => {
+      useFetchMachineOrNodePools.mockReturnValue({ data: [] });
       // Arrange
       render(<DetailsRight {...defaultProps} />);
 
@@ -216,6 +225,7 @@ describe('<DetailsRight />', () => {
         subscription: { status: 'Archived', id: 'fake' },
       };
       const props = { ...defaultProps, cluster };
+      useFetchMachineOrNodePools.mockReturnValue({ data: [] });
       render(<DetailsRight {...props} />);
 
       // Assert
@@ -227,13 +237,13 @@ describe('<DetailsRight />', () => {
     it('shows total VPC if cluster is not disconnected and does not have sockets', () => {
       // Arrange
       expect(defaultProps.cluster.subscription.status).not.toEqual(
-        SubscriptionCommonFields.status.DISCONNECTED,
+        SubscriptionCommonFieldsStatus.Disconnected,
       );
       expect(defaultProps.cluster.metrics.sockets.total.value).toBeFalsy();
 
       const numberOfVCPU = 36;
       expect(defaultProps.cluster.metrics.cpu.total.value).toEqual(numberOfVCPU);
-
+      useFetchMachineOrNodePools.mockReturnValue({ data: [] });
       render(<DetailsRight {...defaultProps} />);
 
       // Assert
@@ -251,11 +261,11 @@ describe('<DetailsRight />', () => {
           ...clusterFixture,
           subscription: {
             ...clusterFixture.subscription,
-            status: SubscriptionCommonFields.status.DISCONNECTED,
+            status: SubscriptionCommonFieldsStatus.Disconnected,
           },
         },
       };
-
+      useFetchMachineOrNodePools.mockReturnValue({ data: [] });
       render(<DetailsRight {...newProps} />);
 
       // Assert
@@ -266,7 +276,7 @@ describe('<DetailsRight />', () => {
       // Arrange
       const clusterFixture = defaultProps.cluster;
       expect(clusterFixture.subscription.status).not.toEqual(
-        SubscriptionCommonFields.status.DISCONNECTED,
+        SubscriptionCommonFieldsStatus.Disconnected,
       );
 
       const newProps = {
@@ -282,6 +292,7 @@ describe('<DetailsRight />', () => {
           },
         },
       };
+      useFetchMachineOrNodePools.mockReturnValue({ data: [] });
       render(<DetailsRight {...newProps} />);
 
       // Assert
@@ -300,11 +311,11 @@ describe('<DetailsRight />', () => {
           ...clusterFixture,
           subscription: {
             ...clusterFixture.subscription,
-            status: SubscriptionCommonFields.status.DISCONNECTED,
+            status: SubscriptionCommonFieldsStatus.Disconnected,
           },
         },
       };
-
+      useFetchMachineOrNodePools.mockReturnValue({ data: [] });
       render(<DetailsRight {...newProps} />);
 
       // Assert
@@ -314,11 +325,12 @@ describe('<DetailsRight />', () => {
     it('shows total memory label if cluster is not disconnected', () => {
       // Arrange
       expect(defaultProps.cluster.subscription.status).not.toEqual(
-        SubscriptionCommonFields.status.DISCONNECTED,
+        SubscriptionCommonFieldsStatus.Disconnected,
       );
       const memory = defaultProps.cluster.metrics.memory.total;
       expect(memory.value).toEqual(147469647872);
       expect(memory.unit).toEqual('B');
+      useFetchMachineOrNodePools.mockReturnValue({ data: [] });
       render(<DetailsRight {...defaultProps} />);
 
       // Assert
@@ -341,7 +353,7 @@ describe('<DetailsRight />', () => {
           },
         },
       };
-
+      useFetchMachineOrNodePools.mockReturnValue({ data: [] });
       render(<DetailsRight {...newProps} />);
 
       // Assert
@@ -363,7 +375,7 @@ describe('<DetailsRight />', () => {
           },
         },
       };
-
+      useFetchMachineOrNodePools.mockReturnValue({ data: [] });
       render(<DetailsRight {...newProps} />);
 
       // Assert
@@ -389,55 +401,11 @@ describe('<DetailsRight />', () => {
           },
         },
       };
-
+      useFetchMachineOrNodePools.mockReturnValue({ data: [] });
       render(<DetailsRight {...newProps} />);
 
       // Assert
       expect(screen.getByText('Infrastructure GCP account')).toBeInTheDocument();
-    });
-  });
-
-  describe('aws billing account', () => {
-    it('shows aws billing account if aws account is known', () => {
-      // Arrange
-      const clusterFixture = defaultProps.cluster;
-
-      const newProps = {
-        ...defaultProps,
-        cluster: {
-          ...clusterFixture,
-          subscription: {
-            ...clusterFixture.subscription,
-            billing_marketplace_account: '1234567890',
-          },
-        },
-      };
-
-      render(<DetailsRight {...newProps} />);
-
-      // Assert
-      checkForValue(componentText.AWS_BILLING_ACCOUNT.label, '1234567890');
-    });
-
-    it('hides aws billing account if aws account is not known', () => {
-      // Arrange
-      const clusterFixture = defaultProps.cluster;
-
-      const newProps = {
-        ...defaultProps,
-        cluster: {
-          ...clusterFixture,
-          subscription: {
-            ...clusterFixture.subscription,
-            billing_marketplace_account: undefined,
-          },
-        },
-      };
-
-      render(<DetailsRight {...newProps} />);
-
-      // Assert
-      checkForValueAbsence(componentText.AWS_BILLING_ACCOUNT.label);
     });
   });
 
@@ -454,7 +422,7 @@ describe('<DetailsRight />', () => {
           ccs: { enabled: false },
         },
       };
-
+      useFetchMachineOrNodePools.mockReturnValue({ data: [] });
       render(<DetailsRight {...newProps} />);
 
       // Assert
@@ -474,7 +442,7 @@ describe('<DetailsRight />', () => {
           ccs: { enabled: true },
         },
       };
-
+      useFetchMachineOrNodePools.mockReturnValue({ data: [] });
       render(<DetailsRight {...newProps} />);
 
       // Assert
@@ -495,7 +463,7 @@ describe('<DetailsRight />', () => {
           load_balancer_quota: '100',
         },
       };
-
+      useFetchMachineOrNodePools.mockReturnValue({ data: [] });
       render(<DetailsRight {...newProps} />);
 
       // Assert
@@ -516,6 +484,7 @@ describe('<DetailsRight />', () => {
           load_balancer_quota: undefined,
         },
       };
+      useFetchMachineOrNodePools.mockReturnValue({ data: [] });
 
       render(<DetailsRight {...newProps} />);
 
@@ -540,6 +509,7 @@ describe('<DetailsRight />', () => {
           },
         },
       };
+      useFetchMachineOrNodePools.mockReturnValue({ data: [] });
 
       render(<DetailsRight {...newProps} />);
 
@@ -562,6 +532,7 @@ describe('<DetailsRight />', () => {
           storage_quota: undefined,
         },
       };
+      useFetchMachineOrNodePools.mockReturnValue({ data: [] });
 
       render(<DetailsRight {...newProps} />);
 
@@ -609,6 +580,7 @@ describe('<DetailsRight />', () => {
               metrics: { ...clusterFixture.metrics, nodes: { master: 12 } },
             },
           };
+          useFetchMachineOrNodePools.mockReturnValue({ data: [] });
 
           render(<DetailsRight {...newProps} />);
 
@@ -631,6 +603,7 @@ describe('<DetailsRight />', () => {
               metrics: { ...clusterFixture.metrics, nodes: { master: undefined } },
             },
           };
+          useFetchMachineOrNodePools.mockReturnValue({ data: [] });
 
           render(<DetailsRight {...newProps} />);
 
@@ -654,6 +627,8 @@ describe('<DetailsRight />', () => {
             },
           };
 
+          useFetchMachineOrNodePools.mockReturnValue({ data: [] });
+
           render(<DetailsRight {...newProps} />);
 
           // Assert
@@ -675,6 +650,7 @@ describe('<DetailsRight />', () => {
               metrics: { ...clusterFixture.metrics, nodes: { master: undefined } },
             },
           };
+          useFetchMachineOrNodePools.mockReturnValue({ data: [] });
 
           render(<DetailsRight {...newProps} />);
 
@@ -702,6 +678,8 @@ describe('<DetailsRight />', () => {
             },
           };
 
+          useFetchMachineOrNodePools.mockReturnValue({ data: [] });
+
           render(<DetailsRight {...newProps} />);
 
           // Assert
@@ -722,6 +700,7 @@ describe('<DetailsRight />', () => {
               nodes: { infra: 0 },
             },
           };
+          useFetchMachineOrNodePools.mockReturnValue({ data: [] });
 
           render(<DetailsRight {...newProps} />);
 
@@ -743,6 +722,7 @@ describe('<DetailsRight />', () => {
               nodes: { infra: 111 },
             },
           };
+          useFetchMachineOrNodePools.mockReturnValue({ data: [] });
 
           render(<DetailsRight {...newProps} />);
 
@@ -752,6 +732,9 @@ describe('<DetailsRight />', () => {
 
         it('shows  desired  count  when  header is shown ', () => {
           // Arrange
+          useFetchMachineOrNodePools.mockReturnValue({
+            data: [],
+          });
           const clusterFixture = defaultProps.cluster;
 
           const newProps = {
@@ -798,7 +781,10 @@ describe('<DetailsRight />', () => {
       describe('Compute nodes', () => {
         it('shows number  desired worker nodes if  desired count is known', () => {
           // Arrange
-          useGlobalState.mockReturnValue(machinePoolsFixtures.nodePoolsWithoutAutoScale);
+          // useGlobalState.mockReturnValue(machinePoolsFixtures.nodePoolsWithoutAutoScale);
+          useFetchMachineOrNodePools.mockReturnValue({
+            data: machinePoolsFixtures.nodePoolsWithoutAutoScale,
+          });
 
           const clusterFixture = defaultProps.cluster;
 
@@ -828,9 +814,12 @@ describe('<DetailsRight />', () => {
         it('shows number of actual worker nodes if  actual  count is known', () => {
           // Arrange
           const clusterFixture = defaultProps.cluster;
-          useGlobalState.mockReturnValue(
-            machinePoolsFixtures.nodePoolsWithoutAutoScaleWithNoReplicas,
-          );
+          // useGlobalState.mockReturnValue(
+          //   machinePoolsFixtures.nodePoolsWithoutAutoScaleWithNoReplicas,
+          // );
+          useFetchMachineOrNodePools.mockReturnValue({
+            data: machinePoolsFixtures.nodePoolsWithoutAutoScaleWithNoReplicas,
+          });
 
           const newProps = {
             ...defaultProps,
@@ -861,7 +850,10 @@ describe('<DetailsRight />', () => {
         it('shows both actual and desired worker nodes if both are known', () => {
           // Arrange
           const clusterFixture = defaultProps.cluster;
-          useGlobalState.mockReturnValue(machinePoolsFixtures.nodePoolsWithoutAutoScale);
+          // useGlobalState.mockReturnValue(machinePoolsFixtures.nodePoolsWithoutAutoScale);
+          useFetchMachineOrNodePools.mockReturnValue({
+            data: machinePoolsFixtures.nodePoolsWithoutAutoScale,
+          });
 
           const newProps = {
             ...defaultProps,
@@ -893,9 +885,12 @@ describe('<DetailsRight />', () => {
         it('shows "NA" for worker nodes if both actual and desired count is not known', () => {
           // Arrange
           const clusterFixture = defaultProps.cluster;
-          useGlobalState.mockReturnValue(
-            machinePoolsFixtures.nodePoolsWithoutAutoScaleWithNoReplicas,
-          );
+          // useGlobalState.mockReturnValue(
+          //   machinePoolsFixtures.nodePoolsWithoutAutoScaleWithNoReplicas,
+          // );
+          useFetchMachineOrNodePools.mockReturnValue({
+            data: machinePoolsFixtures.nodePoolsWithoutAutoScaleWithNoReplicas,
+          });
 
           const newProps = {
             ...defaultProps,
@@ -949,7 +944,11 @@ describe('<DetailsRight />', () => {
         it('shows count if not hypershift and  count is known', () => {
           // Arrange
           const clusterFixture = defaultProps.cluster;
-          useGlobalState.mockReturnValue(machinePoolsFixtures.nodePoolsWithAutoScale);
+          // useGlobalState.mockReturnValue(machinePoolsFixtures.nodePoolsWithAutoScale);
+          useFetchMachineOrNodePools.mockReturnValue({
+            data: machinePoolsFixtures.nodePoolsWithAutoScale,
+          });
+
           const newProps = {
             ...defaultProps,
             cluster: {
@@ -968,7 +967,11 @@ describe('<DetailsRight />', () => {
         it('shows "NA" for control plane count if not hypershift and node count is unknown', () => {
           // Arrange
           const clusterFixture = defaultProps.cluster;
-          useGlobalState.mockReturnValue(machinePoolsFixtures.nodePoolsWithAutoScale);
+          // useGlobalState.mockReturnValue(machinePoolsFixtures.nodePoolsWithAutoScale);
+          useFetchMachineOrNodePools.mockReturnValue({
+            data: machinePoolsFixtures.nodePoolsWithAutoScale,
+          });
+
           const newProps = {
             ...defaultProps,
             hasAutoscaleMachinePools: true,
@@ -1054,7 +1057,10 @@ describe('<DetailsRight />', () => {
         it('shows infra node count (via metrics) when infra header is shown and node count is known', () => {
           // Arrange
           const clusterFixture = defaultProps.cluster;
-          useGlobalState.mockReturnValue(machinePoolsFixtures.nodePoolsWithAutoScale);
+          // useGlobalState.mockReturnValue(machinePoolsFixtures.nodePoolsWithAutoScale);
+          useFetchMachineOrNodePools.mockReturnValue({
+            data: machinePoolsFixtures.nodePoolsWithAutoScale,
+          });
           const newProps = {
             ...defaultProps,
             hasAutoscaleMachinePools: true,
@@ -1075,7 +1081,10 @@ describe('<DetailsRight />', () => {
         it('shows NA when infra header is shown and node count not known', () => {
           // Arrange
           const clusterFixture = defaultProps.cluster;
-          useGlobalState.mockReturnValue(machinePoolsFixtures.nodePoolsWithAutoScale);
+          // useGlobalState.mockReturnValue(machinePoolsFixtures.nodePoolsWithAutoScale);
+          useFetchMachineOrNodePools.mockReturnValue({
+            data: machinePoolsFixtures.nodePoolsWithAutoScale,
+          });
           const newProps = {
             ...defaultProps,
             hasAutoscaleMachinePools: true,
@@ -1102,7 +1111,10 @@ describe('<DetailsRight />', () => {
         it('shows total compute nodes  if known', () => {
           // Arrange
           const clusterFixture = defaultProps.cluster;
-          useGlobalState.mockReturnValue(machinePoolsFixtures.nodePoolsWithAutoScale);
+          // useGlobalState.mockReturnValue(machinePoolsFixtures.nodePoolsWithAutoScale);
+          useFetchMachineOrNodePools.mockReturnValue({
+            data: machinePoolsFixtures.nodePoolsWithAutoScale,
+          });
           const newProps = {
             ...defaultProps,
             cluster: {
@@ -1120,7 +1132,11 @@ describe('<DetailsRight />', () => {
         it('shows "NA" for compute count if total account modes is not known ', () => {
           // Arrange
           const clusterFixture = defaultProps.cluster;
-          useGlobalState.mockReturnValue(machinePoolsFixtures.nodePoolsWithAutoScaleWithNoReplicas);
+          // useGlobalState.mockReturnValue(machinePoolsFixtures.nodePoolsWithAutoScaleWithNoReplicas);
+
+          useFetchMachineOrNodePools.mockReturnValue({
+            data: machinePoolsFixtures.nodePoolsWithAutoScaleWithNoReplicas,
+          });
 
           const newProps = {
             ...defaultProps,
@@ -1231,7 +1247,10 @@ describe('<DetailsRight />', () => {
     it('shows "N/A" as the owner if creator name and creator username are not available', () => {
       // Arrange
       const clusterFixture = defaultProps.cluster;
-      useGlobalState.mockReturnValue(machinePoolsFixtures.nodePoolsWithoutAutoScale);
+      // useGlobalState.mockReturnValue(machinePoolsFixtures.nodePoolsWithoutAutoScale);
+      useFetchMachineOrNodePools.mockReturnValue({
+        data: machinePoolsFixtures.nodePoolsWithoutAutoScale,
+      });
 
       const newProps = {
         ...defaultProps,
@@ -1261,7 +1280,10 @@ describe('<DetailsRight />', () => {
       const newProps = {
         ...defaultProps,
       };
-      useGlobalState.mockReturnValue(machinePoolsFixtures.nodePoolsWithoutAutoScale);
+      // useGlobalState.mockReturnValue(machinePoolsFixtures.nodePoolsWithoutAutoScale);
+      useFetchMachineOrNodePools.mockReturnValue({
+        data: machinePoolsFixtures.nodePoolsWithoutAutoScale,
+      });
 
       render(<DetailsRight {...newProps} />);
 
@@ -1272,7 +1294,11 @@ describe('<DetailsRight />', () => {
     it('shows "enabled", min node count, and max node count if MP autoscale is enabled', () => {
       // Arrange
       const clusterFixture = defaultProps.cluster;
-      useGlobalState.mockReturnValue(machinePoolsFixtures.nodePoolsWithAutoScale);
+      // useGlobalState.mockReturnValue(machinePoolsFixtures.nodePoolsWithAutoScale);
+      useFetchMachineOrNodePools.mockReturnValue({
+        data: machinePoolsFixtures.nodePoolsWithAutoScale,
+      });
+
       const newProps = {
         ...defaultProps,
         cluster: {

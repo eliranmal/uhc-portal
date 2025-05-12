@@ -1,26 +1,39 @@
 import React from 'react';
-import { reduxForm } from 'redux-form';
+import { Formik } from 'formik';
 
+import { useFormState } from '~/components/clusters/wizards/hooks';
+import { FieldId } from '~/components/clusters/wizards/rosa/constants';
 import { render, screen } from '~/testUtils';
 
 import UpgradeSettingsFields from './UpgradeSettingsFields';
 
+jest.mock('~/components/clusters/wizards/hooks', () => ({
+  useFormState: jest.fn(),
+}));
+
 describe('<UpgradeSettingsFields />', () => {
-  const change = jest.fn();
   const defaultProps = {
-    isAutomatic: false,
     isDisabled: false,
-    isHypershift: false,
     showDivider: true,
-    change,
-    product: 'ROSA',
+    isRosa: true,
     initialScheduleValue: '',
   };
 
-  const ConnectedUpgradeSettingsFields = reduxForm({
-    form: 'CreateCluster',
-    initialValues: { node_drain_grace_period: 60 },
-  })(UpgradeSettingsFields);
+  beforeEach(() => {
+    useFormState.mockReturnValue({
+      setFieldValue: jest.fn(),
+      setFieldTouched: jest.fn(),
+      getFieldProps: jest.fn((fieldName) => ({
+        name: fieldName,
+        value: '', // Provide default values or mock data here
+        onBlur: jest.fn(),
+        onChange: jest.fn(),
+      })),
+      values: {
+        [FieldId.UpgradePolicy]: 'manual', // Mock the UpgradePolicy value as needed
+      },
+    });
+  });
 
   describe('Node draining grace period', () => {
     it('is shown if not hypershift', () => {
@@ -28,7 +41,11 @@ describe('<UpgradeSettingsFields />', () => {
         ...defaultProps,
         isHypershift: false,
       };
-      render(<ConnectedUpgradeSettingsFields {...newProps} />);
+      render(
+        <Formik>
+          <UpgradeSettingsFields {...newProps} />
+        </Formik>,
+      );
       expect(screen.getByText('Node draining')).toBeInTheDocument();
     });
     it('is hidden if hypershift', () => {
@@ -36,7 +53,11 @@ describe('<UpgradeSettingsFields />', () => {
         ...defaultProps,
         isHypershift: true,
       };
-      render(<ConnectedUpgradeSettingsFields {...newProps} />);
+      render(
+        <Formik>
+          <UpgradeSettingsFields {...newProps} />
+        </Formik>,
+      );
       expect(screen.queryByText('Node draining')).not.toBeInTheDocument();
     });
   });

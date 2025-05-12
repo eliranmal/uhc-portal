@@ -177,7 +177,7 @@ yarn install
 if [ "$1" == "staging" ]; then
     echo "running staging push"
     rm -rf dist
-    yarn build:prod --env api-env=staging sentry-version="$SENTRY_STAGE_VERSION"
+    yarn build:prod --env sentry-version="$SENTRY_STAGE_VERSION"
     yarn sentry:sourcemaps
     push_build "qa-stable"
     echo "staging branch is pushed to RedHatInsights/uhc-portal-frontend-deploy qa-stable branch"
@@ -186,7 +186,7 @@ if [ "$1" == "staging" ]; then
 elif [ "$1" == "stable" ]; then
     echo "running stable push"
     rm -rf dist
-    yarn build:prod --env api-env=production beta="false" sentry-version="$SENTRY_PROD_VERSION"
+    yarn build:prod --env sentry-version="$SENTRY_PROD_VERSION"
     yarn sentry:sourcemaps
     push_build "prod-stable"
     echo "stable branch is  pushed to RedHatInsights/uhc-portal-frontend-deploy prod-stable branch"

@@ -1,176 +1,45 @@
-image:
-  # node:18.12.1
-  name: $REGISTRY/node@sha256:53f699f1e6171e725e854cd5a75a6968acaf0a8010630ea430de0d3058a491fb
-
 # Grants access to the shared gitlab runners
 default:
   tags:
     - shared
 
 variables:
-  CYPRESS_CACHE_FOLDER: '$CI_PROJECT_DIR/cache/Cypress'
-  GITLAB_TOKEN: $GITLAB_TOKEN
-  FF_USE_FASTZIP: 'true'
-  CACHE_COMPRESSION_LEVEL: 'fast'
-  CACHE_FALLBACK_KEY: fallback-key
-  REGISTRY: images.paas.redhat.com/ocm_team
-
-# global cache, jobs override the policy setting as needed
-cache: &global_cache
-  key:
-    files:
-      # compute cache key from lock file
-      - yarn.lock
-  # files and folders to cache
-  paths:
-    - node_modules/
-    - cache/Cypress/
-    - .yarn/
-  policy: pull-push
-
-# Adds a comment to the MR
-.send-note: &send-note
-  - apt-get update && apt-get install -y curl && apt-get install -y jq
-  - echo "$NOTE_BODY"
-  - |
-    echo -n "$NOTE_BODY" |
-    jq --raw-input --slurp '{ "body": . }' |
-    curl --insecure --location --request POST "https://gitlab.cee.redhat.com/api/v4/projects/$CI_MERGE_REQUEST_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID/notes" --header "PRIVATE-TOKEN: $GITLAB_TOKEN" --header "Content-Type: application/json" --data @-
+  GITHUB_TOKEN: $GITHUB_TOKEN
+  GITLAB_SYNC_TOKEN: $GITLAB_SYNC_TOKEN
+  RH_CA_FILENAME: RH-IT-Root-CA.crt
 
 # Save job output to a variable
-.store-note: &store-note
-  variables:
-    EMOJI_CONDITIONAL: '(if [ "$${CI_JOB_STATUS}" == "success" ]; then echo "✅"; else echo "🚫"; fi);'
-  after_script:
-    - EMOJI=$(eval $EMOJI_CONDITIONAL)
-    - |
-      NOTE_BODY="<br>**$CI_JOB_NAME $CI_JOB_STATUS $EMOJI**<br>Job url: $CI_JOB_URL"
-    - JOB_NAME=$(echo "${CI_JOB_NAME_SLUG^^}" | tr - _)
-    - |
-      if [ "$JOB_NAME" == "CYPRESS_TESTING" ]; then NOTE_BODY="$NOTE_BODY<br>Artifacts: https://gitlab.cee.redhat.com/service/uhc-portal/-/jobs/$CI_JOB_ID/artifacts/browse"; fi;
-    - if [ "$CI_JOB_STATUS" == "failed" ]; then echo "$JOB_NAME=$NOTE_BODY" > .env; else echo "$JOB_NAME=" > .env; fi;
-  artifacts:
-    reports:
-      dotenv:
-        - .env
+.sync-default: &sync-default
+  image:
+    name: quay.io/emingora/gitlab-github-sync:latest
+  before_script:
+    - "[[ ! -f ${RH_CA_FILENAME} ]] && curl -k -s 'https://certs.corp.redhat.com/certs/{2015,2022}-IT-Root-CA.pem' > ${RH_CA_FILENAME}"
+    - ls ${PWD}/${RH_CA_FILENAME}
+    - export NODE_EXTRA_CA_CERTS=${PWD}/${RH_CA_FILENAME}
+    - export GIT_SSL_CAINFO=${PWD}/${RH_CA_FILENAME}
+    - git config --global http.sslCAInfo ${PWD}/${RH_CA_FILENAME}
 
 stages:
-  - install
-  - test
-  - report
+  - sync
 
-📦 Install and cache dependencies:
-  <<: *store-note
-  image:
-    # cypress/base:20.11.0
-    name: $REGISTRY/cypress/base@sha256:b556d79c9e9d04de77edd6bfaa185518420b470aea10503d02269bfd3222ed45
-  stage: install
-  only:
-    - merge_requests
+📦 Sync master branch:
+  <<: *sync-default
+  stage: sync
+  rules:
+    - if: $JOB_ID == "sync"
   script:
-    - echo "Installing dependencies"
-    - node --version
-    - yarn install --frozen-lockfile --cache-folder .yarn
-    - yarn cypress cache path
-    - yarn cypress cache list
-    - yarn cypress verify
+    - git clone -b master https://$GITHUB_TOKEN@github.com/RedHatInsights/uhc-portal uhc-portal
+    - cd uhc-portal
+    - git remote add gitlab https://GITLAB_SYNC_TOKEN:$GITLAB_SYNC_TOKEN@gitlab.cee.redhat.com/service/uhc-portal
+    - git push gitlab master --force
 
-🧪 Unit testing:
-  <<: *store-note
-  stage: test
-  cache:
-    # inherit all global cache settings
-    <<: *global_cache
-    # override the policy
-    policy: pull
-  only:
-    - merge_requests
+📦 Sync stable branch:
+  <<: *sync-default
+  stage: sync
+  rules:
+    - if: $JOB_ID == "sync"
   script:
-    - echo "Running unit tests..."
-    - node --version
-    # Record `top` output every 10sec as long as test is running, to track resource usage in CI.
-    # (If running locally, note these are Linux top flags, OSX would need different flags.)
-    - time yarn concurrently --success=first --kill-others --raw 'yarn test-no-cache' 'top -b -c -d10 -i -w > jest-top.log'
-  artifacts:
-    when: always
-    paths:
-      - '*.log'
-
-👀 Linting:
-  <<: *store-note
-  stage: test
-  cache:
-    # inherit all global cache settings
-    <<: *global_cache
-    # override the policy
-    policy: pull
-  only:
-    - merge_requests
-  script:
-    - echo "Linting code..."
-    - node --version
-    - yarn lint-prettier
-
-🌎 Cypress testing:
-  <<: *store-note
-  image:
-    # cypress/included:13.6.4
-    name: $REGISTRY/cypress/included@sha256:671d7964f757038e4c84b958e1a89bb48dd81fda38110adee22a87bf358654c8
-    entrypoint: ['']
-  stage: test
-  cache:
-    # inherit all global cache settings
-    <<: *global_cache
-    # override the policy
-    policy: pull
-  only:
-    - merge_requests
-  before_script:
-    - apt-get update
-    - apt-get -y install make
-    - apt-get -y install sudo
-    - make dev-env-setup
-  script:
-    - echo "Running cypress tests"
-    - node --version
-    - yarn start --env logging=quiet --no-client-overlay &
-    - NODE_TLS_REJECT_UNAUTHORIZED=0 yarn wait-on https://prod.foo.redhat.com:1337/openshift/
-    - TERM=xterm LC_ALL=C.UTF-8 LANG=C.UTF-8 yarn e2e-test
-  artifacts:
-    when: always
-    paths:
-      - cypress/videos/**/*.mp4
-      - cypress/screenshots/**/*.png
-    expire_in: 1 day
-    reports:
-      dotenv:
-        - .env
-
-Pipeline failure:
-  stage: report
-  only:
-    - merge_requests
-  variables:
-    GIT_STRATEGY: none # This step doesn't need access to the source code.
-  cache: {}
-  script:
-    # ${CI_JOB_NAME_SLUG^^} used as variable key
-    # INSTALL_AND_CACHE_DEPENDENCIES | LINTING | UNIT_TESTING | CYPRESS_TESTING
-    - |
-      NOTE_BODY="Pipeline failed, pipeline url: $CI_PIPELINE_URL<br>$INSTALL_AND_CACHE_DEPENDENCIES$LINTING$UNIT_TESTING$CYPRESS_TESTING"
-    - *send-note
-  when: on_failure
-
-Pipeline success:
-  stage: report
-  only:
-    - merge_requests
-  # This step doesn't need access to the source code nor save/restore cache.
-  variables:
-    GIT_STRATEGY: none
-  cache: {}
-  script:
-    - |
-      NOTE_BODY="Pipeline success, pipeline url: $CI_PIPELINE_URL"
-    - *send-note
-  when: on_success
+    - git clone -b stable https://$GITHUB_TOKEN@github.com/RedHatInsights/uhc-portal uhc-portal
+    - cd uhc-portal
+    - git remote add gitlab https://GITLAB_SYNC_TOKEN:$GITLAB_SYNC_TOKEN@gitlab.cee.redhat.com/service/uhc-portal
+    - git push gitlab stable --force

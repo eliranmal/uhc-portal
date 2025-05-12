@@ -20,6 +20,7 @@ import {
   resourceLimitsFields,
   scaleDownFields,
 } from '~/components/clusters/common/EditClusterAutoScalingDialog/fieldDefinitions';
+import { MaxNodesTotalPopoverText } from '~/components/clusters/common/EditClusterAutoScalingDialog/MaxNodesTotalTooltip';
 import { FieldId } from '~/components/clusters/wizards/common/constants';
 import { BooleanDropdownField } from '~/components/clusters/wizards/form/BooleanDropdownField';
 import { TextInputField } from '~/components/clusters/wizards/form/TextInputField';
@@ -28,6 +29,7 @@ import ExternalLink from '~/components/common/ExternalLink';
 import Modal from '~/components/common/Modal/Modal';
 import { closeModal } from '~/components/common/Modal/ModalActions';
 import modals from '~/components/common/Modal/modals';
+import useValidateMaxNodesTotal from '~/hooks/useValidateMaxNodesTotal';
 import { useGlobalState } from '~/redux/hooks';
 
 import {
@@ -42,6 +44,7 @@ import './ClusterAutoScaleSettingsDialog.scss';
 interface ClusterAutoScaleSettingsDialogProps {
   isWizard: boolean;
   isRosa: boolean;
+  maxNodesTotalDefault: number;
 }
 
 const getValidator = (field: FieldDefinition) => {
@@ -112,6 +115,7 @@ const mapField = (field: FieldDefinition, isDisabled?: boolean) => {
 const ClusterAutoScaleSettingsDialog = ({
   isWizard,
   isRosa,
+  maxNodesTotalDefault,
 }: ClusterAutoScaleSettingsDialogProps) => {
   const dispatch = useDispatch();
   const closeScalerModal = () => dispatch(closeModal());
@@ -136,7 +140,11 @@ const ClusterAutoScaleSettingsDialog = ({
   };
 
   const handleReset = () => {
-    setFieldValue(FieldId.ClusterAutoscaling, getDefaultClusterAutoScaling(), true);
+    setFieldValue(
+      FieldId.ClusterAutoscaling,
+      getDefaultClusterAutoScaling(maxNodesTotalDefault),
+      true,
+    );
   };
 
   const hasAutoScalingErrors = Object.keys(autoScalingErrors || {}).length > 0;
@@ -199,6 +207,19 @@ const ClusterAutoScaleSettingsDialog = ({
                   {mapField(field)}
                 </GridItem>
               ))}
+              <GridItem span={6} key="resource_limits.max_nodes_total">
+                <TextInputField
+                  name="cluster_autoscaling.resource_limits.max_nodes_total"
+                  label="max-nodes-total"
+                  type="number"
+                  showHelpTextOnError
+                  helperText={
+                    <span className="custom-help-text">Default value: {maxNodesTotalDefault}</span>
+                  }
+                  validate={useValidateMaxNodesTotal(maxNodesTotalDefault)}
+                  tooltip={<MaxNodesTotalPopoverText />}
+                />
+              </GridItem>
               <GridItem span={6}>
                 <TextInputField
                   name="cluster_autoscaling.resource_limits.gpus"

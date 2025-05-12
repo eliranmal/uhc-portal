@@ -9,14 +9,17 @@ import { NodePoolWithUpgradePolicies } from '../machinePoolCustomTypes';
 import { UpdateMachinePoolModal, UpdatePoolButton } from './UpdateMachinePoolModal';
 import * as updateMachinePoolsHelpers from './updateMachinePoolsHelpers';
 
+const clusterId = 'cluster-1';
+const clusterVersionID = 'openshift-v4.13.3';
+
 const defaultMachinePool = {
   id: 'my-machine-pool',
   version: { id: 'openshift-v4.12.5' },
 };
 
 const defaultCluster = {
-  id: 'my control plane id',
-  version: { available_upgrades: [], id: 'openshift-v4.13.3' },
+  id: clusterId,
+  version: { available_upgrades: [], id: clusterVersionID },
   hypershift: { enabled: true },
 };
 
@@ -63,6 +66,7 @@ describe('UpdateMachinePoolModal', () => {
           machinePool={defaultMachinePool}
           isMachinePoolError={false}
           isHypershift
+          controlPlaneVersion={clusterVersionID}
         />,
       );
 
@@ -95,6 +99,7 @@ describe('UpdateMachinePoolModal', () => {
           machinePool={defaultMachinePool}
           isMachinePoolError={false}
           isHypershift
+          controlPlaneVersion={clusterVersionID}
         />,
       );
 
@@ -118,6 +123,7 @@ describe('UpdateMachinePoolModal', () => {
             machinePool={defaultMachinePool}
             isMachinePoolError={false}
             isHypershift={false}
+            controlPlaneVersion={clusterVersionID}
           />,
         );
 
@@ -140,6 +146,7 @@ describe('UpdateMachinePoolModal', () => {
             machinePool={defaultMachinePool}
             isMachinePoolError={false}
             isHypershift
+            controlPlaneVersion=""
           />,
         );
 
@@ -154,7 +161,12 @@ describe('UpdateMachinePoolModal', () => {
           },
         };
         const { container } = withState(newState).render(
-          <UpdatePoolButton machinePool={defaultMachinePool} isMachinePoolError isHypershift />,
+          <UpdatePoolButton
+            machinePool={defaultMachinePool}
+            isMachinePoolError
+            isHypershift
+            controlPlaneVersion={clusterVersionID}
+          />,
         );
 
         expect(container).toBeEmptyDOMElement();
@@ -168,7 +180,12 @@ describe('UpdateMachinePoolModal', () => {
           },
         };
         const { container } = withState(newState).render(
-          <UpdatePoolButton machinePool={{}} isMachinePoolError={false} isHypershift />,
+          <UpdatePoolButton
+            machinePool={{}}
+            isMachinePoolError={false}
+            isHypershift
+            controlPlaneVersion={clusterVersionID}
+          />,
         );
 
         expect(container).toBeEmptyDOMElement();
@@ -182,7 +199,12 @@ describe('UpdateMachinePoolModal', () => {
           },
         };
         const { container } = withState(newState).render(
-          <UpdatePoolButton machinePool={{}} isMachinePoolError={false} isHypershift />,
+          <UpdatePoolButton
+            machinePool={{}}
+            isMachinePoolError={false}
+            isHypershift
+            controlPlaneVersion={clusterVersionID}
+          />,
         );
 
         expect(container).toBeEmptyDOMElement();
@@ -204,6 +226,7 @@ describe('UpdateMachinePoolModal', () => {
             machinePool={defaultMachinePool}
             isMachinePoolError={false}
             isHypershift
+            controlPlaneVersion={clusterVersionID}
           />,
         );
 
@@ -213,7 +236,12 @@ describe('UpdateMachinePoolModal', () => {
       it('the machine pool version is not known', () => {
         const newMachinePool = { ...defaultMachinePool, version: {} };
         const { container } = withState(defaultState).render(
-          <UpdatePoolButton machinePool={newMachinePool} isMachinePoolError={false} isHypershift />,
+          <UpdatePoolButton
+            machinePool={newMachinePool}
+            isMachinePoolError={false}
+            isHypershift
+            controlPlaneVersion={clusterVersionID}
+          />,
         );
 
         expect(container).toBeEmptyDOMElement();
@@ -224,7 +252,12 @@ describe('UpdateMachinePoolModal', () => {
 
         expect(defaultCluster.version.id).toEqual('openshift-v4.13.3');
         const { container } = withState(defaultState).render(
-          <UpdatePoolButton machinePool={newMachinePool} isMachinePoolError={false} isHypershift />,
+          <UpdatePoolButton
+            machinePool={newMachinePool}
+            isMachinePoolError={false}
+            isHypershift
+            controlPlaneVersion={clusterVersionID}
+          />,
         );
 
         expect(container).toBeEmptyDOMElement();
@@ -244,6 +277,7 @@ describe('UpdateMachinePoolModal', () => {
               machinePool={newMachinePool}
               isMachinePoolError={false}
               isHypershift
+              controlPlaneVersion={clusterVersionID}
             />,
           );
 
@@ -273,6 +307,7 @@ describe('UpdateMachinePoolModal', () => {
               machinePool={newMachinePool}
               isMachinePoolError={false}
               isHypershift
+              controlPlaneVersion={clusterVersionID}
             />,
           );
 
@@ -298,6 +333,7 @@ describe('UpdateMachinePoolModal', () => {
               machinePool={newMachinePool}
               isMachinePoolError={false}
               isHypershift
+              controlPlaneVersion={clusterVersionID}
             />,
           );
 
@@ -321,14 +357,26 @@ describe('UpdateMachinePoolModal', () => {
     });
     it('is hidden when redux state has modal closed', () => {
       const newState = { ...defaultState, modal: { data: {} } };
-      const { container } = withState(newState).render(<UpdateMachinePoolModal />);
+      const { container } = withState(newState).render(
+        <UpdateMachinePoolModal
+          isHypershift
+          controlPlaneVersion={clusterVersionID}
+          clusterId={clusterId}
+        />,
+      );
 
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       expect(container).toBeEmptyDOMElement();
     });
 
     it('displays modal with machine name', async () => {
-      const { container } = withState(defaultState).render(<UpdateMachinePoolModal />);
+      const { container } = withState(defaultState).render(
+        <UpdateMachinePoolModal
+          isHypershift
+          controlPlaneVersion={clusterVersionID}
+          clusterId={clusterId}
+        />,
+      );
       expect(screen.getByRole('dialog')).toBeInTheDocument();
       expect(
         screen.getByText('Update machine pool my-machine-pool', { exact: false }),
@@ -341,7 +389,13 @@ describe('UpdateMachinePoolModal', () => {
       useDispatchMock.mockReturnValue(mockedDispatch);
       mockUpdatePools.mockResolvedValue([]);
 
-      const { user } = withState(defaultState).render(<UpdateMachinePoolModal />);
+      const { user } = withState(defaultState).render(
+        <UpdateMachinePoolModal
+          isHypershift
+          controlPlaneVersion={clusterVersionID}
+          clusterId={clusterId}
+        />,
+      );
       expect(screen.getByRole('dialog')).toBeInTheDocument();
       expect(mockUpdatePools).toBeCalledTimes(0);
 
@@ -360,7 +414,13 @@ describe('UpdateMachinePoolModal', () => {
       const mockedDispatch = jest.fn();
       useDispatchMock.mockReturnValue(mockedDispatch);
 
-      const { user } = withState(defaultState).render(<UpdateMachinePoolModal />);
+      const { user } = withState(defaultState).render(
+        <UpdateMachinePoolModal
+          isHypershift
+          controlPlaneVersion={clusterVersionID}
+          clusterId={clusterId}
+        />,
+      );
       expect(screen.getByRole('dialog')).toBeInTheDocument();
       expect(mockUpdatePools).toBeCalledTimes(0);
 

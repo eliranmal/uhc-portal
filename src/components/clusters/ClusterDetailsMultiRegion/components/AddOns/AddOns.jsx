@@ -10,10 +10,10 @@ import {
   EmptyStateFooter,
   EmptyStateHeader,
   EmptyStateIcon,
+  Spinner,
 } from '@patternfly/react-core';
 import { CubesIcon } from '@patternfly/react-icons/dist/esm/icons/cubes-icon';
 import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
-import { Spinner } from '@redhat-cloud-services/frontend-components/Spinner';
 
 import { useAddClusterAddOn } from '~/queries/ClusterDetailsQueries/AddOnsTab/useAddClusterAddOn';
 import { useDeleteClusterAddOn } from '~/queries/ClusterDetailsQueries/AddOnsTab/useDeleteClusterAddOn';
@@ -56,6 +56,7 @@ const AddOns = ({ clusterID, region, cluster, isHypershift }) => {
     error: addClusterAddOnError,
     isSuccess: isAddClusterAddOnSuccess,
     mutate: addClusterAddOn,
+    reset: resetAddClusterAddon,
   } = useAddClusterAddOn(region);
   const {
     isPending: isUpdateClusterAddOnPending,
@@ -113,7 +114,9 @@ const AddOns = ({ clusterID, region, cluster, isHypershift }) => {
     return (
       <EmptyState>
         <EmptyStateBody>
-          <Spinner centered />
+          <div className="pf-v5-u-text-align-center">
+            <Spinner size="lg" aria-label="Loading..." />
+          </div>
         </EmptyStateBody>
       </EmptyState>
     );
@@ -148,7 +151,12 @@ const AddOns = ({ clusterID, region, cluster, isHypershift }) => {
   return (
     <>
       {isAddClusterAddOnError && (
-        <ErrorBox message="Error adding add-ons" response={addClusterAddOnError} />
+        <ErrorBox
+          message="Error adding add-ons"
+          response={addClusterAddOnError}
+          showCloseBtn
+          onCloseAlert={resetAddClusterAddon}
+        />
       )}
       <AddOnsDrawer
         addOnsList={addOnsList}

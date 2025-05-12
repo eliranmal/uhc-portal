@@ -3,7 +3,8 @@ import React from 'react';
 import { Button, Flex, Form, Modal, Stack, StackItem, TextInput } from '@patternfly/react-core';
 
 import ErrorBox from '~/components/common/ErrorBox';
-import { clusterService } from '~/services';
+import { useDeleteExternalAuth } from '~/queries/ClusterDetailsQueries/AccessControlTab/ExternalAuthenticationQueries/useDeleteExternalAuth';
+import { refetchExternalAuths } from '~/queries/ClusterDetailsQueries/AccessControlTab/ExternalAuthenticationQueries/useFetchExternalAuths';
 import { ExternalAuth } from '~/types/clusters_mgmt.v1';
 
 type DeleteExternalAuthProviderModalProps = {
@@ -11,37 +12,32 @@ type DeleteExternalAuthProviderModalProps = {
   externalAuthProvider: ExternalAuth | undefined;
   onClose: () => void;
   isOpen?: boolean;
+  region?: string;
 };
 
 export const DeleteExternalAuthProviderModal = (props: DeleteExternalAuthProviderModalProps) => {
-  const { clusterId, externalAuthProvider, onClose, isOpen = true } = props;
+  const { clusterId, externalAuthProvider, onClose, isOpen = true, region } = props;
   const [providerNameInput, setProviderNameInput] = React.useState('');
-  const [error, setError] = React.useState<unknown>();
-  const [isPending, setIsPending] = React.useState(false);
+
+  const {
+    isPending,
+    isError,
+    error,
+    mutate: deleteExternalAuthProvider,
+    reset,
+  } = useDeleteExternalAuth(region, clusterId);
 
   const closeDialog = () => {
     setProviderNameInput('');
-    setError(undefined);
+    reset();
     onClose();
   };
 
-  const deleteExternalAuthProvider = async (clusterId: string, externalAuthProviderId: string) => {
-    const request = clusterService.deleteExternalAuth;
-    setIsPending(true);
-    try {
-      await request(clusterId, externalAuthProviderId).then((response) => response.data);
-      closeDialog();
-    } catch (error) {
-      setError(error);
-    } finally {
-      setIsPending(false);
-    }
-  };
   const isValid = providerNameInput === externalAuthProvider?.id;
   const submitForm = (e: any) => {
     e.preventDefault();
     if (isValid) {
-      deleteExternalAuthProvider(clusterId, providerNameInput);
+      deleteExternalAuthProvider(providerNameInput);
     }
   };
 
@@ -58,7 +54,12 @@ export const DeleteExternalAuthProviderModal = (props: DeleteExternalAuthProvide
           isDisabled={isPending || !isValid}
           isLoading={isPending}
           onClick={() => {
-            deleteExternalAuthProvider(clusterId, externalAuthProvider?.id || '');
+            deleteExternalAuthProvider(externalAuthProvider?.id || '', {
+              onSuccess: () => {
+                refetchExternalAuths();
+                closeDialog();
+              },
+            });
           }}
         >
           Delete
@@ -86,14 +87,14 @@ export const DeleteExternalAuthProviderModal = (props: DeleteExternalAuthProvide
           />
         </Form>
       </Flex>
-      {error && (
+      {isError && (
         <Stack hasGutter>
           <StackItem>
             <ErrorBox
               message={`Failed to delete external auth provider: ${externalAuthProvider?.id}`}
               response={{
-                errorMessage: (error as any)?.message,
-                operationID: (error as any)?.response?.status?.toString(),
+                errorMessage: error.error.errorMessage,
+                operationID: error.error.operationID,
               }}
             />
           </StackItem>

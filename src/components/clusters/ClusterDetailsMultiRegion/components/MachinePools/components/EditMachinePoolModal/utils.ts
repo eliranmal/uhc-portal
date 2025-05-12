@@ -1,4 +1,4 @@
-import { AWSMachinePool, MachinePool, NodePool } from '~/types/clusters_mgmt.v1';
+import { AwsMachinePool, MachinePool, NodePool } from '~/types/clusters_mgmt.v1';
 
 import { EditMachinePoolValues } from './hooks/useMachinePoolFormik';
 
@@ -63,7 +63,7 @@ export const buildMachinePoolRequest = (
   };
 
   if (!isEdit) {
-    const awsConfig: AWSMachinePool = {};
+    const awsConfig: AwsMachinePool = {};
 
     machinePool.instance_type = values.instanceType;
 
@@ -109,6 +109,7 @@ export const buildNodePoolRequest = (
     labels: getLabels(values.labels),
     taints: getTaints(values.taints),
     ...getAutoscalingParams(values, isMultiZoneMachinePool, true),
+    auto_repair: values.auto_repair,
   };
 
   if (!isEdit) {
@@ -116,6 +117,9 @@ export const buildNodePoolRequest = (
     nodePool.aws_node_pool = {
       instance_type: values.instanceType,
       additional_security_group_ids: values.securityGroupIds,
+      root_volume: {
+        size: values.diskSize,
+      },
     };
   }
   return nodePool;

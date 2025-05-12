@@ -9,8 +9,6 @@ import { assistedService } from '~/services';
 import { Subscription } from '~/types/accounts_mgmt.v1';
 import { AugmentedCluster } from '~/types/types';
 
-import { queryConstants } from '../queriesConstants';
-
 /**
  * Function to get Assisted Installer cluster details or return fake cluster
  * @param clusterID subscription ID to pass into api call
@@ -73,7 +71,6 @@ export const useFetchAiCluster = (
       const response = await getAIClusterDetails(clusterID, subscription as Subscription);
       return response;
     },
-    staleTime: queryConstants.STALE_TIME,
     enabled: !!subscription,
   });
 

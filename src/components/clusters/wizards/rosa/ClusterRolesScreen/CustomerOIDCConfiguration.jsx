@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import {
   Button,
   ClipboardCopy,
+  ClipboardCopyVariant,
   Flex,
   FlexItem,
   FormGroup,
@@ -19,7 +20,7 @@ import { useFormState } from '~/components/clusters/wizards/hooks';
 import { FieldId } from '~/components/clusters/wizards/rosa/constants';
 import ExternalLink from '~/components/common/ExternalLink';
 import { FormGroupHelperText } from '~/components/common/FormGroupHelperText';
-import FuzzySelect from '~/components/common/FuzzySelect';
+import { FuzzySelect } from '~/components/common/FuzzySelect/FuzzySelect';
 import Instruction from '~/components/common/Instruction';
 import Instructions from '~/components/common/Instructions';
 import PopoverHint from '~/components/common/PopoverHint';
@@ -32,14 +33,16 @@ import links from '../../../../../common/installLinks.mjs';
 import validators, {
   MAX_CUSTOM_OPERATOR_ROLES_PREFIX_LENGTH,
 } from '../../../../../common/validators';
-import ReduxVerticalFormGroup from '../../../../common/ReduxFormComponents/ReduxVerticalFormGroup';
+import ReduxVerticalFormGroup from '../../../../common/ReduxFormComponents_deprecated/ReduxVerticalFormGroup';
+
+import './CustomerOIDCConfiguration.scss';
 
 function CreateOIDCProviderInstructions({ isMultiRegionEnabled, regionLoginCommand }) {
   return (
     <Popover
       aria-label="oidc-creation-instructions"
       position="top"
-      maxWidth="22rem"
+      maxWidth="25rem"
       style={{ '--pf-v5-c-popover--c-button--sibling--PaddingRight': '2rem' }}
       bodyContent={
         <TextContent>
@@ -48,11 +51,15 @@ function CreateOIDCProviderInstructions({ isMultiRegionEnabled, regionLoginComma
             {isMultiRegionEnabled ? 's' : ''} in your CLI. Then, refresh and select the new config
             ID from the dropdown.
           </p>
-          {isMultiRegionEnabled && (
-            <ClipboardCopy className="pf-v5-u-pb-md" isReadOnly>
+          {isMultiRegionEnabled ? (
+            <ClipboardCopy
+              className="pf-v5-u-pb-md"
+              variant={ClipboardCopyVariant.expansion}
+              isReadOnly
+            >
               {regionLoginCommand}
             </ClipboardCopy>
-          )}
+          ) : null}
           <ClipboardCopy isReadOnly>rosa create oidc-config</ClipboardCopy>
         </TextContent>
       }
@@ -141,7 +148,7 @@ function CustomerOIDCConfiguration({
     [oidcConfigs],
   );
 
-  const rosaRegionLoginCommand = `rosa login --url https://${regionalInstance?.url}`;
+  const rosaRegionLoginCommand = `rosa login --url ${regionalInstance?.url}`;
 
   return (
     <Instructions wide>
@@ -174,10 +181,10 @@ function CustomerOIDCConfiguration({
           <Flex>
             <FlexItem grow={{ default: 'grow' }}>
               <FuzzySelect
-                label="Config ID"
+                className="oidc-config-select"
                 aria-label="Config ID"
                 isOpen={isDropdownOpen}
-                onToggle={(_ev, isOpen) => setIsDropdownOpen(isOpen)}
+                onOpenChange={(isOpen) => setIsDropdownOpen(isOpen)}
                 onSelect={onSelect}
                 selectedEntryId={byoOidcConfigID}
                 selectionData={selectionData}
@@ -186,6 +193,10 @@ function CustomerOIDCConfiguration({
                   oidcConfigs.length > 0 ? 'Select a config id' : 'No OIDC configurations found'
                 }
                 inlineFilterPlaceholderText="Filter by config ID"
+                isScrollable
+                popperProps={{
+                  maxWidth: 'trigger',
+                }}
               />
             </FlexItem>
             <FlexItem>

@@ -1,6 +1,6 @@
 .controlPlaneScreenTile {
   text-align: left !important;
-
+  height: 100%;
   .pf-v5-c-tile__body {
     --pf-v5-c-tile__body--FontSize: var(--pf-v5-global--FontSize--md);
   }
@@ -16,4 +16,10 @@
   .pf-v5-c-alert {
     --pf-v5-c-alert__FontSize: var(--pf-v5-global--FontSize--md);
   }
+
+}
+
+.controlPlaneScreenTile.pf-v5-c-tile {
+  --pf-v5-c-tile--Transition: none !important;
+  --pf-v5-c-tile--TranslateY: 0 !important;
 }

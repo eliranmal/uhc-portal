@@ -1,169 +1,179 @@
-import React, { Component } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
+import { useDispatch } from 'react-redux';
 
 import { Form, FormGroup, Radio, TextInput } from '@patternfly/react-core';
 
 import { FormGroupHelperText } from '~/components/common/FormGroupHelperText';
+import { refetchUsers } from '~/queries/ClusterDetailsQueries/AccessControlTab/UserQueries/useFetchUsers';
 
 import links from '../../../../../../common/installLinks.mjs';
 import { checkUserID } from '../../../../../../common/validators';
 import ErrorBox from '../../../../../common/ErrorBox';
 import ExternalLink from '../../../../../common/ExternalLink';
 import Modal from '../../../../../common/Modal/Modal';
+import { modalActions } from '../../../../../common/Modal/ModalActions';
 
-const initialState = {
-  selectedGroup: 'dedicated-admins',
-  userId: '',
-  userIdTouched: false,
-};
+const AddUserDialog = ({
+  isOpen,
+  canAddClusterAdmin,
+  addUserMutate,
+  isAddUserPending,
+  isAddUserError,
+  addUserError,
+  isAddUserSuccess,
+  resetAddUserMutate,
+}) => {
+  const dispatch = useDispatch();
 
-class AddUserDialog extends Component {
-  state = initialState;
+  const [selectedGroup, setSelectedGroup] = React.useState('dedicated-admins');
+  const [userId, setUserId] = React.useState('');
+  const [userIdTouched, setUserIdTouched] = React.useState(false);
 
-  componentDidUpdate() {
-    const { addUserResponse, clearAddUserResponses, closeModal } = this.props;
-    if (addUserResponse.fulfilled) {
-      closeModal();
-      clearAddUserResponses();
-      //  eslint-disable-next-line react/no-did-update-set-state
-      this.setState(initialState);
+  const resetInitialState = () => {
+    setSelectedGroup('dedicated-admins');
+    setUserId('');
+    setUserIdTouched(false);
+  };
+
+  React.useEffect(() => {
+    if (isAddUserSuccess) {
+      dispatch(modalActions.closeModal());
+      resetInitialState();
     }
-  }
+  }, [isAddUserSuccess, dispatch]);
 
-  setUserIdValue = (userIdValue) => {
-    this.setState({ userId: userIdValue, userIdTouched: true });
+  const setUserIdValue = (userIdValue) => {
+    setUserId(userIdValue);
+    setUserIdTouched(true);
   };
 
-  setGroupValue = (_, event) => {
-    this.setState({ selectedGroup: event.target.value });
+  const setGroupValue = (_, event) => {
+    setSelectedGroup(event.target.value);
   };
 
-  cancelAddUser = () => {
-    const { clearAddUserResponses, closeModal } = this.props;
-    this.setState(initialState);
-    clearAddUserResponses();
-    closeModal();
+  const cancelAddUser = () => {
+    resetInitialState();
+    resetAddUserMutate();
+    dispatch(modalActions.closeModal());
   };
 
-  render() {
-    const { isOpen, submit, addUserResponse, clusterID, canAddClusterAdmin } = this.props;
-    const { selectedGroup, userId, userIdTouched } = this.state;
+  const hasError = isAddUserError && (
+    <ErrorBox message="Error adding grant" response={addUserError.error} />
+  );
+  const validationMessage = checkUserID(userId);
 
-    const hasError = addUserResponse.error && (
-      <ErrorBox message="Error adding grant" response={addUserResponse} />
-    );
+  const handleSubmit = () => {
+    if (!validationMessage && !!selectedGroup) {
+      addUserMutate(
+        { selectedGroup, userId },
+        {
+          onSuccess: () => refetchUsers(),
+        },
+      );
+    }
+  };
 
-    const validationMessage = checkUserID(userId);
+  const dedicatedAdmin = 'dedicated-admins';
+  const clusterAdmin = 'cluster-admins';
 
-    const handleSubmit = () => {
-      if (!validationMessage && !!selectedGroup) {
-        submit(clusterID, selectedGroup, userId);
-      }
-    };
+  return (
+    isOpen && (
+      <Modal
+        title="Add cluster user"
+        onClose={cancelAddUser}
+        primaryText="Add user"
+        secondaryText="Cancel"
+        onPrimaryClick={handleSubmit}
+        onSecondaryClick={cancelAddUser}
+        isPrimaryDisabled={!!validationMessage || isAddUserPending}
+        isPending={isAddUserPending}
+      >
+        <>
+          {hasError}
+          <Form
+            className="control-form-cursor"
+            onSubmit={(e) => {
+              handleSubmit();
+              e.preventDefault();
+            }}
+          >
+            <FormGroup label="User ID" isRequired fieldId="user-id">
+              <TextInput
+                value={userId}
+                isRequired
+                id="user-id"
+                type="text"
+                validated={(userIdTouched ? !validationMessage : true) ? 'default' : 'error'}
+                onChange={(_event, userIdValue) => setUserIdValue(userIdValue)}
+                aria-label="user id"
+              />
 
-    const dedicatedAdmin = 'dedicated-admins';
-    const clusterAdmin = 'cluster-admins';
-
-    return (
-      isOpen && (
-        <Modal
-          title="Add cluster user"
-          onClose={this.cancelAddUser}
-          primaryText="Add user"
-          secondaryText="Cancel"
-          onPrimaryClick={handleSubmit}
-          onSecondaryClick={this.cancelAddUser}
-          isPrimaryDisabled={!!validationMessage || addUserResponse.pending}
-          isPending={addUserResponse.pending}
-        >
-          <>
-            {hasError}
-            <Form
-              className="control-form-cursor"
-              onSubmit={(e) => {
-                handleSubmit();
-                e.preventDefault();
-              }}
-            >
-              <FormGroup label="User ID" isRequired fieldId="user-id">
-                <TextInput
-                  value={userId}
-                  isRequired
-                  id="user-id"
-                  type="text"
-                  validated={(userIdTouched ? !validationMessage : true) ? 'default' : 'error'}
-                  onChange={(_event, userIdValue) => this.setUserIdValue(userIdValue)}
-                  aria-label="user id"
-                />
-
-                <FormGroupHelperText touched={userIdTouched} error={validationMessage} />
-              </FormGroup>
-              <h3 id="user-group-select">Group</h3>
+              <FormGroupHelperText touched={userIdTouched} error={validationMessage} />
+            </FormGroup>
+            <h3 id="user-group-select">Group</h3>
+            <Radio
+              className="radio-button"
+              key={dedicatedAdmin}
+              isChecked={selectedGroup === dedicatedAdmin}
+              name={dedicatedAdmin}
+              onChange={(event, _) => setGroupValue(_, event)}
+              label={
+                <>
+                  {dedicatedAdmin}
+                  <div className="radio-helptext">
+                    Grants standard administrative privileges for OpenShift Dedicated. Users can
+                    perform administrative actions listed in the{' '}
+                    <ExternalLink href={links.OSD_DEDICATED_ADMIN_ROLE}>documentation</ExternalLink>
+                    .
+                  </div>
+                </>
+              }
+              id={dedicatedAdmin}
+              value={dedicatedAdmin}
+            />
+            {canAddClusterAdmin && (
               <Radio
                 className="radio-button"
-                key={dedicatedAdmin}
-                isChecked={selectedGroup === dedicatedAdmin}
-                name={dedicatedAdmin}
-                onChange={(event, _) => this.setGroupValue(_, event)}
+                key={clusterAdmin}
+                isChecked={selectedGroup === clusterAdmin}
+                name={clusterAdmin}
+                onChange={(event, _) => setGroupValue(_, event)}
                 label={
                   <>
-                    {dedicatedAdmin}
+                    {clusterAdmin}
                     <div className="radio-helptext">
-                      Grants standard administrative privileges for OpenShift Dedicated. Users can
-                      perform administrative actions listed in the{' '}
-                      <ExternalLink href={links.OSD_DEDICATED_ADMIN_ROLE}>
-                        documentation
-                      </ExternalLink>
-                      .
+                      {' '}
+                      Gives users full administrative access to the cluster. This is the highest
+                      level of privilege available to users. It should be granted with extreme care,
+                      because it is possible with this level of access to get the cluster into an
+                      unsupportable state.
                     </div>
                   </>
                 }
-                id={dedicatedAdmin}
-                value={dedicatedAdmin}
+                id={clusterAdmin}
+                value={clusterAdmin}
               />
-              {canAddClusterAdmin && (
-                <Radio
-                  className="radio-button"
-                  key={clusterAdmin}
-                  isChecked={selectedGroup === clusterAdmin}
-                  name={clusterAdmin}
-                  onChange={(event, _) => this.setGroupValue(_, event)}
-                  label={
-                    <>
-                      {clusterAdmin}
-                      <div className="radio-helptext">
-                        {' '}
-                        Gives users full administrative access to the cluster. This is the highest
-                        level of privilege available to users. It should be granted with extreme
-                        care, because it is possible with this level of access to get the cluster
-                        into an unsupportable state.
-                      </div>
-                    </>
-                  }
-                  id={clusterAdmin}
-                  value={clusterAdmin}
-                />
-              )}
-            </Form>
-          </>
-        </Modal>
-      )
-    );
-  }
-}
+            )}
+          </Form>
+        </>
+      </Modal>
+    )
+  );
+};
 
 AddUserDialog.propTypes = {
-  closeModal: PropTypes.func.isRequired,
-  submit: PropTypes.func.isRequired,
-  clearAddUserResponses: PropTypes.func.isRequired,
-  addUserResponse: PropTypes.object,
   isOpen: PropTypes.bool,
   canAddClusterAdmin: PropTypes.bool.isRequired,
-  clusterID: PropTypes.string.isRequired,
+  addUserMutate: PropTypes.func.isRequired,
+  resetAddUserMutate: PropTypes.func.isRequired,
+  isAddUserPending: PropTypes.bool.isRequired,
+  isAddUserError: PropTypes.bool.isRequired,
+  addUserError: PropTypes.object,
+  isAddUserSuccess: PropTypes.bool.isRequired,
 };
 
 AddUserDialog.defaultProps = {
-  addUserResponse: {},
   isOpen: false,
 };
 

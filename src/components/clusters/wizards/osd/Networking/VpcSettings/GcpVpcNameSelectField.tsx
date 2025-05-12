@@ -18,7 +18,7 @@ import { FieldId } from '~/components/clusters/wizards/osd/constants';
 import { FormGroupHelperText } from '~/components/common/FormGroupHelperText';
 import { getGCPCloudProviderVPCs, LIST_VPCS } from '~/redux/actions/ccsInquiriesActions';
 import { useGlobalState } from '~/redux/hooks/useGlobalState';
-import { CloudVPC } from '~/types/clusters_mgmt.v1';
+import { CloudVpc } from '~/types/clusters_mgmt.v1';
 
 interface GcpVpcNameSelectFieldProps {
   input: FieldInputProps<FormSelectProps>;
@@ -45,6 +45,7 @@ export const GcpVpcNameSelectField = ({
   const { values } = useFormState();
   const { vpcs } = useGlobalState((state) => state.ccsInquiries);
   const ccsCredentials = getGcpCcsCredentials(values);
+  const { [FieldId.GcpAuthType]: gcpAuthType } = values;
   const region = values[FieldId.Region];
   const hasDependencies = !!(ccsCredentials && region);
   const matchesDependencies =
@@ -92,7 +93,7 @@ export const GcpVpcNameSelectField = ({
 
     if (matchesDependencies && vpcs.fulfilled) {
       // Made request and current value is no longer valid.
-      const items: CloudVPC[] = vpcs.data?.items || [];
+      const items: CloudVpc[] = vpcs.data?.items || [];
       return !items.some((item) => item.name === input.value.toString());
     }
 
@@ -101,7 +102,7 @@ export const GcpVpcNameSelectField = ({
 
   React.useEffect(() => {
     if (hasDependencies && !matchesDependencies && !vpcs.pending) {
-      dispatch(getGCPCloudProviderVPCs(LIST_VPCS, ccsCredentials, region));
+      dispatch(getGCPCloudProviderVPCs(LIST_VPCS, gcpAuthType, ccsCredentials, region));
     }
 
     if (isCurrentValueIrrelevant) {
@@ -116,6 +117,7 @@ export const GcpVpcNameSelectField = ({
     region,
     dispatch,
     isCurrentValueIrrelevant,
+    gcpAuthType,
   ]);
 
   const { onChange, ...restInput } = input;

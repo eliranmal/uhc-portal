@@ -10,6 +10,7 @@ import '@testing-library/jest-dom';
 describe('<Overview />', () => {
   const advancedClusterSecurityCardData = { ...FEATURED_PRODUCTS_CARDS[0] };
   const openshiftAiCardData = { ...FEATURED_PRODUCTS_CARDS[1] };
+  const openshiftVirtualizationData = { ...FEATURED_PRODUCTS_CARDS[2] };
 
   const gitopsCardData = { ...RECOMMENDED_OPERATORS_CARDS_DATA[0] };
   const pipelinesCardData = { ...RECOMMENDED_OPERATORS_CARDS_DATA[1] };
@@ -134,6 +135,15 @@ describe('<Overview />', () => {
         'https://catalog.redhat.com/software/container-stacks/detail/63b85b573112fe5a95ee9a3a',
       learnMoreLinkTextContent: `Learn more about ${openshiftAiCardData.title}`,
     },
+    {
+      ...openshiftVirtualizationData,
+      index: 2,
+      someDrawerContent:
+        'Transition your virtual machines to a modern hybrid cloud application platform. Run your VMs alongside containers using the same set of tools and processes.',
+      learnMoreLinkDestination:
+        'https://docs.redhat.com/en/documentation/migration_toolkit_for_virtualization/2.0/html/installing_and_using_the_migration_toolkit_for_virtualization/about-mtv_mtv#mtv-resources-and-services_mtv',
+      learnMoreLinkTextContent: 'Learn more about Migration Toolkit for Virtualization',
+    },
   ])(
     'verifies Featured Product Card "$title" content (basic functionality verification of each Card separately)',
     async ({
@@ -159,7 +169,7 @@ describe('<Overview />', () => {
       const learnMoreBtns = screen.getAllByTestId(
         'product-overview-card__learn-more-button-Featured products',
       );
-      expect(learnMoreBtns).toHaveLength(2);
+      expect(learnMoreBtns).toHaveLength(3);
 
       // click on Card's Learn more button
       await userEvent.click(learnMoreBtns[index]);
@@ -193,7 +203,7 @@ describe('<Overview />', () => {
     const learnMoreBtns = screen.getAllByTestId(
       'product-overview-card__learn-more-button-Featured products',
     );
-    expect(learnMoreBtns).toHaveLength(2);
+    expect(learnMoreBtns).toHaveLength(3);
 
     // click on Advanced Cluster Security card's Learn more button
     await userEvent.click(learnMoreBtns[0]);
@@ -230,6 +240,20 @@ describe('<Overview />', () => {
     expect(
       screen.getByText(
         'Build, train, tune, and deploy AI models at scale across hybrid cloud environments with Red Hat OpenShift AI, an AI platform.',
+      ),
+    ).toBeInTheDocument();
+
+    // click on Openshift Virtualization card's Learn more button
+    await userEvent.click(learnMoreBtns[2]);
+
+    // ensure the title and some drawer content is shown
+    expect(screen.getByTestId('drawer-panel-content__title')).toHaveTextContent(
+      openshiftVirtualizationData.title,
+    );
+
+    expect(
+      screen.getByText(
+        'Transition your virtual machines to a modern hybrid cloud application platform. Run your VMs alongside containers using the same set of tools and processes.',
       ),
     ).toBeInTheDocument();
   });
@@ -308,7 +332,7 @@ describe('<Overview />', () => {
       'product-overview-card__learn-more-button-Featured products',
     );
     expect(recommendedOperatorsLearnMoreBtns).toHaveLength(3);
-    expect(featuredProductsLearnMoreBtns).toHaveLength(2);
+    expect(featuredProductsLearnMoreBtns).toHaveLength(3);
 
     const learnMoreBtns = [...featuredProductsLearnMoreBtns, ...recommendedOperatorsLearnMoreBtns];
 
@@ -345,8 +369,29 @@ describe('<Overview />', () => {
       ),
     ).not.toBeInTheDocument();
 
-    // click on Gitops card's Learn more button
+    // click on Openshift Virtualization card's Learn more button
     await userEvent.click(learnMoreBtns[2]);
+
+    // ensure the title and some drawer content is shown
+    expect(screen.getByTestId('drawer-panel-content__title')).toHaveTextContent(
+      openshiftVirtualizationData.title,
+    );
+
+    expect(
+      screen.getByText(
+        'Transition your virtual machines to a modern hybrid cloud application platform. Run your VMs alongside containers using the same set of tools and processes.',
+      ),
+    ).toBeInTheDocument();
+
+    // ensure some of the previously shown content of the Drawer is no longer shown:
+    expect(
+      screen.queryByText(
+        'Build, train, tune, and deploy AI models at scale across hybrid cloud environments with Red Hat OpenShift AI, an AI platform.',
+      ),
+    ).not.toBeInTheDocument();
+
+    // click on Gitops card's Learn more button
+    await userEvent.click(learnMoreBtns[3]);
 
     // ensure the title and some drawer content is shown
     expect(screen.getByTestId('drawer-panel-content__title')).toHaveTextContent(
@@ -361,12 +406,12 @@ describe('<Overview />', () => {
     // ensure some of the previously shown content of the Drawer is no longer shown:
     expect(
       screen.queryByText(
-        'Build, train, tune, and deploy AI models at scale across hybrid cloud environments with Red Hat OpenShift AI, an AI platform.',
+        'Transition your virtual machines to a modern hybrid cloud application platform. Run your VMs alongside containers using the same set of tools and processes.',
       ),
     ).not.toBeInTheDocument();
 
     // click on Pipelines card's Learn more button
-    await userEvent.click(learnMoreBtns[3]);
+    await userEvent.click(learnMoreBtns[4]);
 
     // ensure the title and some drawer content is shown
     expect(screen.getByTestId('drawer-panel-content__title')).toHaveTextContent(
@@ -386,7 +431,7 @@ describe('<Overview />', () => {
     ).not.toBeInTheDocument();
 
     // click on Service Mesh card's Learn more button
-    await userEvent.click(learnMoreBtns[4]);
+    await userEvent.click(learnMoreBtns[5]);
 
     // ensure the title and some drawer content is shown
     expect(screen.getByTestId('drawer-panel-content__title')).toHaveTextContent(

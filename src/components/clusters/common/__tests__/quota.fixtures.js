@@ -1,5 +1,8 @@
 import { normalizedProducts } from '~/common/subscriptionTypes';
-import { RelatedResource } from '~/types/accounts_mgmt.v1';
+import {
+  RelatedResourceBilling_model as RelatedResourceBillingModel,
+  SubscriptionCommonFieldsCluster_billing_model as SubscriptionCommonFieldsClusterBillingModel,
+} from '~/types/accounts_mgmt.v1';
 
 // This is the quota we use in mockdata mode, pretty much everything is allowed.
 import * as mockQuotaCost from '../../../../../mockdata/api/accounts_mgmt/v1/organizations/1HAXGgCYqHpednsRDiwWsZBmDlA/quota_cost.json';
@@ -164,7 +167,7 @@ export const paramsRhInfra = {
   resourceName: 'standard-4',
   isMultiAz: true,
   isBYOC: false,
-  billingModel: RelatedResource.billing_model.STANDARD,
+  billingModel: RelatedResourceBillingModel.standard,
 };
 export const paramsCCS = {
   product: normalizedProducts.OSD,
@@ -172,7 +175,7 @@ export const paramsCCS = {
   resourceName: 'standard-4',
   isMultiAz: true,
   isBYOC: true,
-  billingModel: RelatedResource.billing_model.STANDARD,
+  billingModel: RelatedResourceBillingModel.standard,
 };
 export const paramsCCSOnDemand = {
   product: normalizedProducts.OSD,
@@ -180,15 +183,15 @@ export const paramsCCSOnDemand = {
   resourceName: 'standard-4',
   isMultiAz: true,
   isBYOC: true,
-  billingModel: RelatedResource.billing_model.MARKETPLACE,
+  billingModel: RelatedResourceBillingModel.marketplace,
 };
 export const paramsTrial = {
-  product: normalizedProducts.OSDTRIAL,
+  product: normalizedProducts.OSDTrial,
   cloudProviderID: 'aws',
   resourceName: 'standard-4',
   isMultiAz: true,
   isBYOC: true,
-  billingModel: RelatedResource.billing_model.STANDARD,
+  billingModel: RelatedResourceBillingModel.standard,
 };
 export const paramsROSA = {
   ...paramsCCS,
@@ -196,7 +199,7 @@ export const paramsROSA = {
 };
 export const paramsGCP = {
   ...paramsRhInfra,
-  billingModel: RelatedResource.billing_model.MARKETPLACE_GCP,
+  billingModel: SubscriptionCommonFieldsClusterBillingModel.marketplace_gcp,
 };
 
 export const paramsAddons = {

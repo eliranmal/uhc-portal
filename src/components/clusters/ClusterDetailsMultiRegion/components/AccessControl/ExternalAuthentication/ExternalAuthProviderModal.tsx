@@ -1,5 +1,4 @@
 import React from 'react';
-import { AxiosError } from 'axios';
 import { Field, Formik } from 'formik';
 import * as Yup from 'yup';
 
@@ -9,7 +8,8 @@ import { getErrorMessage } from '~/common/errors';
 import { validateSecureURL } from '~/common/validators';
 import ErrorBox from '~/components/common/ErrorBox';
 import TextField from '~/components/common/formik/TextField';
-import { clusterService } from '~/services';
+import { useAddEditExternalAuth } from '~/queries/ClusterDetailsQueries/AccessControlTab/ExternalAuthenticationQueries/useAddEditExternalAuth';
+import { refetchExternalAuths } from '~/queries/ClusterDetailsQueries/AccessControlTab/ExternalAuthenticationQueries/useFetchExternalAuths';
 import { ExternalAuth } from '~/types/clusters_mgmt.v1';
 
 import CAUpload from '../../IdentityProvidersPage/components/CAUpload';
@@ -20,6 +20,7 @@ type ExternalAuthProviderModalProps = {
   externalAuthProvider?: ExternalAuth;
   isEdit?: boolean;
   isOpen?: boolean;
+  region?: string;
 };
 type ExternalAuthenticationProvider = {
   id: string;
@@ -34,26 +35,6 @@ type ExternalAuthenticationProvider = {
 
 const modalDescription =
   'An external authentication provider controls access to your cluster. You can add one provider to your cluster.';
-
-const submitProvider = ({
-  clusterID,
-  values,
-  externalAuthProviderId,
-}: {
-  clusterID: string;
-  values: ExternalAuth;
-  externalAuthProviderId?: string;
-}) => {
-  // Edit request
-  if (externalAuthProviderId) {
-    const request = clusterService.patchExternalAuth;
-    return request(clusterID || '', externalAuthProviderId, values);
-  }
-
-  // Creation request
-  const request = clusterService.postExternalAuth;
-  return request(clusterID || '', values);
-};
 
 const buildExternalAuthProvider = (values: ExternalAuthenticationProvider): ExternalAuth => {
   const consoleCLient = {
@@ -92,9 +73,14 @@ const buildExternalAuthProvider = (values: ExternalAuthenticationProvider): Exte
 };
 
 export function ExternalAuthProviderModal(props: ExternalAuthProviderModalProps) {
-  const { clusterID, onClose, externalAuthProvider, isEdit, isOpen = true } = props;
-  const [submitError, setSubmitError] = React.useState<AxiosError<any>>();
-  const [isPending, setIsPending] = React.useState(false);
+  const { clusterID, onClose, externalAuthProvider, isEdit, region, isOpen = true } = props;
+
+  const {
+    isPending,
+    isError,
+    error: submitError,
+    mutate,
+  } = useAddEditExternalAuth(clusterID, region);
 
   // find the first client with component name console
   const consoleClient = externalAuthProvider?.clients?.find(
@@ -169,21 +155,19 @@ export function ExternalAuthProviderModal(props: ExternalAuthProviderModalProps)
         [['consoleClientID', 'consoleClientSecret']],
       )}
       onSubmit={async (values) => {
-        setSubmitError(undefined);
-        setIsPending(true);
         const data: ExternalAuth = buildExternalAuthProvider(values);
-        try {
-          await submitProvider({
-            clusterID,
+        mutate(
+          {
             values: data,
             externalAuthProviderId: externalAuthProvider?.id,
-          });
-          onClose();
-        } catch (err) {
-          setSubmitError(err as any);
-        } finally {
-          setIsPending(false);
-        }
+          },
+          {
+            onSuccess: () => {
+              refetchExternalAuths();
+              onClose();
+            },
+          },
+        );
       }}
     >
       {(formik) => (
@@ -247,21 +231,22 @@ export function ExternalAuthProviderModal(props: ExternalAuthProviderModalProps)
                 onChange: (value: string) => formik.setFieldValue('provider_ca', value),
                 onBlur: formik.handleBlur,
               }}
+              fieldName="provider_ca"
               name="provider_ca"
               label="CA file"
               helpText="PEM encoded certificate bundle to use to validate server certificates for the configured issuer URL."
               certValue={isEdit ? formik.values.provider_ca : ''}
             />
           </Form>
-          {submitError && (
+          {isError && (
             <Stack hasGutter>
               <StackItem>
                 <ErrorBox
                   message={isEdit ? 'Error editing provider' : 'Error adding provider'}
                   response={{
-                    errorDetails: submitError.response?.data?.details,
-                    errorMessage: getErrorMessage({ payload: submitError }),
-                    operationID: submitError.response?.data.operation_id,
+                    errorDetails: submitError.error.errorDetails,
+                    errorMessage: getErrorMessage({ payload: submitError.error as any }),
+                    operationID: submitError.error.operationID,
                   }}
                 />
               </StackItem>

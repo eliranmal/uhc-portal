@@ -1,3 +1,4 @@
+/* eslint-disable custom-rules/restrict-react-router-imports */
 import React from 'react';
 import { Navigate as RouterNavigate } from 'react-router-dom';
 

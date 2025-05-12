@@ -13,16 +13,23 @@ import {
   SelectList,
   SelectOption,
   SelectProps,
+  Spinner,
   Switch,
 } from '@patternfly/react-core';
 import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons/dist/esm/icons/outlined-question-circle-icon';
-import { Spinner } from '@redhat-cloud-services/frontend-components/Spinner';
 
 import { isSupportedMinorVersion } from '~/common/helpers';
+import {
+  channelGroups,
+  getVersionNameWithChannel,
+  hasUnstableVersionsCapability,
+} from '~/components/clusters/wizards/common/ClusterSettings/Details/versionSelectHelper';
 import { MIN_MANAGED_POLICY_VERSION } from '~/components/clusters/wizards/rosa/rosaConstants';
 import ErrorBox from '~/components/common/ErrorBox';
 import { FormGroupHelperText } from '~/components/common/FormGroupHelperText';
 import { useOCPLifeCycleStatusData } from '~/components/releases/hooks';
+import { UNSTABLE_CLUSTER_VERSIONS } from '~/queries/featureGates/featureConstants';
+import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 import { clustersActions } from '~/redux/actions';
 import { useGlobalState } from '~/redux/hooks';
 import type { Version } from '~/types/clusters_mgmt.v1';
@@ -60,11 +67,20 @@ function VersionSelection({
     },
   } = useFormState();
   const isHypershiftSelected = isHypershift === 'true';
+  const organization = useGlobalState((state) => state.userProfile.organization.details);
+  const unstableOCPVersionsEnabled =
+    useFeatureGate(UNSTABLE_CLUSTER_VERSIONS) && hasUnstableVersionsCapability(organization);
 
   const dispatch = useDispatch();
   const getInstallableVersionsResponse = useGlobalState((state) => state.clusters.clusterVersions);
   const getInstallableVersions = (isHCP: boolean) =>
-    dispatch(clustersActions.getInstallableVersions(true, false, isHCP));
+    dispatch(
+      clustersActions.getInstallableVersions({
+        isRosa: true,
+        isHCP,
+        includeUnstableVersions: unstableOCPVersionsEnabled,
+      }),
+    );
 
   const awsAccountRoleArns = useGlobalState(
     (state) => state.rosaReducer.getAWSAccountRolesARNsResponse,
@@ -90,7 +106,8 @@ function VersionSelection({
     statusVersions.map((version) => [version.name, version.type]),
   );
   const isValidRosaVersion = React.useCallback(
-    (version) => isSupportedMinorVersion(version.raw_id, rosaMaxOSVersion) && version.rosa_enabled,
+    (version: Version) =>
+      isSupportedMinorVersion(version?.raw_id || '', rosaMaxOSVersion) && version.rosa_enabled,
     [rosaMaxOSVersion],
   );
 
@@ -98,8 +115,8 @@ function VersionSelection({
     // rosaMaxOSVersion - is actually the max version allowed by the chosen AccountRoles
     // if Hypershift is used outside of ROSA, the logic to determine the max version (aka rosaMaxOSVersion)
     // may need to change
-    (version) =>
-      isSupportedMinorVersion(version.raw_id, rosaMaxOSVersion) &&
+    (version: Version) =>
+      isSupportedMinorVersion(version?.raw_id || '', rosaMaxOSVersion) &&
       version.hosted_control_plane_enabled,
     [rosaMaxOSVersion],
   );
@@ -177,11 +194,11 @@ function VersionSelection({
         const versions = getInstallableVersionsResponse?.versions ?? [];
 
         const selectedVersionInVersionList = versions.find(
-          (ver) => ver.raw_id === selectedClusterVersion?.raw_id,
+          (ver) => ver.id === selectedClusterVersion?.id,
         );
 
         if (
-          selectedClusterVersion?.raw_id &&
+          selectedClusterVersion?.id &&
           (!selectedVersionInVersionList || incompatibleVersionReason(selectedVersionInVersionList))
         ) {
           // The previously selected version is no longer compatible
@@ -201,13 +218,19 @@ function VersionSelection({
   );
 
   useEffect(() => {
-    if (versions.length && !selectedClusterVersion?.raw_id) {
+    if (versions.length && !selectedClusterVersion?.id) {
       const defaultVersion = versions.find((version) => version.default === true);
 
-      const defaultRosaVersion = versions.find((version) => isValidRosaVersion(version));
+      const defaultRosaVersion = versions.find(
+        (version) => isValidRosaVersion(version) && version.channel_group === channelGroups.STABLE,
+      );
 
       const defaultHypershiftVersion =
-        isHypershiftSelected && versions.find((version) => isValidHypershiftVersion(version));
+        isHypershiftSelected &&
+        versions.find(
+          (version) =>
+            isValidHypershiftVersion(version) && version.channel_group === channelGroups.STABLE,
+        );
 
       if (!defaultRosaVersion || (isHypershiftSelected && !defaultHypershiftVersion)) {
         setRosaVersionError(true);
@@ -223,7 +246,7 @@ function VersionSelection({
     }
   }, [
     versions,
-    selectedClusterVersion?.raw_id,
+    selectedClusterVersion?.id,
     rosaMaxOSVersion,
     setValue,
     onChange,
@@ -243,14 +266,14 @@ function VersionSelection({
 
   const onSelect: SelectProps['onSelect'] = (_event, selection) => {
     setIsOpen(false);
-    const selectedVersion = versions.find((version) => version.raw_id === selection);
+    const selectedVersion = versions.find((version) => version.id === selection);
     setValue(selectedVersion);
     onChange(selectedVersion);
   };
 
   const getSelection = () => {
-    const selectedVersion = versions.find((version) => input.value?.raw_id === version.raw_id);
-    return selectedVersion ? selectedVersion.raw_id : '';
+    const selectedVersion = versions.find((version) => input.value?.id === version.id);
+    return selectedVersion ? selectedVersion.id : '';
   };
 
   const toggle = (toggleRef: React.Ref<MenuToggleElement>) => (
@@ -264,50 +287,82 @@ function VersionSelection({
       }}
       id={FieldId.ClusterVersion}
     >
-      {selectedClusterVersion?.raw_id || getSelection()}
+      {getVersionNameWithChannel(selectedClusterVersion) || getSelection()}
     </MenuToggle>
   );
 
   const selectOptions = React.useMemo(() => {
     const fullSupport: ReactElement[] = [];
     const maintenanceSupport: ReactElement[] = [];
+    const nightlySupport: ReactElement[] = [];
+    const candidateSupport: ReactElement[] = [];
+    const fastSupport: ReactElement[] = [];
     let hasIncompatibleVersions = false;
 
     versions.forEach((version) => {
-      const disableReason = incompatibleVersionReason(version);
+      const { raw_id: versionRawId, id: versionId, channel_group: channelGroup } = version;
+      if (versionRawId && versionId) {
+        const disableReason = incompatibleVersionReason(version);
 
-      hasIncompatibleVersions ||= !!disableReason;
+        hasIncompatibleVersions ||= !!disableReason;
 
-      if (disableReason && showOnlyCompatibleVersions) {
-        return;
-      }
+        if (disableReason && showOnlyCompatibleVersions) {
+          return;
+        }
 
-      const selectOption = (
-        <SelectOption
-          value={version.raw_id}
-          key={version.id}
-          isDisabled={!!disableReason}
-          description={disableReason || ''}
-        >
-          {`${version.raw_id}`}
-        </SelectOption>
-      );
+        const selectOption = (
+          <SelectOption
+            value={version.id}
+            key={version.id}
+            isDisabled={!!disableReason}
+            description={disableReason || ''}
+          >
+            {getVersionNameWithChannel(version)}
+          </SelectOption>
+        );
 
-      switch (supportVersionMap?.[versionName(version)]) {
-        case SupportStatusType.Full:
-          fullSupport.push(selectOption);
-          break;
-        default:
-          maintenanceSupport.push(selectOption);
+        if (!unstableOCPVersionsEnabled || channelGroup === channelGroups.STABLE) {
+          switch (supportVersionMap?.[versionName(version)]) {
+            case SupportStatusType.Full:
+              fullSupport.push(selectOption);
+              break;
+            default:
+              maintenanceSupport.push(selectOption);
+          }
+        }
+        if (unstableOCPVersionsEnabled) {
+          switch (channelGroup) {
+            case channelGroups.CANDIDATE:
+              candidateSupport.push(selectOption);
+              break;
+            case channelGroups.NIGHTLY:
+              nightlySupport.push(selectOption);
+              break;
+            case channelGroups.FAST:
+              fastSupport.push(selectOption);
+              break;
+            default:
+              break;
+          }
+        }
       }
     });
 
     return {
       fullSupport,
       maintenanceSupport,
+      nightlySupport,
+      candidateSupport,
+      fastSupport,
       hasIncompatibleVersions,
     };
-  }, [incompatibleVersionReason, supportVersionMap, versions, showOnlyCompatibleVersions]);
+  }, [
+    incompatibleVersionReason,
+    supportVersionMap,
+    versions,
+    showOnlyCompatibleVersions,
+    unstableOCPVersionsEnabled,
+  ]);
 
   return (
     <FormGroup {...input} label={label} isRequired>
@@ -322,13 +377,13 @@ function VersionSelection({
       ) : null}
       {getInstallableVersionsResponse.pending && (
         <div className="spinner-fit-container">
-          <Spinner />
+          <Spinner size="lg" aria-label="Loading..." />
         </div>
       )}
       {getInstallableVersionsResponse.fulfilled && !rosaVersionError && (
         <Select
           isOpen={isOpen}
-          selected={selectedClusterVersion?.raw_id || getSelection()}
+          selected={selectedClusterVersion?.id || getSelection()}
           toggle={toggle}
           onOpenChange={setIsOpen}
           onSelect={onSelect}
@@ -373,6 +428,32 @@ function VersionSelection({
                 {selectOptions.maintenanceSupport}
               </SelectList>
             </SelectGroup>
+          ) : null}
+          {unstableOCPVersionsEnabled ? (
+            <>
+              {' '}
+              {selectOptions.nightlySupport?.length > 0 ? (
+                <SelectGroup label="Nightly" id="nightly-support">
+                  <SelectList aria-labelledby="nightly-support">
+                    {selectOptions.nightlySupport}
+                  </SelectList>
+                </SelectGroup>
+              ) : null}
+              {selectOptions.candidateSupport?.length > 0 ? (
+                <SelectGroup label="Candidate" id="candidate-support">
+                  <SelectList aria-labelledby="candidate-support">
+                    {selectOptions.candidateSupport}
+                  </SelectList>
+                </SelectGroup>
+              ) : null}
+              {selectOptions.fastSupport?.length > 0 ? (
+                <SelectGroup label="Fast" id="fast-support">
+                  <SelectList aria-labelledby="fast-support">
+                    {selectOptions.fastSupport}
+                  </SelectList>
+                </SelectGroup>
+              ) : null}
+            </>
           ) : null}
         </Select>
       )}

@@ -4,7 +4,7 @@ import { Link } from '~/common/routing';
 import {
   MachinePoolItemList,
   securityGroupsRenderer,
-} from '~/components/clusters/ClusterDetails/components/MachinePools/components/MachinePoolExpandedRow';
+} from '~/components/clusters/ClusterDetailsMultiRegion/components/MachinePools/components/MachinePoolExpandedRow';
 import { MachinePool, NodePool, SecurityGroup } from '~/types/clusters_mgmt.v1';
 
 const getCombinedMachinePoolSecurityGroupIds = (

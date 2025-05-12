@@ -9,19 +9,42 @@ class ClusterList extends Page {
   }
 
   filterTxtField = () => cy.getByTestId('filterInputClusterList', { timeout: 15000 });
+
   viewOnlyMyCluster = () => cy.get('label > input[id="view-only-my-clusters"]');
+
   viewOnlyMyClusterHelp = () => cy.get('label[for="view-only-my-clusters"]').find('button').first();
+
   tooltipviewOnlyMyCluster = () => cy.get('div.pf-v5-c-popover__body');
+
   viewClusterArchives = () => cy.contains('a', 'View cluster archives');
+
+  viewClusterRequests = () => cy.contains('a', 'View cluster requests');
+
+  viewClusterRequestsButton = () => cy.contains('button', 'View cluster requests');
+
   assistedInstallerClusters = () => cy.contains('a', 'Assisted Installer clusters');
+
   registerCluster = () => cy.getByTestId('register-cluster-item');
+
   showActiveClusters = () => cy.get('a').contains('Show active clusters');
+
+  clusterKebabIcon = () => cy.get('button[aria-label="Kebab toggle"]').should('be.visible');
+
   itemPerPage = () => cy.get('#options-menu-bottom-toggle').last();
+
   goToLastPageBtn = () => cy.get('button[aria-label="Go to last page"]').last();
+
   goToFirstPageBtn = () => cy.get('button[aria-label="Go to first page"]').last();
+
   typeColumnsInClusterList = () => cy.get('td[data-label="Type"] span');
+
   filterdClusterTypesValues = () => cy.get('span.pf-v5-c-chip__text');
+
   createClusterButton = () => cy.getByTestId('create_cluster_btn');
+
+  pendingTransferRequestsBanner = () => cy.get('#pendingTransferOwnerAlert', { timeout: 15000 });
+
+  showPendingTransferRequestsLink = () => cy.get('a').contains('Show pending transfer requests');
 
   isRegisterClusterUrl() {
     super.assertUrlIncludes('/openshift/register');
@@ -48,7 +71,7 @@ class ClusterList extends Page {
   }
 
   clickClusterTypeFilters() {
-    cy.getByTestId('cluster-list-filter-dropdown').click();
+    cy.get('button').contains('Cluster type').click();
   }
 
   clickClusterTypes(type) {
@@ -57,7 +80,7 @@ class ClusterList extends Page {
 
   // Checks if the selected filters are populated filter rule string in cluster/archives list.
   checkFilteredClusterTypes(type, isContains) {
-    var criteria = 'eq';
+    let criteria = 'eq';
     if (!isContains) {
       criteria = 'not.eq';
     }
@@ -68,7 +91,7 @@ class ClusterList extends Page {
 
   // Checks if the selected cluster type filters matches with the list of clusters filtered in list.
   checkFilteredClustersFromClusterList(type, isContains) {
-    var criteria = 'eq';
+    let criteria = 'eq';
     if (!isContains) {
       criteria = 'not.eq';
     }
@@ -94,14 +117,19 @@ class ClusterList extends Page {
   }
 
   openClusterDefinition(clusterName) {
-    cy.get('td[data-label="Name"]')
-      .find('a')
-      .contains(new RegExp('^' + clusterName + '$', 'g'))
+    cy.get('a')
+      .contains(new RegExp(`^${clusterName}$`, 'g'), { timeout: 10000 })
       .click({ force: true });
   }
+
+  clickKebabMenuItem(menuText) {
+    cy.get('button').contains(menuText).click();
+  }
+
   clickClusterListExtraActions() {
     cy.getByTestId('cluster-list-extra-actions-dropdown').should('be.visible').click();
   }
+
   clickClusterListExtraActions() {
     cy.get('button.pf-v5-c-dropdown__toggle').should('be.visible').click();
   }
@@ -111,7 +139,7 @@ class ClusterList extends Page {
   }
 
   scrollClusterListPageTo(direction) {
-    cy.getByTestId('appDrawerContent').scrollTo(direction);
+    cy.getByTestId('appDrawerContent').scrollTo(direction, { ensureScrollable: false });
   }
 
   scrollToPagination() {
@@ -123,9 +151,7 @@ class ClusterList extends Page {
   }
 
   clickPerPageItem(count) {
-    cy.get('li[data-action="per-page-' + count + '"]')
-      .scrollIntoView()
-      .click();
+    cy.get(`li[data-action="per-page-${count}"]`).scrollIntoView().click();
   }
 
   checkClusterListTableHeaders(headers) {
@@ -146,6 +172,21 @@ class ClusterList extends Page {
     cy.get('div[data-ready="true"]', { timeout: 60000 }).should('exist');
   }
 
+  waitForClusterInClusterList(clusterName) {
+    cy.getByTestId('clusterListTableBody').within(() => {
+      cy.get('a').contains(clusterName, { timeout: 60000 }).should('exist');
+      cy.get('span').contains('loading cluster status', { timeout: 60000 }).should('not.exist');
+    });
+  }
+
+  clickClusterKebabIcon(clusterName) {
+    cy.get(`a:contains(${clusterName})`)
+      .parents('tr')
+      .within(() => {
+        cy.get('button[aria-label="Kebab toggle"]').click();
+      });
+  }
+
   waitForArchiveDataReady() {
     cy.get('div.cluster-list', { timeout: 30000 }).should('exist');
     cy.get('div.ins-c-spinner.cluster-list-spinner', { timeout: 30000 }).should('not.exist');
@@ -157,6 +198,43 @@ class ClusterList extends Page {
 
   isCreateClusterBtnVisible() {
     cy.getByTestId('create_cluster_btn').should('be.visible');
+  }
+
+  isPendingTransferRequestsBannerShown(isShown, transferRequests) {
+    if (isShown) {
+      this.pendingTransferRequestsBanner()
+        .should('be.visible')
+        .within(() => {
+          cy.get('h4').contains('Pending Transfer Requests').should('be.visible');
+          cy.contains(`You have ${transferRequests} pending cluster transfer ownership request`);
+          this.showPendingTransferRequestsLink()
+            .invoke('attr', 'href')
+            .should('include', '/openshift/./cluster-request');
+        });
+    } else {
+      this.pendingTransferRequestsBanner().should('not.be.exist');
+    }
+  }
+
+  checkForDetailsInAnchor() {
+    cy.get('tbody.pf-v5-c-table__tbody tr')
+      .find('td[data-label="Name"] a')
+      .should('have.length.greaterThan', 0)
+      .each((anchor) => {
+        expect(anchor.prop('href')).to.include('/openshift/details/');
+      });
+  }
+
+  checkIfFirstAnchorNavigatesToCorrectRoute() {
+    cy.get('tbody.pf-v5-c-table__tbody tr')
+      .find('td[data-label="Name"] a')
+      .first()
+      .then((anchor) => {
+        const href = anchor.prop('href');
+        cy.wrap(anchor).click();
+        cy.url().should('include', '/openshift/details/');
+        cy.url().should('include', href);
+      });
   }
 }
 

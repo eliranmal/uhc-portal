@@ -1,6 +1,6 @@
 import React from 'react';
 import { FieldInputProps, FieldMetaProps } from 'formik';
-import { CopyToClipboard } from 'react-copy-to-clipboard';
+import CopyToClipboard from 'react-copy-to-clipboard';
 import { useDispatch } from 'react-redux';
 
 import { Button, Flex, FlexItem, FormGroup, Tooltip } from '@patternfly/react-core';
@@ -9,7 +9,7 @@ import { TrashIcon } from '@patternfly/react-icons/dist/esm/icons/trash-icon';
 
 import ErrorBox from '~/components/common/ErrorBox';
 import { FormGroupHelperText } from '~/components/common/FormGroupHelperText';
-import FuzzySelect, { FuzzySelectProps } from '~/components/common/FuzzySelect';
+import { FuzzySelect, FuzzySelectProps } from '~/components/common/FuzzySelect/FuzzySelect';
 import { dnsDomainsActions } from '~/redux/actions/dnsDomainsActions';
 import { useGlobalState } from '~/redux/hooks';
 
@@ -70,7 +70,7 @@ const SharedVPCDomainSelect = ({ label, input, meta }: SharedVPCDomainSelectProp
     }
   };
 
-  const onToggle: FuzzySelectProps['onToggle'] = (_event, isOpen) => {
+  const onToggle: FuzzySelectProps['onOpenChange'] = (isOpen) => {
     if (!isDisabled) {
       setIsOpen(isOpen);
     }
@@ -107,10 +107,10 @@ const SharedVPCDomainSelect = ({ label, input, meta }: SharedVPCDomainSelectProp
             onSelect={onSelect}
             selectedEntryId={input.value}
             placeholderText={placeholderLabel}
-            onToggle={onToggle}
+            onOpenChange={onToggle}
             isDisabled={isDisabled}
             isOpen={isOpen}
-            validated={input.value ? 'success' : 'default'}
+            validated={input.value ? 'success' : undefined}
             footer={
               <Button
                 isInline
@@ -123,7 +123,10 @@ const SharedVPCDomainSelect = ({ label, input, meta }: SharedVPCDomainSelectProp
               </Button>
             }
             inlineFilterPlaceholderText="Filter by domain name"
-            menuAppendTo={() => document.body}
+            isScrollable
+            popperProps={{
+              appendTo: () => document.body,
+            }}
           />
         </FlexItem>
 

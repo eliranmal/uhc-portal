@@ -1,4 +1,8 @@
-import { SubscriptionCommonFields, SubscriptionPatchRequest } from '~/types/accounts_mgmt.v1';
+import {
+  SubscriptionCommonFieldsSupport_level as SubscriptionCommonFieldsSupportLevel,
+  SubscriptionCommonFieldsSystem_units as SubscriptionCommonFieldsSystemUnits,
+  SubscriptionPatchRequest,
+} from '~/types/accounts_mgmt.v1';
 
 import { subscriptionSettings } from '../../../common/subscriptionTypes';
 
@@ -15,9 +19,9 @@ const validateSubscriptionSettings = (settings: {
   } = settings;
   // subscription setting is optional for disconnected cluster registration
   if (
-    supportLevel !== SubscriptionCommonFields.support_level.PREMIUM &&
-    supportLevel !== SubscriptionCommonFields.support_level.STANDARD &&
-    supportLevel !== SubscriptionCommonFields.support_level.SELF_SUPPORT
+    supportLevel !== SubscriptionCommonFieldsSupportLevel.Premium &&
+    supportLevel !== SubscriptionCommonFieldsSupportLevel.Standard &&
+    supportLevel !== SubscriptionCommonFieldsSupportLevel.Self_Support
   ) {
     return {
       request: null,
@@ -32,11 +36,11 @@ const validateSubscriptionSettings = (settings: {
   }
   // adjust the system_units values to avoid of round-off errors
   const request = { ...settings };
-  if (systemUnits === SubscriptionCommonFields.system_units.SOCKETS) {
+  if (systemUnits === SubscriptionCommonFieldsSystemUnits.Sockets) {
     request[SOCKET_TOTAL] = parseInt(socketTotal, 10);
     request[CPU_TOTAL] = request[SOCKET_TOTAL];
   }
-  if (systemUnits === SubscriptionCommonFields.system_units.CORES_V_CPU) {
+  if (systemUnits === SubscriptionCommonFieldsSystemUnits.Cores_vCPU) {
     request[SOCKET_TOTAL] = 1;
     request[CPU_TOTAL] = parseInt(cpuTotal, 10);
   }

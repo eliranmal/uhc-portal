@@ -2,8 +2,8 @@ import React from 'react';
 
 import { Flex, FlexItem, Title } from '@patternfly/react-core';
 
+import { ProductCard } from '../../../common/ProductCard/ProductCard';
 import { DRAWER_PANEL_CONTENT, DrawerPanelContentNode } from '../common/DrawerPanelContent';
-import ProductCard from '../common/ProductCard/ProductCard';
 import PRODUCT_CARD_LOGOS from '../common/ProductCardLogos';
 
 const TITLE = 'Featured products';
@@ -12,7 +12,7 @@ type FeaturedProductsCardsNode = {
   title: string;
   description: string;
   logo: string;
-  labelText: string;
+  labelText?: string;
   drawerPanelContent: DrawerPanelContentNode;
 };
 
@@ -31,6 +31,12 @@ const FEATURED_PRODUCTS_CARDS: FeaturedProductsCardsNode[] = [
     labelText: '60-day trial',
     drawerPanelContent: DRAWER_PANEL_CONTENT.OpenshiftAi,
   },
+  {
+    ...PRODUCT_CARD_LOGOS.openshiftVirtualization,
+    description:
+      'Streamline your operations and reduce complexity when you run and manage your VMs, containers, and serverless workloads in a single platform.',
+    drawerPanelContent: DRAWER_PANEL_CONTENT.OpenshiftVirtualization,
+  },
 ];
 
 type FeaturedProductsCardsProps = {
@@ -38,12 +44,14 @@ type FeaturedProductsCardsProps = {
   selectedCardTitle: string;
 };
 
+// TODO: This component can be refactored and simplified when using ProductCardView component (a generic ProductCard view in a Flex Layout) - LInk to ticket: https://issues.redhat.com/browse/OCMUI-2414
+
 const FeaturedProductsCards = ({
   openLearnMore,
   selectedCardTitle,
 }: FeaturedProductsCardsProps) => (
   <div className="featured-products-cards">
-    <Title size="xl" headingLevel="h2" className="pf-v5-u-mt-lg">
+    <Title size="xl" headingLevel="h2" className="pf-v5-u-mt-lg" id="featured-products">
       {TITLE}
     </Title>
     <Flex className="pf-v5-u-mb-lg">

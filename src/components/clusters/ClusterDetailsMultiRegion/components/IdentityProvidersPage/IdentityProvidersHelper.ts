@@ -4,11 +4,11 @@ import isEmpty from 'lodash/isEmpty';
 import {
   GithubIdentityProvider,
   IdentityProvider,
-  LDAPAttributes,
-  OpenIDClaims,
+  LdapAttributes,
+  OpenIdClaims,
 } from '~/types/clusters_mgmt.v1';
 
-import { multiInputToCleanArray, strToCleanArray } from '../../../../../common/helpers';
+import { strToCleanArray } from '../../../../../common/helpers';
 
 import { GitHubTeamsAndOrgsDataType } from './model/GitHubTeamsAndOrgsDataType';
 import { IDPFormDataType } from './model/IDPFormDataType';
@@ -166,11 +166,8 @@ const getCreateIDPRequestData = (formData: IDPFormDataType) => {
     client_id: formData.client_id.trim(),
     client_secret: formData.client_secret.trim(),
     organizations:
-      formData.github_auth_mode === 'organizations'
-        ? multiInputToCleanArray(formData, 'organizations')
-        : undefined,
-    teams:
-      formData.github_auth_mode === 'teams' ? multiInputToCleanArray(formData, 'teams') : undefined,
+      formData.github_auth_mode === 'organizations' ? formData.organizations : undefined,
+    teams: formData.github_auth_mode === 'teams' ? formData.teams : undefined,
     hostname: formData.hostname,
     ca: formData.github_ca ? formData.github_ca.trim() : formData.github_ca,
   });
@@ -183,10 +180,10 @@ const getCreateIDPRequestData = (formData: IDPFormDataType) => {
 
   const ldapData = () => ({
     attributes: {
-      id: multiInputToCleanArray(formData, 'ldap_id'),
-      email: multiInputToCleanArray(formData, 'ldap_email'),
-      name: multiInputToCleanArray(formData, 'ldap_name'),
-      preferred_username: multiInputToCleanArray(formData, 'ldap_preferred_username'),
+      id: formData.ldap_id,
+      email: formData.ldap_email,
+      name: formData.ldap_name,
+      preferred_username: formData.ldap_preferred_username,
     },
     bind_dn: formData.bind_dn,
     bind_password: formData.bind_password,
@@ -205,9 +202,9 @@ const getCreateIDPRequestData = (formData: IDPFormDataType) => {
   const openIdData = () => ({
     ca: formData.openid_ca ? formData.openid_ca.trim() : formData.openid_ca,
     claims: {
-      email: multiInputToCleanArray(formData, 'openid_email'),
-      name: multiInputToCleanArray(formData, 'openid_name'),
-      preferred_username: multiInputToCleanArray(formData, 'openid_preferred_username'),
+      email: formData.openid_email,
+      name: formData.openid_name,
+      preferred_username: formData.openid_preferred_username,
     },
     client_id: formData.client_id.trim(),
     client_secret: formData.client_secret.trim(),
@@ -265,8 +262,8 @@ const getCreateIDPRequestData = (formData: IDPFormDataType) => {
 };
 
 const getOpenIdClaims = (
-  claims: OpenIDClaims | undefined,
-  type: keyof OpenIDClaims,
+  claims: OpenIdClaims | undefined,
+  type: keyof OpenIdClaims,
 ): OpenIdClaimsType[] => {
   const claimsToIterate = claims?.[type];
   if (claimsToIterate?.length) {
@@ -296,8 +293,8 @@ const getOpenIdClaims = (
 };
 
 const getldapAttributes = (
-  attributes: LDAPAttributes,
-  type: keyof LDAPAttributes,
+  attributes: LdapAttributes,
+  type: keyof LdapAttributes,
 ): LdapAttributesType[] => {
   const attributeType = attributes ? attributes[type] : undefined;
   if (attributeType) {
@@ -332,13 +329,11 @@ const getldapAttributes = (
 const getGitHubTeamsAndOrgsData = (idP: GithubIdentityProvider): GitHubTeamsAndOrgsDataType[] => {
   if (idP.teams) {
     return idP.teams.map((teams, id) => ({
-      id,
       teams,
     }));
   }
   if (idP.organizations) {
     return idP.organizations.map((organizations, id) => ({
-      id,
       organizations,
     }));
   }
@@ -384,6 +379,7 @@ const getInitialValuesForEditing = (idpEdited: IdentityProvider, editedType: IDP
     case 'gitlab':
       return {
         ...baseValues,
+        gitlab_ca: idpEdited[editedType]?.ca,
         gitlab_url: idpEdited[editedType]?.url,
         client_id: idpEdited[editedType]?.client_id,
       };
@@ -391,12 +387,9 @@ const getInitialValuesForEditing = (idpEdited: IdentityProvider, editedType: IDP
       return {
         ...baseValues,
         issuer: idpEdited[editedType]?.issuer,
-        openid_name: getOpenIdClaims(idpEdited[editedType]?.claims, 'name'),
-        openid_email: getOpenIdClaims(idpEdited[editedType]?.claims, 'email'),
-        openid_preferred_username: getOpenIdClaims(
-          idpEdited[editedType]?.claims,
-          'preferred_username',
-        ),
+        openid_name: idpEdited[editedType]?.claims?.name,
+        openid_email: idpEdited[editedType]?.claims?.email,
+        openid_preferred_username: idpEdited[editedType]?.claims?.preferred_username,
         openid_extra_scopes: idpEdited[editedType]?.extra_scopes
           ? idpEdited[editedType]?.extra_scopes?.join()
           : '',
@@ -412,13 +405,10 @@ const getInitialValuesForEditing = (idpEdited: IdentityProvider, editedType: IDP
     case 'ldap':
       return {
         ...baseValues,
-        ldap_id: getldapAttributes(idpEdited[editedType]?.attributes ?? {}, 'id'),
-        ldap_preferred_username: getldapAttributes(
-          idpEdited[editedType]?.attributes ?? {},
-          'preferred_username',
-        ),
-        ldap_name: getldapAttributes(idpEdited[editedType]?.attributes ?? {}, 'name'),
-        ldap_email: getldapAttributes(idpEdited[editedType]?.attributes ?? {}, 'email'),
+        ldap_id: idpEdited[editedType]?.attributes?.id ?? [''],
+        ldap_preferred_username: idpEdited[editedType]?.attributes?.preferred_username ?? [''],
+        ldap_name: idpEdited[editedType]?.attributes?.name ?? [''],
+        ldap_email: idpEdited[editedType]?.attributes?.email ?? [''],
         ldap_url: idpEdited[editedType]?.url,
         bind_dn: idpEdited[editedType]?.bind_dn,
         bind_password: idpEdited[editedType]?.bind_dn ? 'BIND_PASSWORD' : '',
@@ -429,8 +419,8 @@ const getInitialValuesForEditing = (idpEdited: IdentityProvider, editedType: IDP
       return {
         ...baseValues,
         hostname: idpEdited[editedType]?.hostname,
-        teams: getGitHubTeamsAndOrgsData(idpEdited[editedType] ?? {}),
-        organizations: getGitHubTeamsAndOrgsData(idpEdited[editedType] ?? {}),
+        teams: idpEdited[editedType]?.teams ?? [''],
+        organizations: idpEdited[editedType]?.organizations ?? [''],
         github_ca: idpEdited[editedType]?.ca,
         client_id: idpEdited[editedType]?.client_id,
       };

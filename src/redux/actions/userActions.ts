@@ -47,7 +47,7 @@ const fetchAccountThenQuotaAndOrganization = () =>
   });
 
 const getOrganizationAndQuotaAction = (
-  payload: Promise<{ quota: { items?: QuotaCost[] }; organization: Organization }>,
+  payload: Promise<{ quota: { items?: Array<QuotaCost> }; organization: Organization }>,
 ) => action(userConstants.GET_ORGANIZATION, payload);
 
 const getOrganizationAndQuota = (): AppThunk => (dispatch, getState) => {
@@ -79,4 +79,4 @@ type UserAction = ActionType<
   typeof userInfoResponse | typeof getOrganizationAndQuotaAction | typeof selfTermsReview
 >;
 
-export { userActions, userInfoResponse, getOrganizationAndQuota, selfTermsReview, UserAction };
+export { getOrganizationAndQuota, selfTermsReview, UserAction, userActions, userInfoResponse };

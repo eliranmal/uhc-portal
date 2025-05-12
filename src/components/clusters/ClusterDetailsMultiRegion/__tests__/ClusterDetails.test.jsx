@@ -2,14 +2,15 @@ import React from 'react';
 import * as reactRedux from 'react-redux';
 import { useParams } from 'react-router-dom';
 
+import { MULTIREGION_PREVIEW_ENABLED } from '~/queries/featureGates/featureConstants';
+
 import { useFetchClusterDetails } from '../../../../queries/ClusterDetailsQueries/useFetchClusterDetails';
 import { useFetchClusterIdentityProviders } from '../../../../queries/ClusterDetailsQueries/useFetchClusterIdentityProviders';
 import { useFetchCloudProviders } from '../../../../queries/common/useFetchCloudProviders';
 import { clearGlobalError, setGlobalError } from '../../../../redux/actions/globalErrorActions';
 import * as userActions from '../../../../redux/actions/userActions';
-import { MULTIREGION_PREVIEW_ENABLED } from '../../../../redux/constants/featureConstants';
 import { mockUseFeatureGate, render, screen, waitFor, withState } from '../../../../testUtils';
-import { SubscriptionCommonFields } from '../../../../types/accounts_mgmt.v1';
+import { SubscriptionCommonFieldsStatus } from '../../../../types/accounts_mgmt.v1';
 import clusterStates from '../../common/clusterStates';
 import ClusterDetails from '../ClusterDetails';
 
@@ -45,7 +46,7 @@ jest.mock('../../../../queries/common/useFetchCloudProviders', () => ({
 }));
 jest.mock('../../../../queries/ClusterDetailsQueries/useFetchClusterIdentityProviders', () => ({
   useFetchClusterIdentityProviders: jest.fn(),
-  invalidateClusterIdentityProviders: jest.fn(),
+  refetchClusterIdentityProviders: jest.fn(),
 }));
 
 const initialState = {
@@ -186,7 +187,7 @@ describe('<ClusterDetailsMultiRegion />', () => {
 
         withState(initialState, true).render(<ClusterDetails {...props} />);
 
-        expect(screen.getByText('Loading...')).toBeInTheDocument();
+        expect(screen.getByRole('progressbar')).toBeInTheDocument();
       });
     });
 
@@ -350,7 +351,7 @@ describe('<ClusterDetailsMultiRegion />', () => {
         ...functions,
         clusterDetails: {
           ...fixtures.clusterDetails,
-          cluster: { ...fixtures.clusterDetails.cluster, state: clusterStates.INSTALLING },
+          cluster: { ...fixtures.clusterDetails.cluster, state: clusterStates.installing },
         },
         hasIssues: true,
       };
@@ -468,7 +469,7 @@ describe('<ClusterDetailsMultiRegion />', () => {
     displayNetworkTabCases.forEach(({ privateLink, description }) => {
       it(description, async () => {
         const cluster = {
-          state: clusterStates.READY,
+          state: clusterStates.ready,
           managed: true,
           cloud_provider: { id: 'aws' },
           ccs: { enabled: true },
@@ -480,7 +481,7 @@ describe('<ClusterDetailsMultiRegion />', () => {
         const props = {
           ...fixtures,
           ...functions,
-          clearFiltersAndFlags: () => {},
+          resetFiltersAndFlags: () => {},
           clusterDetails: {
             ...fixtures.ROSAClusterDetails,
             cluster: { ...fixtures.ROSAClusterDetails.cluster, cluster },
@@ -533,7 +534,7 @@ describe('<ClusterDetailsMultiRegion />', () => {
           canEdit: true,
           subscription: {
             ...fixtures.clusterDetails.cluster.subscription,
-            status: SubscriptionCommonFields.status.ACTIVE,
+            status: SubscriptionCommonFieldsStatus.Active,
             plan: {
               id: 'OSDTrial',
               kind: 'Plan',
@@ -577,7 +578,7 @@ describe('<ClusterDetailsMultiRegion />', () => {
             canEdit: true,
             subscription: {
               ...fixtures.clusterDetails.cluster.subscription,
-              status: SubscriptionCommonFields.status.DEPROVISIONED,
+              status: SubscriptionCommonFieldsStatus.Deprovisioned,
             },
           },
         },
@@ -595,7 +596,6 @@ describe('<ClusterDetailsMultiRegion />', () => {
     const ocpProps = {
       ...fixtures,
       ...functions,
-      assistedInstallerEnabled: true,
       clusterDetails: {
         ...fixtures.OCPClusterDetails,
         cluster: {
@@ -603,7 +603,7 @@ describe('<ClusterDetailsMultiRegion />', () => {
           canEdit: true,
           subscription: {
             ...fixtures.OCPClusterDetails.cluster.subscription,
-            status: SubscriptionCommonFields.status.ARCHIVED,
+            status: SubscriptionCommonFieldsStatus.Archived,
           },
           // together with assistedInstallerEnabled: true,
           // this set displayAddAssistedHosts to true if not Archived

@@ -1,6 +1,6 @@
 import { checkAccessibility, render, screen } from '~/testUtils';
 
-import GitopsDrawerPanelBody from '../../components/common/DrawerPanelContents/Gitops/DrawerPanelBody';
+import { GitopsDrawerPanelBody } from '../../components/common/DrawerPanelContents/Gitops/DrawerPanelBody';
 
 import '@testing-library/jest-dom';
 
@@ -47,6 +47,8 @@ describe('GitopsDrawerPanelBody', () => {
       'href',
       'https://www.redhat.com/en/blog/argocd-and-gitops-whats-next',
     );
+    expect(argoCDLink).toHaveAttribute('target', '_blank');
+    expect(argoCDLink).toHaveAttribute('rel', 'noreferrer noopener');
 
     const learnMoreBtn = screen.getByTestId(
       'learn-more-about-red-hat-openshift-gitops-drawer-panel-content-link',

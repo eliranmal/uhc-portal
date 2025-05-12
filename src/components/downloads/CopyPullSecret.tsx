@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import isEmpty from 'lodash/isEmpty';
-import { CopyToClipboard } from 'react-copy-to-clipboard';
+import CopyToClipboard from 'react-copy-to-clipboard';
 
 import { Button, Tooltip } from '@patternfly/react-core';
 import { CopyIcon } from '@patternfly/react-icons/dist/esm/icons/copy-icon';

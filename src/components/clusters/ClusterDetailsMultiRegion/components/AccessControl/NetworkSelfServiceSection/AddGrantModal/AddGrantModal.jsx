@@ -1,170 +1,178 @@
-import React, { Component } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
+import { useDispatch } from 'react-redux';
 
 import { Form, FormGroup, Radio, TextInput } from '@patternfly/react-core';
 
 import { FormGroupHelperText } from '~/components/common/FormGroupHelperText';
+import shouldShowModal from '~/components/common/Modal/ModalSelectors';
+import { refetchGrants } from '~/queries/ClusterDetailsQueries/AccessControlTab/NetworkSelfServiceQueries/useFetchGrants';
+import { useGlobalState } from '~/redux/hooks';
 
 import { validateUserOrGroupARN } from '../../../../../../../common/validators';
 import ErrorBox from '../../../../../../common/ErrorBox';
 import Modal from '../../../../../../common/Modal/Modal';
+import { modalActions } from '../../../../../../common/Modal/ModalActions';
 import PopoverHint from '../../../../../../common/PopoverHint';
 
 import './AddGrantModal.scss';
 
-const initialState = {
-  selectedRole: '',
-  arn: '',
-  arnTouched: false,
-};
+const AddGrantModal = ({
+  addGrantsMutate,
+  roles,
+  isAddGrantsPending,
+  isAddGrantsError,
+  addGrantsError,
+  resetAddGrantsMutate,
+}) => {
+  const dispatch = useDispatch();
 
-class AddGrantModal extends Component {
-  state = initialState;
+  const [selectedRole, setSelectedRole] = React.useState('');
+  const [arn, setArn] = React.useState('');
+  const [arnTouched, setArnTouched] = React.useState(false);
 
-  componentDidUpdate(prevProps) {
-    const { selectedRole } = this.state;
-    const { roles } = this.props;
-    // set default role
-    if (!selectedRole && !!roles.length) {
-      // eslint-disable-next-line react/no-did-update-set-state
-      this.setState({ selectedRole: roles[0].id });
-    }
+  const hasRoles = !!roles?.length;
 
-    const { addGrantResponse, clearAddGrantResponse, closeModal } = this.props;
-    if (!prevProps.addGrantResponse.fulfilled && addGrantResponse.fulfilled) {
-      closeModal();
-      clearAddGrantResponse();
-      // eslint-disable-next-line react/no-did-update-set-state
-      this.setState(initialState);
-    }
-  }
+  const isOpen = useGlobalState((state) => shouldShowModal(state, 'grant-modal'));
 
-  setArnValue = (arnValue) => {
-    this.setState({ arn: arnValue, arnTouched: true });
+  const resetInitialState = () => {
+    setSelectedRole('');
+    setArn('');
+    setArnTouched(false);
   };
 
-  setRoleValue = (_, event) => {
-    this.setState({ selectedRole: event.target.value });
+  React.useEffect(() => {
+    if (!selectedRole && hasRoles) {
+      setSelectedRole(roles[0].id);
+    }
+  }, [roles, selectedRole, hasRoles]);
+
+  const setArnValue = (arnValue) => {
+    setArn(arnValue);
+    setArnTouched(true);
   };
 
-  render() {
-    const { isOpen, closeModal, submit, addGrantResponse, clearAddGrantResponse, roles } =
-      this.props;
-    const { selectedRole, arn, arnTouched } = this.state;
+  const setRoleValue = (_, event) => {
+    setSelectedRole(event.target.value);
+  };
 
-    const cancelAddGrant = () => {
-      clearAddGrantResponse();
-      closeModal();
-    };
+  const cancelAddGrant = () => {
+    resetAddGrantsMutate();
+    resetInitialState();
+    dispatch(modalActions.closeModal());
+  };
 
-    const hasError = addGrantResponse.error && (
-      <ErrorBox message="Error adding grant" response={addGrantResponse} />
-    );
+  const hasError = isAddGrantsError && (
+    <ErrorBox message="Error adding grant" response={addGrantsError.error} />
+  );
 
-    const validationMessage = validateUserOrGroupARN(arn);
+  const validationMessage = validateUserOrGroupARN(arn);
 
-    const handleSubmit = () => {
-      if (!validationMessage && !!selectedRole) {
-        submit(selectedRole, arn);
+  const handleSubmit = async () => {
+    if (!validationMessage && !!selectedRole) {
+      await addGrantsMutate(
+        { roleId: selectedRole, arn },
+        {
+          onSuccess: () => {
+            refetchGrants();
+            dispatch(modalActions.closeModal());
+            resetInitialState();
+          },
+        },
+      );
+    }
+  };
+
+  const generateRadio = (role) => (
+    <Radio
+      className="radio-button"
+      key={role.id}
+      isChecked={selectedRole === role.id}
+      name={role.id}
+      onChange={(event, _) => setRoleValue(_, event)}
+      label={
+        <>
+          {role.displayName}
+          <div className="radio-helptext">{role.description}</div>
+        </>
       }
-    };
+      id={role.id}
+      value={role.id}
+    />
+  );
 
-    const generateRadio = (role) => (
-      <Radio
-        className="radio-button"
-        key={role.id}
-        isChecked={selectedRole === role.id}
-        name={role.id}
-        onChange={(event, _) => this.setRoleValue(_, event)}
-        label={
-          <>
-            {role.displayName}
-            <div className="radio-helptext">{role.description}</div>
-          </>
-        }
-        id={role.id}
-        value={role.id}
-      />
-    );
-
-    return (
-      isOpen && (
-        <Modal
-          title="Grant AWS infrastructure role"
-          onClose={cancelAddGrant}
-          primaryText="Grant role"
-          secondaryText="Cancel"
-          onPrimaryClick={handleSubmit}
-          onSecondaryClick={cancelAddGrant}
-          isPrimaryDisabled={!!validationMessage || addGrantResponse.pending}
-          isPending={addGrantResponse.pending}
-        >
-          <>
-            {hasError}
-            <Form
-              className="control-form-cursor"
-              onSubmit={(e) => {
-                handleSubmit();
-                e.preventDefault();
-              }}
-            >
-              <FormGroup
-                label="AWS IAM ARN"
-                isRequired
-                fieldId="aws-iam-arn"
-                labelIcon={
-                  <PopoverHint
-                    hint={
-                      <div>
-                        <p>Need help configuring ARNs?</p>
-                        <a
-                          href="https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html"
-                          target="_blank"
-                          rel="noreferrer noopener"
-                        >
-                          Check the AWS documentation.
-                        </a>
-                      </div>
-                    }
-                    iconClassName="hand-pointer"
-                  />
-                }
-              >
-                <TextInput
-                  value={arn}
-                  isRequired
-                  id="aws-iam-arn-input"
-                  type="text"
-                  validated={(arnTouched ? !validationMessage : true) ? 'default' : 'error'}
-                  placeholder="arn:aws:iam::123456789012:user/name"
-                  onChange={(_event, arnValue) => this.setArnValue(arnValue)}
-                  aria-label="AWS IAM ARN"
+  return (
+    isOpen && (
+      <Modal
+        title="Grant AWS infrastructure role"
+        onClose={cancelAddGrant}
+        primaryText="Grant role"
+        secondaryText="Cancel"
+        onPrimaryClick={handleSubmit}
+        onSecondaryClick={cancelAddGrant}
+        isPrimaryDisabled={!!validationMessage || isAddGrantsPending}
+        isPending={isAddGrantsPending}
+      >
+        <>
+          {hasError}
+          <Form
+            className="control-form-cursor"
+            onSubmit={(e) => {
+              handleSubmit();
+              e.preventDefault();
+            }}
+          >
+            <FormGroup
+              label="AWS IAM ARN"
+              isRequired
+              fieldId="aws-iam-arn"
+              labelIcon={
+                <PopoverHint
+                  hint={
+                    <div>
+                      <p>Need help configuring ARNs?</p>
+                      <a
+                        href="https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html"
+                        target="_blank"
+                        rel="noreferrer noopener"
+                      >
+                        Check the AWS documentation.
+                      </a>
+                    </div>
+                  }
+                  iconClassName="hand-pointer"
                 />
+              }
+            >
+              <TextInput
+                value={arn}
+                isRequired
+                id="aws-iam-arn-input"
+                type="text"
+                validated={(arnTouched ? !validationMessage : true) ? 'default' : 'error'}
+                placeholder="arn:aws:iam::123456789012:user/name"
+                onChange={(_event, arnValue) => setArnValue(arnValue)}
+                aria-label="AWS IAM ARN"
+              />
 
-                <FormGroupHelperText touched={arnTouched} error={validationMessage} />
-              </FormGroup>
-              <h3 id="grant-role-select">Role</h3>
-              {roles.map((role) => generateRadio(role))}
-            </Form>
-          </>
-        </Modal>
-      )
-    );
-  }
-}
+              <FormGroupHelperText touched={arnTouched} error={validationMessage} />
+            </FormGroup>
+            <h3 id="grant-role-select">Role</h3>
+            {roles.map((role) => generateRadio(role))}
+          </Form>
+        </>
+      </Modal>
+    )
+  );
+};
 
 AddGrantModal.propTypes = {
-  roles: PropTypes.array.isRequired,
-  closeModal: PropTypes.func.isRequired,
-  submit: PropTypes.func.isRequired,
-  clearAddGrantResponse: PropTypes.func.isRequired,
-  addGrantResponse: PropTypes.object,
-  isOpen: PropTypes.bool,
-};
-
-AddGrantModal.defaultProps = {
-  addGrantResponse: {},
-  isOpen: false,
+  addGrantsMutate: PropTypes.func,
+  roles: PropTypes.array,
+  isAddGrantsPending: PropTypes.bool,
+  isAddGrantsError: PropTypes.bool,
+  addGrantsError: PropTypes.object,
+  resetAddGrantsMutate: PropTypes.func,
 };
 
 export default AddGrantModal;

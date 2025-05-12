@@ -6,7 +6,7 @@ import { Grid, GridItem } from '@patternfly/react-core';
 import VPCDropdown from '~/components/clusters/wizards/common/VPCDropdown/VPCDropdown';
 import { useFormState } from '~/components/clusters/wizards/hooks';
 import { FieldId } from '~/components/clusters/wizards/osd/constants';
-import { CloudVPC } from '~/types/clusters_mgmt.v1';
+import { CloudVpc } from '~/types/clusters_mgmt.v1';
 
 import AwsSingleSubnetField from './AwsSingleSubnetField';
 
@@ -35,7 +35,7 @@ const AwsSubnetFields = () => {
             }}
             isOSD
             meta={vpcMeta}
-            validate={(vpc: CloudVPC) => (dirty && !vpc?.id ? 'error' : undefined)}
+            validate={(vpc: CloudVpc) => (dirty && !vpc?.id ? 'error' : undefined)}
             selectedVPC={selectedVPC}
             showRefresh
             isHypershift={false}

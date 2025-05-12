@@ -21,7 +21,7 @@ describe('useFetchClusterIdentityProviders hook', () => {
     const clusterID = 'mockedClusterID';
 
     // Mock the network request using axios
-    apiRequestMock.get.mockResolvedValueOnce(clusterIDP);
+    apiRequestMock.get.mockResolvedValueOnce({ data: clusterIDP });
     const { result } = renderHook(() => useFetchClusterIdentityProviders(clusterID));
 
     expect(result.current.isLoading).toBe(true);
@@ -29,6 +29,7 @@ describe('useFetchClusterIdentityProviders hook', () => {
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
     });
+
     expect(result.current.isError).toBe(false);
     expect(result.current.clusterIdentityProviders).toEqual(clusterIDP);
   });

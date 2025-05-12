@@ -1,0 +1,86 @@
+Checking URLs...
+Found 385 URLs to check
+
+Testing redirect destinations...
+
+URL CHECK RESULTS
+
+Category                           Count
+---------------------------------- ------
+Total URLs skipped                     0
+Success                              176
+Redirects                            205
+Redirects errors                  [31m     4[0m
+Client errors (4xx)               [31m     4[0m
+Server errors (5xx)                    0
+Request errors                         0
+---------------------------------- ------
+Total URLs checked                   385
+
+SUCCESS:                                                                176 URLs
+All these URLs returned status code 200 (OK)
+
+REDIRECTS:                                                              205 URLs
+
+[Status 301 - Moved Permanently (Resource at new location)] -            95 URLs
+
+  [32m✓ 93 redirect URLs tested successfully[0m
+  [31mX 2 redirect URLs had errors[0m
+
+  [Original URL] https://access.redhat.com/documentation/en-us/red_hat_openshift_application_services/1/guide/bb30ee92-9e0a-4fd6-a67f-aed8910d7da3
+  [Redirect URL] https://docs.redhat.com/documentation/en-us/red_hat_openshift_application_services/1/guide/bb30ee92-9e0a-4fd6-a67f-aed8910d7da3
+  [Redirect URL Test] [31m404[0m
+
+  [Original URL] https://access.redhat.com/documentation/en-us/cost_management_service/2023/html/adding_an_openshift_container_platform_source_to_cost_management/assembly-adding-openshift-container-platform-source
+  [Redirect URL] https://docs.redhat.com/documentation/en-us/cost_management_service/2023/html/adding_an_openshift_container_platform_source_to_cost_management/assembly-adding-openshift-container-platform-source
+  [Redirect URL Test] [31m404[0m
+
+
+[Status 302 - Found (Resource temporarily at different URL)] -           77 URLs
+
+  [32m✓ 75 redirect URLs tested successfully[0m
+  [31mX 2 redirect URLs had errors[0m
+
+  [Original URL] https://console.aws.amazon.com/route53/v2/hostedzones
+  [Redirect URL] https://***REMOVED***/route53/v2/hostedzones
+  [Redirect URL Test] [31m405[0m
+
+  [Original URL] https://source.redhat.com/groups/public/cooperative_community_support/cooperative_community_support_wiki/codeready_containers_case_response_template
+  [Redirect URL] https://source.redhat.com/?signin
+  [Redirect URL Test] [31mFetchError: maximum redirect reached at: https://source.redh[0m
+
+
+[Status 307 - Temporary Redirect (Resource temporarily moved)] -         33 URLs
+
+  [32m✓ 33 redirect URLs tested successfully[0m
+
+
+CLIENT ERRORS (4xx):                                                      4 URLs
+
+[Status [31m405[0m - Method Not Allowed (Request method not supported)] -  4 URLs
+
+  [Original URL] https://console.aws.amazon.com/rosa/home#/get-started
+
+  [Original URL] https://console.aws.amazon.com/ec2/home#SecurityGroups
+
+  [Original URL] https://console.aws.amazon.com/rosa/home
+
+  [Original URL] https://issues.redhat.com/projects/OCPBUGS/issues
+
+
+SERVER ERRORS (5xx):                                                      0 URLs
+No server errors (5xx) found
+
+REQUEST ERRORS:                                                           0 URLs
+No request errors found
+
+SKIPPED:                                                                  0 URLs
+No URLs were skipped
+
+--------------------------------------------------------------------------------
+Total URLs checked:                                                     385 URLs
+--------------------------------------------------------------------------------
+
+Note: Run with -v or --verbose to see URLs for successful requests and redirects
+      Run with -r or --redirects to see ONLY redirected URLs with targets
+      Run with -h or --help for more information

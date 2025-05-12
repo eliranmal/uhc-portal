@@ -98,8 +98,8 @@ describe('<EditSecurityGroups />', () => {
 
       await openPFSecurityGroupsSelect(user);
 
-      expect(within(screen.getByRole('listbox')).getByText('sg-abc')).toBeInTheDocument();
-      expect(within(screen.getByRole('listbox')).getByText('sg-xyz')).toBeInTheDocument();
+      expect(within(screen.getByRole('menu')).getByText('sg-abc')).toBeInTheDocument();
+      expect(within(screen.getByRole('menu')).getByText('sg-xyz')).toBeInTheDocument();
     });
 
     it('Shows the name as empty and the id as the description if the group has no name', async () => {
@@ -110,9 +110,9 @@ describe('<EditSecurityGroups />', () => {
 
       await openPFSecurityGroupsSelect(user);
 
-      expect(within(screen.getByRole('listbox')).getByText('--')).toBeInTheDocument();
+      expect(within(screen.getByRole('menu')).getByText('--')).toBeInTheDocument();
       expect(
-        within(screen.getByRole('listbox')).getByText('sg-group-without-a-name'),
+        within(screen.getByRole('menu')).getByText('sg-group-without-a-name'),
       ).toBeInTheDocument();
     });
 
@@ -125,10 +125,10 @@ describe('<EditSecurityGroups />', () => {
       await openPFSecurityGroupsSelect(user);
 
       expect(
-        within(screen.getByRole('listbox')).getByRole('checkbox', { name: /sg-abc/ }),
+        within(screen.getByRole('menu')).getByRole('checkbox', { name: /sg-abc/ }),
       ).not.toBeChecked();
       expect(
-        within(screen.getByRole('listbox')).getByRole('checkbox', { name: /sg-xyz/ }),
+        within(screen.getByRole('menu')).getByRole('checkbox', { name: /sg-xyz/ }),
       ).toBeChecked();
     });
 

@@ -1,9 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
 
-// dup of this in order to convert to formik src/components/clusters/common/Upgrades/UpgradeSettingsFields.jsx
-// redux-form version still used by src/components/clusters/ClusterDetails/components/UpgradeSettings/UpgradeSettingsTab.jsx
-// in Details page of Cluster Details TODO convert cluster details page to formik
-
 // Form fields for upgrade settings, used in Upgrade Settings tab and in cluster creation
 import React from 'react';
 import { Field } from 'formik';
@@ -24,7 +20,7 @@ import UpgradeScheduleSelection from '~/components/clusters/common/Upgrades/Upgr
 import { useFormState } from '~/components/clusters/wizards/hooks';
 import { FieldId } from '~/components/clusters/wizards/rosa/constants';
 import ExternalLink from '~/components/common/ExternalLink';
-import RadioButtons from '~/components/common/ReduxFormComponents/RadioButtons';
+import RadioButtons from '~/components/common/ReduxFormComponents_deprecated/RadioButtons';
 
 import './UpgradeSettingsFields.scss';
 
@@ -32,8 +28,8 @@ function UpgradeSettingsFields() {
   const {
     setFieldValue, // Set value of form field directly
     setFieldTouched, // Set whether field has been touched directly
-    getFieldProps, // Access: name, value, onBlur, onChange for a <Field>, useful for mapping to a field that expects the redux-form props
-    // getFieldMeta, // Access: error, touched for a <Field>, useful for mapping to a field that expects the redux-form props
+    getFieldProps, // Access: name, value, onBlur, onChange for a <Field>, useful for mapping to a field
+    // getFieldMeta, // Access: error, touched for a <Field>, useful for mapping to a field
     values: { [FieldId.UpgradePolicy]: upgradePolicy, [FieldId.Hypershift]: hypershift },
   } = useFormState();
 

@@ -7,7 +7,8 @@ import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circ
 import TextField from '~/components/common/formik/TextField';
 import WithTooltip from '~/components/common/WithTooltip';
 import { MachineTypesResponse } from '~/queries/types';
-import { Cluster, MachinePool } from '~/types/clusters_mgmt.v1';
+import { MachinePool } from '~/types/clusters_mgmt.v1';
+import { ClusterFromSubscription } from '~/types/types';
 
 import {
   isEnforcedDefaultMachinePool,
@@ -18,7 +19,7 @@ import TaintEffectField from '../fields/TaintEffectField';
 import { EditMachinePoolValues } from '../hooks/useMachinePoolFormik';
 
 type EditTaintsSectionProps = {
-  cluster: Cluster;
+  cluster: ClusterFromSubscription;
   machinePoolId?: string;
   machinePools: MachinePool[];
   machineTypes: MachineTypesResponse;

@@ -4,6 +4,7 @@ import { isHypershiftCluster } from '~/components/clusters/common/clusterStates'
 import { MachineTypesResponse } from '~/queries/types';
 import { GlobalState } from '~/redux/store';
 import { Cluster, MachinePool, NodePool } from '~/types/clusters_mgmt.v1';
+import { ClusterFromSubscription } from '~/types/types';
 
 import { asArray } from '../../../../../common/helpers';
 import { isMultiAZ } from '../../clusterDetailsHelper';
@@ -100,7 +101,7 @@ const isEnforcedDefaultMachinePool = (
   currentMachinePoolId: string | undefined,
   machinePools: MachinePool[],
   machineTypes: MachineTypesResponse,
-  cluster: Cluster,
+  cluster: ClusterFromSubscription,
 ) => {
   if (isHypershiftCluster(cluster)) {
     return false;
@@ -148,7 +149,7 @@ const isMinimumCountWithoutTaints = ({
 }: {
   currentMachinePoolId?: string;
   machinePools: MachinePool[];
-  cluster: Cluster;
+  cluster: ClusterFromSubscription;
 }) => {
   if (!isHypershiftCluster(cluster)) {
     return true; // This only applies to HCP clusters
@@ -181,7 +182,7 @@ const actionResolver = ({
   onClickDelete: (...args: any[]) => any;
   onClickUpdate: (...args: any[]) => any;
   canDelete: boolean;
-  cluster: Cluster;
+  cluster: ClusterFromSubscription;
   machinePools: MachinePool[];
   machineTypes: GlobalState['machineTypes'];
 }) => {
@@ -269,7 +270,7 @@ const getClusterMinNodes = ({
   machinePool,
   machinePools,
 }: {
-  cluster: Cluster;
+  cluster: ClusterFromSubscription;
   machineTypesResponse: MachineTypesResponse;
   machinePool: MachinePool | undefined;
   machinePools: MachinePool[];
@@ -318,7 +319,7 @@ const hasDefaultOrExplicitAutoscalingMachinePool = (
     ? true
     : hasExplicitAutoscalingMachinePool(machinePools, excludeId);
 
-const canUseSpotInstances = (cluster: Cluster) => {
+const canUseSpotInstances = (cluster: ClusterFromSubscription) => {
   const cloudProviderID = cluster.cloud_provider?.id;
   const product = normalizeProductID(cluster.product?.id);
   return (
@@ -331,16 +332,16 @@ const canUseSpotInstances = (cluster: Cluster) => {
 
 export {
   actionResolver,
-  normalizeNodePool,
-  getSubnetIds,
-  hasSubnets,
+  canUseSpotInstances,
+  getClusterMinNodes,
   getMinNodesRequired,
   getNodeIncrement,
   getNodeIncrementHypershift,
-  hasExplicitAutoscalingMachinePool,
+  getSubnetIds,
   hasDefaultOrExplicitAutoscalingMachinePool,
+  hasExplicitAutoscalingMachinePool,
+  hasSubnets,
   isEnforcedDefaultMachinePool,
   isMinimumCountWithoutTaints,
-  canUseSpotInstances,
-  getClusterMinNodes,
+  normalizeNodePool,
 };

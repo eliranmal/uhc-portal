@@ -10,11 +10,3 @@ export type ClusterLogsErrorType = {
   errorMessage?: string | undefined;
   errorDetails?: ErrorDetail[];
 };
-
-export const initialParams = {
-  currentPage: 1,
-  pageSize: 20,
-  totalCount: 0,
-  totalPages: 0,
-  order: 'timestamp desc',
-};

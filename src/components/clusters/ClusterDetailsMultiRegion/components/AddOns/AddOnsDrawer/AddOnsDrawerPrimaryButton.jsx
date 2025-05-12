@@ -5,6 +5,8 @@ import { useDispatch } from 'react-redux';
 import { Button, ButtonSize } from '@patternfly/react-core';
 import { ExternalLinkAltIcon } from '@patternfly/react-icons/dist/esm/icons/external-link-alt-icon';
 
+import { NO_QUOTA } from '~/components/clusters/ClusterDetailsMultiRegion/components/AddOns/AddOnsDrawer/AddOnsTypes';
+
 import { noQuotaTooltip } from '../../../../../../common/helpers';
 import ButtonWithTooltip from '../../../../../common/ButtonWithTooltip';
 import { openModal } from '../../../../../common/Modal/ModalActions';
@@ -75,9 +77,9 @@ function AddOnsPrimaryButton(props) {
   const hibernatingReason =
     isHibernating(cluster) && 'This operation is not available while cluster is hibernating';
   // a superset of hibernatingReason.
-  const notReadyReason = cluster.state !== clusterStates.READY && 'This cluster is not ready';
+  const notReadyReason = cluster.state !== clusterStates.ready && 'This cluster is not ready';
   const requirementsReason = !activeCardRequirementsFulfilled && 'Prerequisites not met';
-  const quotaReason = (!hasQuota || subscription?.billingModel === 'no-quota') && noQuotaTooltip;
+  const quotaReason = (!hasQuota || subscription?.billingModel === NO_QUOTA) && noQuotaTooltip;
   const billingReason =
     subscription?.billingModel === 'marketplace' && 'Select a subscription type';
   const unchangedReason =

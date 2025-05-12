@@ -167,7 +167,7 @@ function AccountsRolesScreen({
   }, [getUserRoleResponse?.error, noUserForSelectedAWSAcct]);
 
   const onClick = useCallback(
-    (event) => {
+    (event: any) => {
       openDrawer({ focusOnClose: event.target, onClose: clearGetAWSAccountIDsResponse });
     },
     [clearGetAWSAccountIDsResponse, openDrawer],

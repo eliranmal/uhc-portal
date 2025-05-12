@@ -6,7 +6,7 @@ import {
   RECOMMENDED_OPERATORS_CARDS_DATA,
   RECOMMENDED_OPERATORS_CARDS_TEST_CASES,
 } from '../components/fixtures';
-import RecommendedOperatorsCards from '../components/RecommendedOperatorsCards/RecommendedOperatorsCards';
+import { RecommendedOperatorsCards } from '../components/RecommendedOperatorsCards/RecommendedOperatorsCards';
 
 import '@testing-library/jest-dom';
 

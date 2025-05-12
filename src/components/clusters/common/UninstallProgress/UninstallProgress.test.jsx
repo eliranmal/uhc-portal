@@ -2,12 +2,12 @@ import React from 'react';
 
 import { checkAccessibility, render, screen, within } from '~/testUtils';
 
-import fixtures from '../../ClusterDetails/__tests__/ClusterDetails.fixtures';
+import fixtures from '../../ClusterDetailsMultiRegion/__tests__/ClusterDetails.fixtures';
 import {
   mockAddOns,
   mockClusterAddOnsWithExternalResources,
-} from '../../ClusterDetails/components/AddOns/__tests__/AddOns.fixtures';
-import AddOnsConstants from '../../ClusterDetails/components/AddOns/AddOnsConstants';
+} from '../../ClusterDetailsMultiRegion/components/AddOns/__tests__/AddOns.fixtures';
+import AddOnsConstants from '../../ClusterDetailsMultiRegion/components/AddOns/AddOnsConstants';
 
 import UninstallProgress from './UninstallProgress';
 

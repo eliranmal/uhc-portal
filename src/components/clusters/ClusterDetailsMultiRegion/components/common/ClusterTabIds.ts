@@ -9,4 +9,5 @@ export enum ClusterTabsId {
   SUPPORT = 'support',
   UPDATE_SETTINGS = 'updateSettings',
   ADD_ASSISTED_HOSTS = 'addAssistedHosts',
+  ACCESS_REQUEST = 'accessRequest',
 }

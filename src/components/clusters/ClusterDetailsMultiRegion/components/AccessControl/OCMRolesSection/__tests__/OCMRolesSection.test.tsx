@@ -1,7 +1,6 @@
 import React from 'react';
-import type axios from 'axios';
 
-import apiRequest from '~/services/apiRequest';
+import { useFetchOCMRoles } from '~/queries/ClusterDetailsQueries/AccessControlTab/OCMRolesQueries/useFetchOCMRoles';
 import { render, screen, waitFor, within } from '~/testUtils';
 import { Subscription } from '~/types/accounts_mgmt.v1';
 
@@ -10,13 +9,20 @@ import OCMRolesSection from '../OCMRolesSection';
 
 import { OCMRoles } from './OCMRolesSection.fixture';
 
-type MockedJest = jest.Mocked<typeof axios> & jest.Mock;
-const apiRequestMock = apiRequest as unknown as MockedJest;
+jest.mock(
+  '~/queries/ClusterDetailsQueries/AccessControlTab/OCMRolesQueries/useFetchOCMRoles',
+  () => ({
+    useFetchOCMRoles: jest.fn(),
+    refetchOcmRoles: jest.fn(),
+  }),
+);
 
 describe('<OCMRolesSection />', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
+
+  const useFetchOCMRolesMock = useFetchOCMRoles as jest.Mock;
 
   const { subscription } = fixtures.clusterDetails.cluster;
   const props = {
@@ -25,15 +31,31 @@ describe('<OCMRolesSection />', () => {
     canViewOCMRoles: true,
   };
 
+  it('shows skeleton while loading', async () => {
+    useFetchOCMRolesMock.mockReturnValue({
+      data: OCMRoles.data,
+      isLoading: true,
+      isError: false,
+      error: null,
+      isSuccess: true,
+    });
+
+    const { container } = render(<OCMRolesSection {...props} />);
+
+    expect(container.querySelectorAll('.pf-v5-c-skeleton').length).toBeGreaterThan(0);
+  });
+
   it('should render', async () => {
-    apiRequestMock.get.mockResolvedValue(OCMRoles);
+    useFetchOCMRolesMock.mockReturnValue({
+      data: OCMRoles.data,
+      isLoading: false,
+      isError: false,
+      error: null,
+      isSuccess: true,
+    });
 
     const { user } = render(<OCMRolesSection {...props} />);
-    expect(apiRequestMock.get).toHaveBeenCalledTimes(1);
-    expect(apiRequestMock.get).toHaveBeenCalledWith(
-      `/api/accounts_mgmt/v1/subscriptions/${fixtures.clusterDetails.cluster.subscription.id}/role_bindings`,
-      expect.objectContaining({}),
-    );
+    expect(useFetchOCMRolesMock).toHaveBeenCalledTimes(2);
 
     await screen.findByRole('grid', { name: 'OCM Roles and Access' });
     expect(screen.getAllByRole('row')).toHaveLength(5);
@@ -55,14 +77,16 @@ describe('<OCMRolesSection />', () => {
   });
 
   it('should disable buttons if no edit access', async () => {
-    apiRequestMock.get.mockResolvedValue(OCMRoles);
+    useFetchOCMRolesMock.mockReturnValue({
+      data: OCMRoles.data,
+      isLoading: false,
+      isError: false,
+      error: null,
+      isSuccess: true,
+    });
 
     const { findByRole } = render(<OCMRolesSection {...props} canEditOCMRoles={false} />);
-    expect(apiRequest.get).toHaveBeenCalledTimes(1);
-    expect(apiRequest.get).toHaveBeenCalledWith(
-      `/api/accounts_mgmt/v1/subscriptions/${fixtures.clusterDetails.cluster.subscription.id}/role_bindings`,
-      expect.objectContaining({}),
-    );
+    expect(useFetchOCMRolesMock).toHaveBeenCalledTimes(2);
 
     expect(await findByRole('button', { name: 'Grant role' })).toHaveAttribute('aria-disabled');
     const row1 = await findByRole('row', { name: /Doris Hudson/ });
@@ -72,25 +96,28 @@ describe('<OCMRolesSection />', () => {
 
   it('should render error', async () => {
     const errorResp = {
-      code: 'ACCT-MGMT-11',
+      errorCode: 'ACCT-MGMT-11',
       href: '/api/accounts_mgmt/v1/errors/11',
       id: '11',
       kind: 'Error',
-      operation_id: 'abcdef',
+      operationID: 'abcdef',
       reason:
         'Account with ID 123456 denied access to perform get on Subscription with HTTP call GET /api/accounts_mgmt/v1/subscriptions/7890/role_bindings',
     };
-    apiRequestMock.get.mockRejectedValue({ status: 403, response: { data: errorResp } }); // Mocks the axios format of the error
+    useFetchOCMRolesMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: { error: errorResp },
+      isSuccess: false,
+    });
 
     const { getByTestId } = render(<OCMRolesSection {...props} />);
-    expect(apiRequest.get).toHaveBeenCalledTimes(1);
-    expect(apiRequest.get).toHaveBeenCalledWith(
-      `/api/accounts_mgmt/v1/subscriptions/${fixtures.clusterDetails.cluster.subscription.id}/role_bindings`,
-      expect.objectContaining({}),
-    );
+    expect(useFetchOCMRolesMock).toHaveBeenCalledTimes(2);
 
     await waitFor(() => expect(getByTestId('alert-error')).toBeVisible());
     const alert = getByTestId('alert-error');
+
     within(alert).getByRole('heading', { name: /error getting OCM roles and access/i });
     within(alert).getByText(/ACCT-MGMT-11/);
     within(alert).getByText(/Account with ID 123456 denied access to perform get/);

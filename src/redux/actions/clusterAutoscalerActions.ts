@@ -18,13 +18,13 @@ const getClusterAutoscaler = (clusterID: string) =>
 const clearClusterAutoscalerResponse = () =>
   action(clusterAutoscalerConstants.CLEAR_GET_CLUSTER_AUTOSCALER_RESPONSE);
 
-const enableClusterAutoscaler = (clusterID: string) =>
+const enableClusterAutoscaler = (clusterID: string, maxNodes?: number) =>
   action(
     clusterAutoscalerConstants.ENABLE_CLUSTER_AUTOSCALER,
     clusterService
       .enableClusterAutoscaler(
         clusterID,
-        getClusterAutoScalingSubmitSettings(getDefaultClusterAutoScaling()),
+        getClusterAutoScalingSubmitSettings(getDefaultClusterAutoScaling(maxNodes)),
       )
       .then((response) => response.data),
   );

@@ -7,15 +7,17 @@ import { ExpandableSection, Form, Grid, GridItem, Text, Title } from '@patternfl
 import links from '~/common/installLinks.mjs';
 import { normalizedProducts } from '~/common/subscriptionTypes';
 import { required } from '~/common/validators';
-import { getMinNodesRequired } from '~/components/clusters/ClusterDetails/components/MachinePools/machinePoolsHelper';
+import { getMinNodesRequired } from '~/components/clusters/ClusterDetailsMultiRegion/components/MachinePools/machinePoolsHelper';
 import { constants } from '~/components/clusters/common/CreateOSDFormConstants';
 import NodeCountInput from '~/components/clusters/common/NodeCountInput';
 import { getNodesCount } from '~/components/clusters/common/ScaleSection/AutoScaleSection/AutoScaleHelper';
-import MachineTypeSelection from '~/components/clusters/common/ScaleSection/MachineTypeSelection';
+import MachineTypeSelection from '~/components/clusters/common/ScaleSection-deprecated/MachineTypeSelection';
 import { CloudProviderType, FieldId } from '~/components/clusters/wizards/common/constants';
 import { useFormState } from '~/components/clusters/wizards/hooks';
 import ExternalLink from '~/components/common/ExternalLink';
 import useCanClusterAutoscale from '~/hooks/useCanClusterAutoscale';
+import { MAX_NODES_TOTAL_249 } from '~/queries/featureGates/featureConstants';
+import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 import {
   clearMachineTypesByRegion,
   getMachineTypes,
@@ -44,6 +46,7 @@ export const MachinePool = () => {
       [FieldId.NodesCompute]: nodesCompute,
       [FieldId.NodeLabels]: nodeLabels,
       [FieldId.Region]: region,
+      [FieldId.ClusterVersion]: version,
     },
     values,
     errors,
@@ -52,6 +55,7 @@ export const MachinePool = () => {
     getFieldMeta,
     setFieldTouched,
   } = useFormState();
+  const allow249Nodes = useFeatureGate(MAX_NODES_TOTAL_249);
   const isMultiAz = multiAz === 'true';
   const isByoc = byoc === 'true';
   const isRosa = product === normalizedProducts.ROSA;
@@ -260,6 +264,8 @@ export const MachinePool = () => {
                   {},
                   { isDefaultMachinePool: true, isByoc, isMultiAz },
                 )}
+                clusterVersion={version?.raw_id}
+                allow249NodesOSDCCSROSA={allow249Nodes}
               />
             </GridItem>
             {imdsSection}

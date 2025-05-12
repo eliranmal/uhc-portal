@@ -28,7 +28,7 @@ import Modal from '../../../../../../common/Modal/Modal';
 import { modalActions } from '../../../../../../common/Modal/ModalActions';
 import modals from '../../../../../../common/Modal/modals';
 import shouldShowModal from '../../../../../../common/Modal/ModalSelectors';
-import { ReduxVerticalFormGroup } from '../../../../../../common/ReduxFormComponents';
+import { ReduxVerticalFormGroup } from '../../../../../../common/ReduxFormComponents_deprecated';
 import NetworkingSelector, { routeSelectorsAsString } from '../../NetworkingSelector';
 
 const canConfigureAdditionalRouter = (clusterVersionRawId) =>
@@ -36,7 +36,7 @@ const canConfigureAdditionalRouter = (clusterVersionRawId) =>
 
 const EditClusterIngressDialog = ({ provider, cluster, refreshCluster, clusterRoutersData }) => {
   const clusterID = cluster?.id;
-  const region = cluster?.subscription?.xcm_id;
+  const region = cluster?.subscription?.rh_region_id;
   const {
     isPending,
     isError,

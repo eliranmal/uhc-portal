@@ -1,39 +1,30 @@
 import React from 'react';
-import { AxiosError } from 'axios';
 
 import { Button, Flex, Modal } from '@patternfly/react-core';
 
 import ErrorBox from '~/components/common/ErrorBox';
-import { clusterService } from '~/services';
+import { useRevokeBreakGlassCredentials } from '~/queries/ClusterDetailsQueries/AccessControlTab/ExternalAuthenticationQueries/useRevokeBreakGlassCredentials';
 
 type RevokeBreakGlassCredentialsModalProps = {
   clusterId: string;
   onClose: () => void;
   isOpen?: boolean;
+  region?: string;
 };
 
 export const RevokeBreakGlassCredentialsModal = (props: RevokeBreakGlassCredentialsModalProps) => {
-  const { clusterId, onClose, isOpen = true } = props;
-  const [error, setError] = React.useState<AxiosError>();
-  const [isPending, setIsPending] = React.useState(false);
+  const { clusterId, onClose, region, isOpen = true } = props;
+  const {
+    isPending,
+    isError,
+    error,
+    mutate: deleteBreakGlassCredential,
+    reset,
+  } = useRevokeBreakGlassCredentials(clusterId, region);
 
   const handleClose = () => {
-    setError(undefined);
+    reset();
     onClose();
-  };
-
-  const deleteBreakGlassCredential = async (clusterId: string) => {
-    const request = clusterService.revokeBreakGlassCredentials;
-    setError(undefined);
-    setIsPending(true);
-    try {
-      await request(clusterId).then((response) => response.data);
-      handleClose();
-    } catch (error) {
-      setError(error as AxiosError);
-    } finally {
-      setIsPending(false);
-    }
   };
 
   return (
@@ -48,7 +39,10 @@ export const RevokeBreakGlassCredentialsModal = (props: RevokeBreakGlassCredenti
           variant="primary"
           isDisabled={isPending}
           isLoading={isPending}
-          onClick={() => deleteBreakGlassCredential(clusterId)}
+          onClick={() => {
+            deleteBreakGlassCredential();
+            handleClose();
+          }}
         >
           Revoke all
         </Button>,
@@ -57,12 +51,12 @@ export const RevokeBreakGlassCredentialsModal = (props: RevokeBreakGlassCredenti
         </Button>,
       ]}
     >
-      {error ? (
+      {isError ? (
         <ErrorBox
           message="A problem occurred while deleting the credentials."
           response={{
-            errorMessage: (error.response?.data as any)?.reason,
-            operationID: (error.response?.data as any)?.operation_id,
+            errorMessage: error.error.errorMessage,
+            operationID: error.error.operationID,
           }}
         />
       ) : (

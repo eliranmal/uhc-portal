@@ -1,6 +1,6 @@
-import { LoadBalancerFlavor } from '~/types/clusters_mgmt.v1';
+import { LoadBalancerFlavor } from '~/types/clusters_mgmt.v1/enums';
 
 export const LoadBalancerFlavorLabel = {
-  [LoadBalancerFlavor.CLASSIC]: 'Classic Load Balancer',
-  [LoadBalancerFlavor.NLB]: 'Network Load Balancer',
+  [LoadBalancerFlavor.classic]: 'Classic Load Balancer',
+  [LoadBalancerFlavor.nlb]: 'Network Load Balancer',
 };

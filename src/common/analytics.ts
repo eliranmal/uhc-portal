@@ -234,6 +234,11 @@ const trackEvents: { [key: string]: TrackEvent } = {
     link_name: 'copy-ocm-create-rosa-account-roles',
     ocm_resource_type: ocmResourceType.MOA,
   },
+  CopyCreateNetwork: {
+    event: eventNames.BUTTON_CLICKED,
+    link_name: 'copy-ocm-create-rosa-network',
+    ocm_resource_type: ocmResourceType.MOA,
+  },
   CopyOCMRoleCreateAdmin: {
     event: eventNames.BUTTON_CLICKED,
     link_name: 'copy-ocm-role-create-admin',
@@ -266,6 +271,10 @@ const trackEvents: { [key: string]: TrackEvent } = {
   ConfigureClusterWideProxy: {
     event: eventNames.CHECKBOX_CLICKED,
     link_name: 'configure-cluster-wide-proxy',
+  },
+  PrivateServiceConnect: {
+    event: eventNames.CHECKBOX_CLICKED,
+    link_name: 'private-service-connect',
   },
   RosaCreationMode: {
     event: eventNames.RADIOBUTTON_CLICKED,
@@ -343,6 +352,10 @@ const trackEvents: { [key: string]: TrackEvent } = {
   CreateClusterRHOCP: {
     event: eventNames.LINK_CLICKED,
     link_name: 'create-ocp-cluster-internal-link',
+  },
+  GlobalSideNav: {
+    event: eventNames.LINK_CLICKED,
+    link_name: 'global-nav-link',
   },
 };
 

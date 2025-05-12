@@ -15,11 +15,10 @@ limitations under the License.
 */
 import { produce } from 'immer';
 
+import { Account, QuotaCost, Subscription } from '~/types/accounts_mgmt.v1';
+
 import { getErrorState } from '../../common/errors';
 import { normalizeQuotaCost } from '../../common/normalize';
-import { Account } from '../../types/accounts_mgmt.v1/models/Account';
-import { QuotaCost } from '../../types/accounts_mgmt.v1/models/QuotaCost';
-import { Subscription } from '../../types/accounts_mgmt.v1/models/Subscription';
 import { SubscriptionsAction } from '../actions/subscriptionsActions';
 import { subscriptionsConstants } from '../constants';
 import {
@@ -132,28 +131,7 @@ function subscriptionsReducer(
           items: action.payload.data.items ?? [],
         };
         break;
-      // GET_SUBSCRIPTION_ID
-      case REJECTED_ACTION(subscriptionsConstants.GET_SUBSCRIPTION_ID):
-        draft.subscriptionID = {
-          ...initialState.subscriptionID,
-          ...getErrorState(action),
-        };
-        break;
-      case PENDING_ACTION(subscriptionsConstants.GET_SUBSCRIPTION_ID):
-        draft.subscriptionID.pending = true;
-        break;
-      case FULFILLED_ACTION(subscriptionsConstants.GET_SUBSCRIPTION_ID):
-        draft.subscriptionID = {
-          ...baseRequestState,
-          fulfilled: true,
-          id: action.payload,
-        };
-        break;
-      case subscriptionsConstants.CLEAR_SUBSCRIPTION_ID:
-        draft.subscriptionID = {
-          ...initialState.subscriptionID,
-        };
-        break;
+
       case REJECTED_ACTION(subscriptionsConstants.GET_QUOTA_COST):
         draft.quotaCost = {
           ...initialState.quotaCost,

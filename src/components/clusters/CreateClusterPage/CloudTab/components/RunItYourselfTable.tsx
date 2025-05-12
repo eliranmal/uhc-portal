@@ -81,15 +81,13 @@ const RunItYourselfTable = () => {
     },
     {
       key: 'oracle',
-      provider: (
-        <Link to="/install/oracle-cloud">Oracle Cloud Infrastructure (virtual machines)</Link>
-      ),
+      provider: <Link to="/install/oracle-cloud">Oracle Cloud Infrastructure</Link>,
       options: 'Pre-existing infrastructure',
     },
   ];
 
   return (
-    <Table aria-label="Run it yourself">
+    <Table aria-label="Run it yourself" data-testid="run-it-yourself">
       <Thead>
         <Tr>
           <Th>{columnNames.cloudProvider}</Th>

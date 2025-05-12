@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { SubscriptionCommonFields } from '~/types/accounts_mgmt.v1';
+import { SubscriptionCommonFieldsSupport_level as SubscriptionCommonFieldsSupportLevel } from '~/types/accounts_mgmt.v1';
 
 import EditSubscriptionFields from '../common/EditSubscriptionSettingsDialog/EditSubscriptionSettingsFields';
 import { EditSubsriptionSettingsFieldsValues } from '../common/EditSubscriptionSettingsDialog/EditSubscriptionSettingsFields/model/EditSubsriptionSettingsFieldsValues';
@@ -9,7 +9,7 @@ type EditSubscriptionSettingsProps = {
   setSettings: (value: any) => void;
   canSubscribeOCP: boolean;
   isValid?: boolean;
-  supportLevel?: SubscriptionCommonFields.support_level;
+  supportLevel?: SubscriptionCommonFieldsSupportLevel;
   canSubscribeMarketplaceOCP?: boolean;
 };
 
@@ -17,7 +17,7 @@ const EditSubscriptionSettings = ({
   setSettings,
   canSubscribeOCP,
   isValid = true,
-  supportLevel = SubscriptionCommonFields.support_level.EVAL,
+  supportLevel = SubscriptionCommonFieldsSupportLevel.Eval,
   canSubscribeMarketplaceOCP = false,
 }: EditSubscriptionSettingsProps) => {
   const initialSettings: EditSubsriptionSettingsFieldsValues = {

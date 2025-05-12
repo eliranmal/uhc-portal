@@ -10,6 +10,7 @@
   - [Unit tests](#unit-tests)
   - [End-to-end tests](#end-to-end-tests)
 - [OpenAPI types definitions](#openapi-types-definitions)
+- [Storybook](#storybook)
 - [Merge request review](#merge-request-review)
 
 ## Insights "Chrome" Architecture
@@ -102,6 +103,24 @@ You can read more in the [dedicated `README`](../cypress/README.md) inside the `
 Types generated from OpenAPI spec files are located in the `src/types` folder.
 
 You can read more about generating new types in the [dedicated README](../openapi/README.md).
+
+## Storybook
+
+A storybook is available to document UI elements, implement PoCs and run components in isolation.
+
+To run storybook:
+
+```
+yarn storybook
+```
+
+Storybook will be available locally at `http://localhost:6006/`.
+
+
+A component’s stories are defined in a story file that lives alongside the component file. The story file is for development-only, and it won't be included in the production bundle.
+When adding a component to storybook, please create stories in separate files using the `.stories.tsx` suffix. For example, to add stories to a component named "MySelect.tsx", create a separate `MySelect.stories.tsx` file in the same folder.
+
+You can have a look at storybook docs for more info about [how to write stories](https://storybook.js.org/docs/writing-stories).
 
 ## Merge Request review
 

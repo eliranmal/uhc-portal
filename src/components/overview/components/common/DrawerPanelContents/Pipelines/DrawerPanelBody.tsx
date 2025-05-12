@@ -83,4 +83,4 @@ const PipelinesDrawerPanelBody = (
   </Stack>
 );
 
-export default PipelinesDrawerPanelBody;
+export { PipelinesDrawerPanelBody };

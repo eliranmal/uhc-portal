@@ -2,7 +2,7 @@ import React from 'react';
 
 import { render, screen, userEvent } from '~/testUtils';
 
-import ProductCard from '../components/common/ProductCard/ProductCard';
+import { ProductCard } from '../../common/ProductCard/ProductCard';
 import { PRODUCT_CARD_TEST_CASES } from '../components/fixtures';
 
 import '@testing-library/jest-dom';

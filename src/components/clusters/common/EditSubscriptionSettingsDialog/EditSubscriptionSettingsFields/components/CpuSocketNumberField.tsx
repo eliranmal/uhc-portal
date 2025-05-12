@@ -5,7 +5,10 @@ import { NumberInput } from '@patternfly/react-core';
 
 import { subscriptionSettings } from '~/common/subscriptionTypes';
 import PopoverHint from '~/components/common/PopoverHint';
-import { Subscription, SubscriptionCommonFields } from '~/types/accounts_mgmt.v1';
+import {
+  Subscription,
+  SubscriptionCommonFieldsSystem_units as SubscriptionCommonFieldsSystemUnits,
+} from '~/types/accounts_mgmt.v1';
 
 import { LABEL_ICON_CLASS, MIN_VAL } from '../constants';
 import { validateSystemUnitsNumericField } from '../utils';
@@ -67,7 +70,7 @@ const CpuSocketNumberField = ({
       value={cpuSocketValue}
       min={minVal}
       inputName={
-        subscription.system_units === SubscriptionCommonFields.system_units.SOCKETS
+        subscription.system_units === SubscriptionCommonFieldsSystemUnits.Sockets
           ? subscriptionSettings.SOCKET_TOTAL
           : subscriptionSettings.CPU_TOTAL
       }
@@ -76,7 +79,7 @@ const CpuSocketNumberField = ({
       onPlus={handleUnitsNumberDelta(1)}
       onChange={handleUnitsNumberChange}
       inputAriaLabel={
-        subscription.system_units === SubscriptionCommonFields.system_units.SOCKETS
+        subscription.system_units === SubscriptionCommonFieldsSystemUnits.Sockets
           ? 'Number of sockets (excluding control plane nodes)'
           : 'Number of compute cores (excluding control plane nodes)'
       }

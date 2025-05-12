@@ -321,7 +321,7 @@ describe('MachineTypeSelection', () => {
 
   const defaultProps = {
     flavours: baseFlavoursState,
-    machineTypes: baseState,
+    machineTypesResponse: baseState,
     machineTypesByRegion: baseState,
     machine_type: field,
     machine_type_force_choice: forceChoiceField,
@@ -356,11 +356,10 @@ describe('MachineTypeSelection', () => {
 
     const errorProps = {
       ...defaultProps,
-      machineTypes: errorState,
+      machineTypesResponse: errorState,
     };
     it('displays an error alert', async () => {
       const { container } = render(<MachineTypeSelection {...errorProps} />);
-
       expect(within(screen.getByRole('alert')).getByText('This is an error message'));
       await checkAccessibility(container);
     });
@@ -381,7 +380,7 @@ describe('MachineTypeSelection', () => {
     const pendingProps = {
       ...defaultProps,
       flavours: pendingFlavoursState,
-      machineTypes: pendingState,
+      machineTypesResponse: pendingState,
     };
 
     it('renders correctly', async () => {
@@ -431,7 +430,7 @@ describe('MachineTypeSelection', () => {
       const quotaAvailableProps = {
         ...defaultProps,
         flavours: fulfilledFlavoursState,
-        machineTypes: fulfilledMachineState,
+        machineTypesResponse: fulfilledMachineState,
         machineTypesByRegion: fulfilledMachineState,
         quota,
         isMultiAz: true,
@@ -465,7 +464,7 @@ describe('MachineTypeSelection', () => {
       const previousSelectionProps = {
         ...defaultProps,
         flavours: fulfilledFlavoursState,
-        machineTypes: fulfilledMachineState,
+        machineTypesResponse: fulfilledMachineState,
         machineTypesByRegion: fulfilledMachineState,
         machine_type: field,
         quota,
@@ -501,7 +500,7 @@ describe('MachineTypeSelection', () => {
       const previousSelectionProps = {
         ...defaultProps,
         flavours: fulfilledFlavoursState,
-        machineTypes: fulfilledMachineState,
+        machineTypesResponse: fulfilledMachineState,
         machineTypesByRegion: fulfilledMachineState,
         machine_type: field,
         quota,
@@ -537,7 +536,7 @@ describe('MachineTypeSelection', () => {
       const byocProps = {
         ...defaultProps,
         flavours: fulfilledFlavoursState,
-        machineTypes: fulfilledMachineState,
+        machineTypesResponse: fulfilledMachineState,
         machineTypesByRegion: fulfilledMachineByRegionState,
         quota,
         isMultiAz: true,
@@ -571,7 +570,7 @@ describe('MachineTypeSelection', () => {
       const byocProps = {
         ...defaultProps,
         flavours: fulfilledFlavoursState,
-        machineTypes: fulfilledMachineState,
+        machineTypesResponse: fulfilledMachineState,
         machineTypesByRegion: fulfilledMachineState,
         quota,
         isMultiAz: true,
@@ -610,7 +609,7 @@ describe('MachineTypeSelection', () => {
 
     const unknownCategoryProps = {
       ...defaultProps,
-      machineTypes: state,
+      machineTypesResponse: state,
       machineTypesByRegion: state,
       flavours: fulfilledFlavoursState,
       isMultiAz: true,
@@ -628,7 +627,7 @@ describe('MachineTypeSelection', () => {
       it('displays only machine types with quota from known categories', async () => {
         const { user } = render(<MachineTypeSelection {...unknownCategoryProps} />);
 
-        const optionsMenu = screen.getByLabelText('Machine type select toggle');
+        const optionsMenu = await screen.findByLabelText('Machine type select toggle');
         await user.click(optionsMenu);
 
         const options = screen

@@ -1,10 +1,11 @@
 import React from 'react';
 import type { AxiosResponse } from 'axios';
 
+import { Account, QuotaCost, QuotaCostList } from '~/types/accounts_mgmt.v1';
+
 import { subscriptionsConstants } from '../../../redux/constants';
 import { subscriptionsReducer } from '../../../redux/reducers/subscriptionsReducer';
 import { FULFILLED_ACTION } from '../../../redux/reduxHelpers';
-import type { QuotaCost, QuotaCostList } from '../../../types/accounts_mgmt.v1';
 import {
   dbaAddon,
   dedicatedRhInfra,
@@ -28,7 +29,7 @@ const account: React.ComponentProps<typeof Quota>['account'] = {
     organization: {
       id: organizationID,
     },
-  },
+  } as Account,
 };
 
 const buildState = (quotaCostItems: QuotaCost[]) => {
@@ -47,13 +48,13 @@ const expectedRowsForQuotaCost = dedicatedRhInfra.length + 0 + dbaAddon.length;
 const rows: string[][] = [];
 
 export {
-  fetchAccount,
-  fetchQuotaCost,
-  organizationID,
   account,
   emptyQuotaCost,
-  quotaCost,
   expectedRowsForQuotaCost,
-  rows,
+  fetchAccount,
+  fetchQuotaCost,
   invalidateClusters,
+  organizationID,
+  quotaCost,
+  rows,
 };

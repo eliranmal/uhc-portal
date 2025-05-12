@@ -17,6 +17,7 @@ describe('<MachinePool />', () => {
           [FieldId.BillingModel]: 'marketplace-aws',
           [FieldId.Product]: 'ROSA',
           [FieldId.CloudProvider]: 'aws',
+          [FieldId.ClusterVersion]: { raw_id: '4.17.1' },
         }}
         onSubmit={() => {}}
       >
@@ -27,6 +28,29 @@ describe('<MachinePool />', () => {
     await waitFor(() => {
       const sectionToggle = screen.getByRole('button', { name: 'Add node labels' });
       expect(sectionToggle).toHaveAttribute('aria-expanded', 'true');
+    });
+  });
+
+  it('should show autoscaling settings button for OSD CCS GCP', async () => {
+    render(
+      <Formik
+        initialValues={{
+          [FieldId.NodeLabels]: [{ key: 'test-key', value: 'test-value' }],
+          [FieldId.MachineType]: 'test',
+          [FieldId.MachineTypeForceChoice]: 'test',
+          [FieldId.BillingModel]: 'marketplace-gcp',
+          [FieldId.Product]: 'OSD',
+          [FieldId.CloudProvider]: 'GCP',
+          [FieldId.Byoc]: 'true',
+          [FieldId.ClusterVersion]: { raw_id: '4.17.1' },
+        }}
+        onSubmit={() => {}}
+      >
+        <MachinePool />
+      </Formik>,
+    );
+    await waitFor(() => {
+      expect(screen.getByText('Edit cluster autoscaling settings')).toBeInTheDocument();
     });
   });
 });

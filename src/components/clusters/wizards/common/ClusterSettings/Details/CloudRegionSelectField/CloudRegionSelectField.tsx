@@ -1,8 +1,7 @@
 import React from 'react';
 import { FieldInputProps } from 'formik';
 
-import { FormSelect, FormSelectOption } from '@patternfly/react-core';
-import { Spinner } from '@redhat-cloud-services/frontend-components/Spinner';
+import { FormSelect, FormSelectOption, Spinner } from '@patternfly/react-core';
 
 import { useFormState } from '~/components/clusters/wizards/hooks';
 import ErrorBox from '~/components/common/ErrorBox';
@@ -74,7 +73,7 @@ export const CloudRegionSelectField = ({
   ) : (
     <>
       <div className="spinner-fit-container">
-        <Spinner />
+        <Spinner size="lg" aria-label="Loading..." />
       </div>
       <div className="spinner-loading-text">Loading region list...</div>
     </>

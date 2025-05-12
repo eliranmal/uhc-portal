@@ -1,14 +1,10 @@
 import React from 'react';
 import * as reactRedux from 'react-redux';
 
-import { closeModal } from '~/components/common/Modal/ModalActions';
+import * as useUpdateDeleteProtections from '~/queries/ClusterDetailsQueries/useUpdateDeleteProtection';
 import { checkAccessibility, screen, withState } from '~/testUtils';
 
 import DeleteProtectionModal from './DeleteProtectionModal';
-
-jest.mock('~/components/common/Modal/ModalActions', () => ({
-  closeModal: jest.fn(),
-}));
 
 jest.mock('react-redux', () => {
   const config = {
@@ -18,73 +14,121 @@ jest.mock('react-redux', () => {
   return config;
 });
 
+const mockedUseUpdateDeleteProtections = jest.spyOn(
+  useUpdateDeleteProtections,
+  'useUpdateDeleteProtections',
+);
+
 describe('<DeleteProtectionModal />', () => {
+  const onClose = jest.fn();
+  const mutate = jest.fn();
+  const reset = jest.fn();
+
+  const useDispatchMock = jest.spyOn(reactRedux, 'useDispatch');
+  const mockedDispatch = jest.fn();
+  useDispatchMock.mockReturnValue(mockedDispatch);
+
+  const defaultProps = {
+    onClose,
+  };
+
+  const defaultState = {
+    modal: {
+      data: {
+        clusterID: 'myClusterId',
+        protectionEnabled: false,
+        region: 'myRegion',
+      },
+    },
+  };
+
+  const defaultResponse = {
+    mutate,
+    isSuccess: false,
+    isPending: false,
+    error: null,
+    isError: false,
+    data: undefined,
+    reset,
+  };
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('is accessible', async () => {
-    const defaultState = {
-      modal: {
-        data: { clusterID: 'fale-id', protectionEnabled: false },
-      },
-      deleteProtection: {
-        updateDeleteProtection: { error: false, fulfilled: false, pending: false },
-      },
-    };
+    mockedUseUpdateDeleteProtections.mockReturnValue(defaultResponse);
     const { container } = withState(defaultState).render(
-      <DeleteProtectionModal onClose={jest.fn()} />,
+      <DeleteProtectionModal {...defaultProps} />,
     );
     await checkAccessibility(container);
   });
 
-  it('disaplys an error message when enabling has failed', () => {
-    const stateWithEror = {
-      modal: {
-        data: { clusterID: 'fale-id', protectionEnabled: false },
-      },
-      deleteProtection: {
-        updateDeleteProtection: { error: true, fulfilled: false, pending: false },
-      },
-    };
-    withState(stateWithEror).render(<DeleteProtectionModal onClose={jest.fn()} />);
+  it('displays an error message when enabling has failed', () => {
+    mockedUseUpdateDeleteProtections.mockReturnValue({
+      ...defaultResponse,
+      isError: true,
+      error: { errorMessage: 'I am an error', operationID: 'error_id' },
+    });
+    withState(defaultState).render(<DeleteProtectionModal {...defaultProps} />);
     expect(screen.getByText('Error enabling Delete Protection')).toBeInTheDocument();
+    expect(screen.getByText('I am an error')).toBeInTheDocument();
   });
 
-  it('disaplys an error message when disabling has failed', () => {
-    const stateWithEror = {
+  it('displays an error message when disabling has failed', () => {
+    const disablingState = {
+      ...defaultState,
       modal: {
-        data: { clusterID: 'fale-id', protectionEnabled: true },
-      },
-      deleteProtection: {
-        updateDeleteProtection: { error: true, fulfilled: false, pending: false },
+        ...defaultState.modal,
+        data: { ...defaultState.modal.data, protectionEnabled: true },
       },
     };
-    withState(stateWithEror).render(<DeleteProtectionModal onClose={jest.fn()} />);
+    mockedUseUpdateDeleteProtections.mockReturnValue({
+      ...defaultResponse,
+      isError: true,
+      error: { errorMessage: 'I am an error', operationID: 'error_id' },
+    });
+    withState(disablingState).render(<DeleteProtectionModal {...defaultProps} />);
     expect(screen.getByText('Error disabling Delete Protection')).toBeInTheDocument();
+    expect(screen.getByText('I am an error')).toBeInTheDocument();
   });
 
-  describe('Close modal action', () => {
-    const useDispatchMock = jest.spyOn(reactRedux, 'useDispatch');
-    const mockedDispatch = jest.fn();
-    useDispatchMock.mockReturnValue(mockedDispatch);
+  it('sends correct info to mutate function', async () => {
+    expect(defaultState.modal.data.protectionEnabled).toBeFalsy();
 
-    afterEach(() => {
-      useDispatchMock.mockClear();
-      mockedDispatch.mockClear();
-    });
+    mockedUseUpdateDeleteProtections.mockReturnValue(defaultResponse);
+    const { user } = withState(defaultState).render(<DeleteProtectionModal {...defaultProps} />);
+    await user.click(screen.getByRole('button', { name: /Enable/i }));
 
-    it('closes the modal', async () => {
-      const closeModalMock = closeModal as jest.Mock;
-      const defaultState = {
-        modal: {
-          data: { clusterID: 'fake-id', protectionEnabled: false },
-        },
-        deleteProtection: {
-          updateDeleteProtection: { error: false, fulfilled: false, pending: false },
-        },
-      };
-      const { user } = withState(defaultState).render(
-        <DeleteProtectionModal onClose={jest.fn()} />,
-      );
-      await user.click(screen.getByRole('button', { name: /cancel/i }));
-      expect(closeModalMock).toHaveBeenCalled();
+    expect(mutate).toHaveBeenCalledWith({
+      clusterID: 'myClusterId',
+      region: 'myRegion',
+      isProtected: true,
     });
+  });
+
+  it('closes the modal on cancel', async () => {
+    expect(mockedDispatch).not.toHaveBeenCalled();
+    mockedUseUpdateDeleteProtections.mockReturnValue(defaultResponse);
+    const { user } = withState(defaultState).render(<DeleteProtectionModal {...defaultProps} />);
+    await user.click(screen.getByRole('button', { name: /cancel/i }));
+    expect(onClose).not.toHaveBeenCalled();
+
+    const dispatchProps = mockedDispatch.mock.calls[0][0];
+    expect(dispatchProps.type).toEqual('CLOSE_MODAL');
+  });
+
+  it('closes the modal on submit success', () => {
+    expect(onClose).not.toHaveBeenCalled();
+    expect(mockedDispatch).not.toHaveBeenCalled();
+    mockedUseUpdateDeleteProtections.mockReturnValue({
+      ...defaultResponse,
+      isSuccess: true,
+    });
+    withState(defaultState).render(<DeleteProtectionModal {...defaultProps} />);
+
+    expect(onClose).toHaveBeenCalled();
+    const dispatchProps = mockedDispatch.mock.calls[0][0];
+    expect(dispatchProps.type).toEqual('CLOSE_MODAL');
   });
 });

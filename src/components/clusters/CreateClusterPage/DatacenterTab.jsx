@@ -1,6 +1,5 @@
 /* eslint-disable react/jsx-no-useless-fragment */
 import React from 'react';
-import PropTypes from 'prop-types';
 
 import {
   Button,
@@ -13,11 +12,7 @@ import {
   Title,
 } from '@patternfly/react-core';
 import OutlinedQuestionCircleIcon from '@patternfly/react-icons/dist/esm/icons/outlined-question-circle-icon';
-import {
-  Table as TableDeprecated,
-  TableBody as TableBodyDeprecated,
-  TableHeader as TableHeaderDeprecated,
-} from '@patternfly/react-table/deprecated';
+import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 
 import { Link } from '~/common/routing';
 
@@ -79,70 +74,68 @@ const ocpTableRows = [
   ],
 ];
 
-const DatacenterTab = ({ assistedInstallerFeature }) => (
+const DatacenterTab = () => (
   <>
-    {assistedInstallerFeature && (
-      <PageSection variant="light" className="pf-v5-u-p-lg">
-        <Stack hasGutter>
-          <StackItem>
-            <Title headingLevel="h2" className="ocm-ocp-datacenter-title">
-              Assisted Installer
-            </Title>
-          </StackItem>
-          <StackItem>
-            The easiest way to install OpenShift on your own infrastructure with step-by-step
-            guidance, preflight validations, and smart defaults. This method supports multiple
-            architectures.
-          </StackItem>
-          <StackItem>
-            <Split hasGutter>
-              <SplitItem>
-                <Button component={Link} to="/assisted-installer/clusters/~new">
-                  Create cluster
+    <PageSection variant="light" className="pf-v5-u-p-lg">
+      <Stack hasGutter>
+        <StackItem>
+          <Title headingLevel="h2" className="ocm-ocp-datacenter-title">
+            Assisted Installer
+          </Title>
+        </StackItem>
+        <StackItem>
+          The easiest way to install OpenShift on your own infrastructure with step-by-step
+          guidance, preflight validations, and smart defaults. This method supports multiple
+          architectures.
+        </StackItem>
+        <StackItem>
+          <Split hasGutter>
+            <SplitItem>
+              <Button component={Link} to="/assisted-installer/clusters/~new">
+                Create cluster
+              </Button>
+            </SplitItem>
+            <SplitItem className="pf-v5-u-align-self-center">
+              <Link to="/install/metal/agent-based">Run Agent-based Installer locally</Link>
+              <Popover bodyContent="Runs Assisted Installer securely and locally to create clusters in disconnected or air-gapped environments.">
+                <Button variant="plain" onClick={(e) => e.preventDefault()}>
+                  <OutlinedQuestionCircleIcon />
                 </Button>
-              </SplitItem>
-              <SplitItem className="pf-v5-u-align-self-center">
-                <Link to="/install/metal/agent-based">Run Agent-based Installer locally</Link>
-                <Popover bodyContent="Runs Assisted Installer securely and locally to create clusters in disconnected or air-gapped environments.">
-                  <Button variant="plain" onClick={(e) => e.preventDefault()}>
-                    <OutlinedQuestionCircleIcon />
-                  </Button>
-                </Popover>
-              </SplitItem>
-            </Split>
-          </StackItem>
-        </Stack>
-      </PageSection>
-    )}
+              </Popover>
+            </SplitItem>
+          </Split>
+        </StackItem>
+      </Stack>
+    </PageSection>
     <PageSection>
       <Stack hasGutter>
         <StackItem>
-          <Title headingLevel="h2">
-            {assistedInstallerFeature ? 'Other datacenter options' : 'datacenter options'}
-          </Title>
+          <Title headingLevel="h2">Other datacenter options</Title>
         </StackItem>
         <StackItem>
           Create clusters on supported infrastructure using our extensive documentation and
           installer program.
         </StackItem>
         <StackItem>
-          <TableDeprecated
-            className="install-options-table"
-            aria-label="Installation options table"
-            cells={ocpTableColumns}
-            rows={ocpTableRows}
-          >
-            <TableHeaderDeprecated />
-            <TableBodyDeprecated />
-          </TableDeprecated>
+          <Table className="install-options-table" aria-label="Installation options table">
+            <Thead>
+              {ocpTableColumns.map((column) => (
+                <Th>{column}</Th>
+              ))}
+            </Thead>
+            <Tbody>
+              {ocpTableRows.map((row) => (
+                <Tr>
+                  <Td>{row[0]}</Td>
+                  <Td>{row[1]}</Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
         </StackItem>
       </Stack>
     </PageSection>
   </>
 );
-
-DatacenterTab.propTypes = {
-  assistedInstallerFeature: PropTypes.bool,
-};
 
 export default DatacenterTab;

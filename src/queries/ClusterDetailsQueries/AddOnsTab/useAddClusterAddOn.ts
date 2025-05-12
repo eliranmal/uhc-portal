@@ -7,7 +7,7 @@ import clusterService, { getClusterServiceForRegion } from '~/services/clusterSe
 import { AddOnInstallation } from '~/types/clusters_mgmt.v1';
 
 export const useAddClusterAddOn = (region?: string) => {
-  const { data, isError, error, isPending, mutate, mutateAsync, isSuccess } = useMutation({
+  const { data, isError, error, isPending, mutate, mutateAsync, isSuccess, reset } = useMutation({
     mutationKey: ['addClusterAddOn'],
     mutationFn: async ({
       clusterID,
@@ -42,6 +42,7 @@ export const useAddClusterAddOn = (region?: string) => {
       mutate,
       mutateAsync,
       isSuccess,
+      reset,
     };
   }
 
@@ -53,5 +54,6 @@ export const useAddClusterAddOn = (region?: string) => {
     mutate,
     mutateAsync,
     isSuccess,
+    reset,
   };
 };

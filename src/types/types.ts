@@ -1,11 +1,14 @@
+import React from 'react';
+
 import type { Cluster as AICluster } from '@openshift-assisted/types/assisted-installer-service';
 import type { FeaturesSupportsLevel } from '@openshift-assisted/ui-lib/ocm';
 import type { ChromeAPI } from '@redhat-cloud-services/types';
 
 import type { List, OneMetric, Subscription } from './accounts_mgmt.v1';
 import type {
-  AWS,
+  Aws,
   Cluster,
+  ClusterApi,
   ClusterState,
   ClusterStatus,
   LimitedSupportReason,
@@ -61,6 +64,8 @@ export type FakeCluster = // AICluster &
     | 'gcp_network'
     | 'status'
     | 'multi_az'
+    | 'proxy'
+    | 'additional_trust_bundle'
   > & {
     metrics: OneMetric;
     state?: string | ClusterState;
@@ -106,6 +111,7 @@ export type AugmentedCluster = ClusterWithPermissions & {
   limitedSupportReasons?: LimitedSupportReason[];
   aiSupportLevels?: FeaturesSupportsLevel;
   status?: ClusterStatus;
+  api?: ClusterApi;
 };
 
 export type AugmentedClusterResponse = {
@@ -118,15 +124,17 @@ export type ErrorState = {
   pending: boolean;
   fulfilled: false;
   error: true;
+  reason?: string;
   errorCode?: number;
   internalErrorCode?: string;
   errorMessage?: string;
   errorDetails?: ErrorDetail[];
   operationID?: string;
+  message?: string;
 };
 
 export type AWSCredentials = Pick<
-  AWS,
+  Aws,
   'account_id' | 'access_key_id' | 'secret_access_key' | 'sts'
 >;
 
@@ -150,10 +158,4 @@ export type ListAPIParams = {
   orderBy?: string;
 };
 
-type StaticRegionalItem = {
-  url: string;
-};
-
-export type StaticRegionalItems = {
-  [key: string]: StaticRegionalItem;
-};
+export type ToggleEvent = React.MouseEvent | React.ChangeEvent | React.KeyboardEvent | Event;

@@ -43,29 +43,9 @@ do
 done
 DAY1_TAGS+="$OTHER_TAGS"
 
-# Writing env variables used for QE cypress tests to cypress.env.json.
+# Writing env variables from vault(used for QE cypress various tests) to cypress.env.json.
 cat > cypress.env.json << EOF
-{
-"TEST_WITHQUOTA_USER": "${TEST_CYPRESS_QE_ORGADMIN_USER}",
-"TEST_WITHQUOTA_PASSWORD": "${TEST_CYPRESS_QE_ORGADMIN_PASSWORD}",
-"QE_ORGADMIN_CLIENT_ID": "${TEST_CYPRESS_QE_ORGADMIN_CLIENT_ID}",
-"QE_ORGADMIN_CLIENT_SECRET": "${TEST_CYPRESS_QE_ORGADMIN_CLIENT_SECRET}",
-"QE_ORGADMIN_USER": "${TEST_CYPRESS_QE_ORGADMIN_USER}",
-"QE_ORGADMIN_PASSWORD": "${TEST_CYPRESS_QE_ORGADMIN_PASSWORD}",
-"QE_ORGADMIN_OFFLINE_TOKEN": "${TEST_CYPRESS_QE_ORGADMIN_OFFLINE_TOKEN}",
-"QE_GCP_OSDCCSADMIN_JSON": ${TEST_CYPRESS_QE_GCP_OSDCCSADMIN_JSON},
-"QE_AWS_ACCESS_KEY_ID": "${TEST_QE_AWS_ACCESS_KEY_ID}",
-"QE_AWS_ACCESS_KEY_SECRET": "${TEST_QE_AWS_ACCESS_KEY_SECRET}",
-"QE_AWS_REGION": "${TEST_QE_AWS_REGION}",
-"QE_AWS_ID": "${TEST_QE_AWS_ID}",
-"QE_ENV_AUT" : "${ENV_AUT}",
-"QE_ACCOUNT_ROLE_PREFIX" : "cypress-account-roles",
-"QE_OCM_ROLE_PREFIX" : "cypress-ocm-role",
-"QE_USER_ROLE_PREFIX" : "cypress-user-role",
-"QE_GCP_WIF_CONFIG" : "cypress-ocmui-wif",
-"QE_USE_OFFLINE_TOKEN" : false,
-"ROSACLI_LOGS": "cli-logs.txt"
-}
+${TEST_QE_CYPRESS_ENV_VARIABLES}
 EOF
 
 echo "*******************Execution details***************************"
@@ -91,7 +71,7 @@ browser_image="quay.io/app-sre/ocmui-cypress-tests:updated"
 # ROSA CLI images for pre-requisits containerized runs
 rosacli_image="registry.ci.openshift.org/ci/rosa-aws-cli:latest"
 # QCMQE image for setting up cloud resources for the runs
-cloudutil_image="quay.io/openshifttest/ocmqeaws:updated"
+cloudutil_image="quay.io/openshifttest/ocmqeaws:1.2.0"
 
 mkdir -p "${PWD}/cypress/videos"
 mkdir -p "${PWD}/cypress/screenshots"

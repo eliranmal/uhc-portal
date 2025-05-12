@@ -14,18 +14,21 @@ import {
 import {
   ExcludedNamespacesHelpText,
   ExcludedNamespacesPopover,
-} from '~/components/clusters/ClusterDetails/components/Networking/components/ApplicationIngressCard/ExcludedNamespacesPopover';
-import { NamespaceOwnerPolicyPopover } from '~/components/clusters/ClusterDetails/components/Networking/components/ApplicationIngressCard/NamespaceOwnerPolicyPopover';
+} from '~/components/clusters/ClusterDetailsMultiRegion/components/Networking/components/ApplicationIngressCard/ExcludedNamespacesPopover';
+import { NamespaceOwnerPolicyPopover } from '~/components/clusters/ClusterDetailsMultiRegion/components/Networking/components/ApplicationIngressCard/NamespaceOwnerPolicyPopover';
 import {
   RouteSelectorsHelpText,
   RouteSelectorsPopover,
-} from '~/components/clusters/ClusterDetails/components/Networking/components/ApplicationIngressCard/RouteSelectorsPopover';
-import { WildcardPolicyPopover } from '~/components/clusters/ClusterDetails/components/Networking/components/ApplicationIngressCard/WildcardsPolicyPopover';
-import { LoadBalancerFlavorLabel } from '~/components/clusters/ClusterDetails/components/Networking/components/constants';
-import LoadBalancerPopover from '~/components/clusters/ClusterDetails/components/Networking/components/LoadBalancerPopover';
+} from '~/components/clusters/ClusterDetailsMultiRegion/components/Networking/components/ApplicationIngressCard/RouteSelectorsPopover';
+import { WildcardPolicyPopover } from '~/components/clusters/ClusterDetailsMultiRegion/components/Networking/components/ApplicationIngressCard/WildcardsPolicyPopover';
+import { LoadBalancerFlavorLabel } from '~/components/clusters/ClusterDetailsMultiRegion/components/Networking/components/constants';
+import LoadBalancerPopover from '~/components/clusters/ClusterDetailsMultiRegion/components/Networking/components/LoadBalancerPopover';
 import { useFormState } from '~/components/clusters/wizards/hooks';
-import { ReduxCheckbox, ReduxVerticalFormGroup } from '~/components/common/ReduxFormComponents';
-import { LoadBalancerFlavor } from '~/types/clusters_mgmt.v1';
+import {
+  ReduxCheckbox,
+  ReduxVerticalFormGroup,
+} from '~/components/common/ReduxFormComponents_deprecated';
+import { LoadBalancerFlavor } from '~/types/clusters_mgmt.v1/enums';
 
 type DefaultIngressFieldsFormikProps = {
   className?: string;
@@ -35,6 +38,7 @@ type DefaultIngressFieldsFormikProps = {
   canEditLoadBalancer?: boolean;
   canShowLoadBalancer?: boolean;
   isHypershiftCluster?: boolean;
+  values?: any;
 };
 
 export const DefaultIngressFieldsFormik: React.FC<DefaultIngressFieldsFormikProps> = ({
@@ -45,10 +49,11 @@ export const DefaultIngressFieldsFormik: React.FC<DefaultIngressFieldsFormikProp
   canEditLoadBalancer,
   canShowLoadBalancer,
   isHypershiftCluster,
+  values,
 }) => {
   const {
-    getFieldProps, // Access: name, value, onBlur, onChange for a <Field>, useful for mapping to a field that expects the redux-form props
-    getFieldMeta, // Access: error, touched for a <Field>, useful for mapping to a field that expects the redux-form props
+    getFieldProps, // Access: name, value, onBlur, onChange for a <Field>, useful for mapping to a field
+    getFieldMeta, // Access: error, touched for a <Field>, useful for mapping to a field
   } = useFormState();
 
   return (
@@ -126,7 +131,7 @@ export const DefaultIngressFieldsFormik: React.FC<DefaultIngressFieldsFormikProp
               component={ReduxVerticalFormGroup}
               name="clusterRoutesTlsSecretRef"
               type="text"
-              validate={validateTlsSecretName}
+              validate={(value: string) => validateTlsSecretName(value, values)}
               disabled={areFieldsDisabled}
               helpText="The name of a secret holding custom TLS certificate, in the openshift-config namespace. Optional."
               showHelpTextOnError={false}
@@ -141,7 +146,7 @@ export const DefaultIngressFieldsFormik: React.FC<DefaultIngressFieldsFormikProp
               component={ReduxVerticalFormGroup}
               name="clusterRoutesHostname"
               type="text"
-              validate={validateTlsHostname}
+              validate={(value: string) => validateTlsHostname(value, values)}
               disabled={areFieldsDisabled}
               helpText="The cluster routes hostname the TLS certificate is issued for."
               showHelpTextOnError={false}
@@ -206,8 +211,8 @@ export const DefaultIngressFieldsFormik: React.FC<DefaultIngressFieldsFormikProp
             component={ReduxCheckbox}
             name="is_nlb_load_balancer"
             disabled={!canEditLoadBalancer}
-            label={LoadBalancerFlavorLabel[LoadBalancerFlavor.NLB]}
-            labelOff={LoadBalancerFlavorLabel[LoadBalancerFlavor.CLASSIC]}
+            label={LoadBalancerFlavorLabel[LoadBalancerFlavor.nlb]}
+            labelOff={LoadBalancerFlavorLabel[LoadBalancerFlavor.classic]}
             isSwitch
             input={getFieldProps('is_nlb_load_balancer')}
             meta={getFieldMeta('is_nlb_load_balancer')}

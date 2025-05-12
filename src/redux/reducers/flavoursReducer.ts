@@ -1,5 +1,5 @@
 import { getErrorState } from '../../common/errors';
-import type { Flavour } from '../../types/clusters_mgmt.v1/models/Flavour';
+import type { Flavour } from '../../types/clusters_mgmt.v1';
 import { DEFAULT_FLAVOUR_ID, FlavourAction } from '../actions/flavourActions';
 import { GET_DEFAULT_FLAVOUR } from '../constants/flavourConstants';
 import {

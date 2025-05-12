@@ -64,6 +64,21 @@ describe('<DeleteProtection />', () => {
     );
   });
 
+  it('Disables the "Disable" button if cluster details is pending', () => {
+    const props = {
+      protectionEnabled: true,
+      clusterID: 'fake-cluster',
+      pending: true,
+      canToggle: true,
+    };
+    render(<DeleteProtection {...props} />);
+
+    expect(screen.getByRole('button', { name: 'Disable' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+  });
+
   it('Displays N/A when cluster is uninstalling', () => {
     const props = {
       protectionEnabled: false,

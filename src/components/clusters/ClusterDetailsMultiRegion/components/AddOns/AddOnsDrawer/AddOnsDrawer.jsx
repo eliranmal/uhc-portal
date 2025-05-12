@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useDispatch } from 'react-redux';
 
@@ -99,6 +99,39 @@ const AddOnsDrawer = ({
     );
   };
 
+  const setDrawerContent = useCallback(
+    (selectedAddOnId) => {
+      const addOn = addOnsList.find((addOn) => addOn.id === selectedAddOnId);
+
+      // get installedAddon
+      const installedAddOn = getInstalled(addOn, clusterAddOns);
+
+      // get addOn requirements
+      const requirements = validateAddOnRequirements(addOn);
+
+      // get billing / quota info
+      const billingQuota = getAddOnBillingQuota(addOn, quota);
+
+      dispatch(
+        setAddonsDrawer({
+          // set active card states
+          activeCard: addOn,
+          // set requirements state
+          activeCardRequirementsFulfilled: requirements.fulfilled,
+          activeCardRequirements: requirements.errorMsgs,
+          // set installed addon
+          installedAddOn,
+          // set billing model
+          billingQuota,
+          // set drawer state
+          open: true,
+          activeTabKey: 0,
+        }),
+      );
+    },
+    [addOnsList, clusterAddOns, dispatch, quota],
+  );
+
   // handles card click
   const handleCardClick = (addOn) => () => {
     // if activeCard is clicked again close drawer
@@ -107,31 +140,7 @@ const AddOnsDrawer = ({
       return;
     }
 
-    // get installedAddon
-    const installedAddOn = getInstalled(addOn, clusterAddOns);
-
-    // get addOn requirements
-    const requirements = validateAddOnRequirements(addOn);
-
-    // get billing / quota info
-    const billingQuota = getAddOnBillingQuota(addOn, quota);
-
-    dispatch(
-      setAddonsDrawer({
-        // set active card states
-        activeCard: addOn,
-        // set requirements state
-        activeCardRequirementsFulfilled: requirements.fulfilled,
-        activeCardRequirements: requirements.errorMsgs,
-        // set installed addon
-        installedAddOn,
-        // set billing model
-        billingQuota,
-        // set drawer state
-        open: true,
-        activeTabKey: 0,
-      }),
-    );
+    setDrawerContent(addOn.id);
   };
 
   const {
@@ -149,6 +158,13 @@ const AddOnsDrawer = ({
     activeTabKey,
     subscriptionModels,
   } = drawer;
+
+  useEffect(() => {
+    // updating the drawer content when the cluster addons are updated and the drawer is open
+    if (clusterAddOns && addOnsList && drawer.open && drawer.activeCard?.id) {
+      setDrawerContent(drawer.activeCard.id);
+    }
+  }, [addOnsList, clusterAddOns, drawer.activeCard?.id, drawer.open, setDrawerContent]);
 
   // panel content for selected active card
   const panelContent = (

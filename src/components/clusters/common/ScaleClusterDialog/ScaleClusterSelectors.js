@@ -1,5 +1,4 @@
 import get from 'lodash/get';
-import { getFormValues } from 'redux-form';
 
 const minValueSelector = (isMultiAz, isByoc) => {
   const multiAzNodes = isByoc ? 3 : 9;
@@ -16,22 +15,18 @@ const minValueSelector = (isMultiAz, isByoc) => {
       };
 };
 
-const shouldShowLoadBalancerAlert = (state) => {
+const shouldShowLoadBalancerAlert = (state, formQuota) => {
   const { data } = state.modal;
   const modalQuota = get(data, 'load_balancer_quota', 0);
-  const values = getFormValues('ScaleCluster')(state);
-  const formQuota = get(values, 'load_balancers', 0);
   if (formQuota && modalQuota) {
     return modalQuota > parseInt(formQuota, 10);
   }
   return false;
 };
 
-const shouldShowStorageQuotaAlert = (state) => {
+const shouldShowStorageQuotaAlert = (state, formQuota) => {
   const { data } = state.modal;
   const modalQuota = get(data, 'storage_quota.value', 0);
-  const values = getFormValues('ScaleCluster')(state);
-  const formQuota = get(values, 'persistent_storage', 0);
   if (formQuota && modalQuota) {
     return modalQuota > parseInt(formQuota, 10);
   }

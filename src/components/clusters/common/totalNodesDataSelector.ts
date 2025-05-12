@@ -1,4 +1,4 @@
-import { MachinePool, NodePool } from '~/types/clusters_mgmt.v1';
+import { MachinePool, NodePool, NodePoolAutoscaling } from '~/types/clusters_mgmt.v1';
 import { ClusterFromSubscription } from '~/types/types';
 
 import { isHypershiftCluster } from './clusterStates';
@@ -33,10 +33,12 @@ const totalNodesDataSelector = <E extends ClusterFromSubscription>(
     machinePools.forEach((machinePool) => {
       if (machinePool.autoscaling) {
         hasMachinePoolWithAutoscaling = true;
-        if (isHypershift) {
+
+        const autoscaling = machinePool.autoscaling as NodePoolAutoscaling;
+        if (isHypershift && (autoscaling?.min_replica || autoscaling?.max_replica)) {
           // if hypershift then NodePool type
-          totalMinNodesCount += (machinePool as NodePool).autoscaling?.min_replica ?? NaN;
-          totalMaxNodesCount += (machinePool as NodePool).autoscaling?.max_replica ?? NaN;
+          totalMinNodesCount += autoscaling?.min_replica ?? NaN;
+          totalMaxNodesCount += autoscaling?.max_replica ?? NaN;
         } else {
           // otherwise MachinePool type
           totalMinNodesCount += (machinePool as MachinePool).autoscaling?.min_replicas ?? NaN;

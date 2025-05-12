@@ -25,16 +25,10 @@
  * Once the parent receives the token, it executes a function callback to pass the token
  */
 import axios, { AxiosError } from 'axios';
-import Keycloak, { KeycloakConfig, KeycloakInitOptions } from 'keycloak-js';
+import Keycloak from 'keycloak-js';
 import urijs from 'urijs';
 
 import type { Chrome } from '~/types/types';
-
-const defaultOptions = {
-  realm: 'redhat-external',
-  clientId: 'cloud-services',
-  cookieName: 'cs_jwt',
-};
 
 const DEFAULT_ROUTES = {
   prod: {
@@ -91,7 +85,7 @@ const insightsUrl = async (env: typeof DEFAULT_ROUTES) => {
 };
 
 const getPartnerScope = (pathname: string) => {
-  // replace beta and leading "/"
+  // replace leading "/"
   const sanitizedPathname = pathname.replace(/^\//, '');
   // check if the pathname is connect/:partner
   if (sanitizedPathname.match(/^connect\/.+/)) {
@@ -127,23 +121,14 @@ export const doOffline = (onDone: (tokenOrError: string, errorReason?: string) =
   }
 
   Promise.resolve(insightsUrl(DEFAULT_ROUTES)).then(async (ssoUrl) => {
-    const options: KeycloakInitOptions &
-      KeycloakConfig & { promiseType: string; redirectUri: string; url: string } = {
-      ...defaultOptions,
-      promiseType: 'native',
-      redirectUri,
-      url: ssoUrl,
-      checkLoginIframe: false,
-    };
-
-    const kc = new Keycloak(options);
-    await kc.init(options);
+    const kc = new Keycloak({ realm: 'redhat-external', clientId: 'cloud-services', url: ssoUrl });
+    await kc.init({ redirectUri, checkLoginIframe: false, pkceMethod: false });
 
     const partnerScope = getPartnerScope(window.location.pathname);
 
     // Open an iframe to the token sso URL and with a redirect of the current page
     const iframe = document.createElement('iframe');
-    const src = kc.createLoginUrl({
+    const src = await kc.createLoginUrl({
       prompt: 'none',
       redirectUri,
       scope: `offline_access${partnerScope ? ` ${partnerScope}` : ''}`,

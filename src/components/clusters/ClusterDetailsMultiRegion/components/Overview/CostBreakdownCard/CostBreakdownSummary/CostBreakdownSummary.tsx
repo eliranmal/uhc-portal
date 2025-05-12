@@ -1,7 +1,6 @@
 import React from 'react';
 
-import { Title } from '@patternfly/react-core';
-import Skeleton from '@redhat-cloud-services/frontend-components/Skeleton';
+import { Skeleton, Title } from '@patternfly/react-core';
 
 import { Report } from '~/components/dashboard/CostCard/models/Report';
 
@@ -19,7 +18,7 @@ type CostBreakdownSummaryProps = {
 
 const CostBreakdownSummary = ({ report }: CostBreakdownSummaryProps) =>
   !report.fulfilled ? (
-    <Skeleton size="md" />
+    <Skeleton fontSize="md" screenreaderText="Loading..." />
   ) : (
     <>
       <Title className="ocm--cost-title" size="md" headingLevel="h2">

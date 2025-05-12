@@ -6,8 +6,13 @@
   .pf-v5-c-table__toggle {
     padding-top: 0;
   }
-  .pf-v5-c-table__expandable-row-content .autoscale__lim {
-    color: var(--pf-v5-global--secondary-color--100);
+  .pf-v5-c-table__expandable-row-content {
+    .autoscale__lim {
+      color: var(--pf-v5-global--secondary-color--100);
+    }
+    .auto_repair {
+      color: var(--pf-v5-global--secondary-color--100);
+    }
   }
   .nodes-count {
     margin: 0;

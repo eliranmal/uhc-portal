@@ -30,7 +30,7 @@ describe('getTabs', () => {
     const tabs = getTabs(regularTabsInfoAllShow);
 
     // Assert
-    expect(tabs.length).toBe(10);
+    expect(tabs.length).toBe(11);
     tabs.forEach((tab) => expect(tab.show).toBe(true));
 
     expect(tabs[1].title).toStrictEqual(
@@ -47,7 +47,7 @@ describe('getTabs', () => {
     const tabs = getTabs(regularTabsInfoAllHidden);
 
     // Assert
-    expect(tabs.length).toBe(10);
+    expect(tabs.length).toBe(11);
     expect(tabs[0].show).toBe(true);
     tabs.slice(1, tabs.length).forEach((tab) => expect(tab.show).toBe(false));
   });
@@ -57,7 +57,7 @@ describe('getTabs', () => {
     const tabs = getTabs(regularTabsInfoMonitoringUndefined);
 
     // Assert
-    expect(tabs.length).toBe(10);
+    expect(tabs.length).toBe(11);
     expect(tabs[0].show).toBe(true);
     expect(tabs[1].show).toBe(true);
     tabs.slice(2, tabs.length).forEach((tab) => expect(tab.show).toBe(false));

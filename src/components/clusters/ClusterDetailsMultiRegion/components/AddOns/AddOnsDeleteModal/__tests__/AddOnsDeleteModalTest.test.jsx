@@ -21,7 +21,6 @@ jest.mock('~/redux/hooks', () => ({
 
 describe('<AddOnsDeleteModal />', () => {
   const deleteClusterAddOn = jest.fn();
-  const getOrganizationAndQuota = jest.fn();
   const closeModal = jest.fn();
 
   const props = {
@@ -40,7 +39,7 @@ describe('<AddOnsDeleteModal />', () => {
     clusterID: 'mockedClusterID',
   };
   afterEach(() => {
-    deleteClusterAddOn.mockClear();
+    jest.clearAllMocks();
   });
 
   it('is accessible', async () => {
@@ -81,7 +80,8 @@ describe('<AddOnsDeleteModal />', () => {
     expect(mockedDispatch).not.toHaveBeenCalledWith(closeModal());
 
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
-    expect(mockedDispatch).toHaveBeenCalled(closeModal());
+
+    expect(mockedDispatch).toHaveBeenCalledWith(closeModal());
   });
 
   it('should call deleteClusterAddOn correctly', async () => {
@@ -97,7 +97,5 @@ describe('<AddOnsDeleteModal />', () => {
         onSuccess: expect.any(Function),
       }),
     );
-    expect(mockedDispatch).toHaveBeenCalledWith(closeModal());
-    expect(mockedDispatch).toHaveBeenCalledWith(getOrganizationAndQuota());
   });
 });

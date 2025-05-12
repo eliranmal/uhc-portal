@@ -2,8 +2,10 @@ import React, { useCallback, useState } from 'react';
 
 import { Flex, FlexItem, PageSection, Title } from '@patternfly/react-core';
 
+import { useScrollToAnchor } from '~/common/helpers';
 import { Link } from '~/common/routing';
 import InternalTrackingLink from '~/components/common/InternalTrackingLink';
+import { useCanCreateManagedCluster } from '~/queries/ClusterDetailsQueries/useFetchActionsPermissions';
 
 import docLinks from '../../common/installLinks.mjs';
 import OpenShiftProductIcon from '../../styles/images/OpenShiftProductIcon.svg';
@@ -17,7 +19,7 @@ import {
   OverviewProductBanner,
   OverviewProductBannerProps,
 } from './components/OverviewProductBanner';
-import RecommendedOperatorsCards from './components/RecommendedOperatorsCards/RecommendedOperatorsCards';
+import { RecommendedOperatorsCards } from './components/RecommendedOperatorsCards/RecommendedOperatorsCards';
 
 import './Overview.scss';
 
@@ -26,23 +28,21 @@ const openshiftHeaderContent: OverviewProductBannerProps = {
   icon: OpenShiftProductIcon,
   altText: 'OpenShift',
   learnMoreLink: docLinks.WHAT_IS_OPENSHIFT,
-  description: (
-    <>
-      Focus on work that matters with the industry&#39;s leading hybrid cloud application platform
-      powered by Kubernetes.
-      <br />
-      Develop, modernize, deploy, run, and manage your applications faster and easier.
-    </>
-  ),
+  description:
+    "Focus on work that matters with the industry's leading hybrid cloud application platform powered by Kubernetes. \nDevelop, modernize, deploy, run, and manage your applications faster and easier.",
   dataTestId: 'OverviewHeader',
 };
 
 const PAGE_TITLE = 'Overview | Red Hat OpenShift Cluster Manager';
 
 function OverviewEmptyState() {
+  useScrollToAnchor();
+
+  const { canCreateManagedCluster } = useCanCreateManagedCluster();
+
   const createClusterURL = '/create';
   const CreateClusterLink = useCallback(
-    (props) => <Link {...props} data-testid="create-cluster" to={createClusterURL} />,
+    (props: any) => <Link {...props} data-testid="create-cluster" to={createClusterURL} />,
     [],
   );
 
@@ -82,10 +82,13 @@ function OverviewEmptyState() {
           </Title>
           <Flex className="pf-v5-u-mb-lg">
             <FlexItem className="pf-v5-u-pt-md" data-testid="offering-card_RHOSD">
-              <OfferingCard offeringType="RHOSD" />
+              <OfferingCard
+                offeringType="RHOSD"
+                canCreateManagedCluster={canCreateManagedCluster}
+              />
             </FlexItem>
             <FlexItem className="pf-v5-u-pt-md" data-testid="offering-card_AWS">
-              <OfferingCard offeringType="AWS" />
+              <OfferingCard offeringType="AWS" canCreateManagedCluster={canCreateManagedCluster} />
             </FlexItem>
             <FlexItem className="pf-v5-u-pt-md" data-testid="offering-card_Azure">
               <OfferingCard offeringType="Azure" />

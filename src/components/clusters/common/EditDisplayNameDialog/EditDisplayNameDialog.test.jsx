@@ -1,25 +1,33 @@
 import React from 'react';
+import * as reactRedux from 'react-redux';
 
+import * as useEditClusterName from '~/queries/ClusterActionsQueries/useEditClusterName';
 import { checkAccessibility, render, screen } from '~/testUtils';
 
 import EditDisplayNameDialog from './EditDisplayNameDialog';
 
+jest.mock('react-redux', () => {
+  const config = {
+    __esModule: true,
+    ...jest.requireActual('react-redux'),
+  };
+  return config;
+});
+
+const mockedUseEditClusterName = jest.spyOn(useEditClusterName, 'useEditClusterName');
+
 describe('<EditDisplayNameDialog />', () => {
   const closeModal = jest.fn();
   const onClose = jest.fn();
-  const submit = jest.fn();
   const resetResponse = jest.fn();
+  const mutate = jest.fn();
+
+  const useDispatchMock = jest.spyOn(reactRedux, 'useDispatch');
+  const mockedDispatch = jest.fn();
+  useDispatchMock.mockReturnValue(mockedDispatch);
 
   const defaultProps = {
-    isOpen: true,
-    closeModal,
     onClose,
-    submit,
-    resetResponse,
-    displayName: 'my-display-name',
-    clusterID: 'my-cluster-id',
-    subscriptionID: 'my-subscription-id',
-    editClusterResponse: { errorMessage: '', error: false },
   };
 
   afterEach(() => {
@@ -32,12 +40,12 @@ describe('<EditDisplayNameDialog />', () => {
   });
 
   it('is accessible when an error occurs', async () => {
-    const newProps = {
-      ...defaultProps,
-      editClusterResponse: { error: true, errorMessage: 'this is an error' },
-    };
+    mockedUseEditClusterName.mockReturnValue({
+      isError: true,
+      error: 'I am an error',
+    });
     const { rerender, container } = render(<EditDisplayNameDialog {...defaultProps} />);
-    rerender(<EditDisplayNameDialog {...newProps} />);
+    rerender(<EditDisplayNameDialog {...defaultProps} />);
 
     expect(screen.getByTestId('alert-error')).toBeInTheDocument();
 
@@ -45,29 +53,44 @@ describe('<EditDisplayNameDialog />', () => {
   });
 
   it('is accessible when pending', async () => {
-    const newProps = {
-      ...defaultProps,
-      editClusterResponse: { pending: true, error: false, fulfilled: false },
-    };
-    const { container } = render(<EditDisplayNameDialog {...newProps} />);
+    mockedUseEditClusterName.mockReturnValue({
+      isError: false,
+      isPending: true,
+    });
+    const { container } = render(<EditDisplayNameDialog {...defaultProps} />);
 
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
-    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByLabelText('Loading...')).toBeInTheDocument();
     await checkAccessibility(container);
   });
 
   it('when cancelled, calls closeModal but not onClose ', async () => {
+    mockedUseEditClusterName.mockReturnValue({
+      reset: resetResponse,
+      isPending: false,
+      isError: false,
+    });
+
     const { user } = render(<EditDisplayNameDialog {...defaultProps} />);
-    expect(closeModal).not.toBeCalled();
-    expect(resetResponse).not.toBeCalled();
+    expect(closeModal).not.toHaveBeenCalled();
+    expect(resetResponse).not.toHaveBeenCalled();
+    expect(mockedDispatch).not.toHaveBeenCalled();
 
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
-    expect(closeModal).toBeCalled();
-    expect(resetResponse).toBeCalled();
-    expect(onClose).not.toBeCalled();
+
+    expect(mockedDispatch).toHaveBeenCalled();
+    expect(mockedDispatch.mock.calls[0][0].type).toEqual('CLOSE_MODAL');
+    expect(resetResponse).toHaveBeenCalled(); // part of useEditClusterName hook
+    expect(onClose).not.toHaveBeenCalled(); // prop
   });
 
   it('calls submit when Edit button is clicked', async () => {
+    mockedUseEditClusterName.mockReturnValue({
+      isError: false,
+      isPending: false,
+      mutate,
+    });
+
     const { user } = render(<EditDisplayNameDialog {...defaultProps} />);
 
     expect(screen.getByRole('button', { name: 'Edit' })).toHaveAttribute('aria-disabled', 'true');
@@ -76,28 +99,46 @@ describe('<EditDisplayNameDialog />', () => {
     await user.type(screen.getByRole('textbox'), 'my-new-name');
 
     expect(screen.getByRole('button', { name: 'Edit' })).toHaveAttribute('aria-disabled', 'false');
-    expect(submit).not.toBeCalled();
+    expect(mutate).not.toHaveBeenCalled();
 
     await user.click(screen.getByRole('button', { name: 'Edit' }));
-    expect(submit).toBeCalledWith('my-subscription-id', 'my-new-name');
+    expect(mutate).toHaveBeenCalledWith({ displayName: 'my-new-name', subscriptionID: '' });
+  });
+
+  it('does not allow blank whitespace to be entered when field is empty', async () => {
+    const { user } = render(<EditDisplayNameDialog {...defaultProps} />);
+
+    expect(screen.getByRole('button', { name: 'Edit' })).toHaveAttribute('aria-disabled', 'true');
+
+    await user.clear(screen.getByRole('textbox'));
+    await user.type(screen.getByRole('textbox'), '    ');
+
+    expect(screen.getByRole('button', { name: 'Edit' })).toHaveAttribute('aria-disabled', 'false');
+    expect(mutate).not.toHaveBeenCalled();
+
+    await user.type(screen.getByRole('textbox'), '   my-new-name');
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    expect(mutate).toHaveBeenCalledWith({ displayName: 'my-new-name', subscriptionID: '' });
   });
 
   it('once fulfilled calls closeModal, resetResponse, and onClose', () => {
-    const { rerender } = render(<EditDisplayNameDialog {...defaultProps} />);
+    expect(closeModal).not.toHaveBeenCalled();
+    expect(resetResponse).not.toHaveBeenCalled();
+    expect(mockedDispatch).not.toHaveBeenCalled();
 
-    expect(closeModal).not.toBeCalled();
-    expect(resetResponse).not.toBeCalled();
-    expect(onClose).not.toBeCalled();
+    mockedUseEditClusterName.mockReturnValue({
+      reset: resetResponse,
+      isError: false,
+      isPending: false,
+      isSuccess: true,
+      mutate,
+    });
 
-    const newProps = {
-      ...defaultProps,
-      editClusterResponse: { fulfilled: true, errorMessage: '' },
-    };
+    render(<EditDisplayNameDialog {...defaultProps} />);
 
-    rerender(<EditDisplayNameDialog {...newProps} />);
-
-    expect(closeModal).toBeCalled();
-    expect(resetResponse).toBeCalled();
-    expect(onClose).toBeCalled();
+    expect(mockedDispatch).toHaveBeenCalled();
+    expect(mockedDispatch.mock.calls[0][0].type).toEqual('CLOSE_MODAL');
+    expect(resetResponse).toHaveBeenCalled(); // part of useEditClusterName hook
+    expect(onClose).toHaveBeenCalled(); // prop
   });
 });

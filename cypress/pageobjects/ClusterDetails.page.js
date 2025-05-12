@@ -11,6 +11,8 @@ class ClusterDetails extends Page {
 
   editConsoleURLDialogInput = () => cy.get('input[id="edit-console-url-input"]');
 
+  clusterOwnerLink = () => cy.getByTestId('ownerTranswerOverviewLink');
+
   editConsoleURLDialogConfirm = () =>
     cy
       .get('div[aria-label="Add console URL"]')
@@ -25,17 +27,25 @@ class ClusterDetails extends Page {
 
   editDisplayNameDropdownItem = () => cy.contains('button', 'Edit display name');
 
+  editMachinePoolDropdownItem = () => cy.contains('button', 'Edit Machine pool');
+
   editDisplayNameInput = () => cy.get('input[id="edit-display-name-input"]');
 
   overviewTab = () => cy.get('button[aria-controls="overviewTabContent"]');
 
-  accessControlTab = () => cy.get('button[aria-controls="overviewTabContent"]');
+  accessControlTab = () => cy.get('button[aria-controls="accessControlTabContent"]');
+
+  addonsTab = () => cy.get('button[aria-controls="addOnsTabContent"]');
 
   machinePoolsTab = () => cy.get('button[aria-controls="machinePoolsTabContent"]');
 
   networkingTab = () => cy.get('button[aria-controls="networkingTabContent"]');
 
   settingsTab = () => cy.get('button[aria-controls="upgradeSettingsTabContent"]');
+
+  accessRequestTab = () => cy.get('button[aria-controls="accessRequestContent"]');
+
+  clusterHistoryTab = () => cy.get('button[id="pf-tab-4-Cluster history"]');
 
   editDisplaynameConfirm = () =>
     cy.get('div[aria-label="Edit display name"]').find('footer').find('button').first();
@@ -81,6 +91,10 @@ class ClusterDetails extends Page {
   clusterAutoScalingStatus = () => cy.getByTestId('clusterAutoscalingStatus').should('exist');
 
   clusterIMDSValue = () => cy.getByTestId('instanceMetadataService').should('exist');
+
+  clusterAuthenticationTypeLabelValue = () => cy.getByTestId('authenticationType').should('exist');
+
+  clusterWifConfigurationValue = () => cy.getByTestId('wifConfiguration').should('exist');
 
   clusterFipsCryptographyStatus = () => cy.getByTestId('fipsCryptographyStatus').should('exist');
 
@@ -145,6 +159,16 @@ class ClusterDetails extends Page {
 
   saveSubscriptionButton = () => cy.getByTestId('btn-primary');
 
+  actionButton = () => cy.getByTestId('cluster-actions-dropdown');
+
+  editDisplayNameButton = () => cy.get('button').contains('Edit display name');
+
+  editDisplayNameInput = () => cy.get('#edit-display-name-input');
+
+  editButton = () => cy.get('button').contains('Edit');
+
+  clusterOwnerLink = () => cy.getByTestId('ownerTranswerOverviewLink');
+
   clusterInfrastructureBillingModelValue = () =>
     cy.getByTestId('infrastructure-billing-model').find('div');
 
@@ -163,7 +187,7 @@ class ClusterDetails extends Page {
   clusterInstallationExpectedText = () => cy.getByTestId('expected-cluster-installation-msg');
 
   clusterBillingMarketplaceAccountLabelValue = () =>
-    cy.getByTestId('billingMarketplaceAccount').should('exist');
+    cy.getByTestId('billingMarketplaceAccountLink').should('exist');
 
   clusterControlPlaneTypeLabelValue = () => cy.getByTestId('controlPlaneType').should('exist');
 
@@ -190,6 +214,45 @@ class ClusterDetails extends Page {
       .find('tr')
       .eq(index)
       .find('td[data-label="Instance type"]');
+  }
+
+  showBillingMarketplaceAccountLink() {
+    cy.getByTestId('billingMarketplaceAccountLink').click({ force: true });
+  }
+
+  refreshBillingAWSAccountButton() {
+    cy.get('button[data-testid="refresh-aws-accounts"]');
+  }
+
+  clickAWSBillingAccountsDropDown() {
+    cy.get('button[aria-describedby="aws-infra-accounts"]').click();
+  }
+
+  updateAWSBillingAccount() {
+    cy.getByTestId(`Update`).click({ force: true });
+  }
+
+  verifyBillingAccountDocLink(text) {
+    cy.get('a')
+      .contains(text)
+      .should('have.attr', 'href', 'https://console.aws.amazon.com/rosa/home');
+  }
+
+  filterAWSBillingAccount(awsBillingAccount) {
+    cy.get('input[placeholder*="Filter by account ID"]', { timeout: 50000 })
+      .clear()
+      .type(awsBillingAccount);
+  }
+
+  selectAWSBillingAccount(awsBillingAccount) {
+    cy.get('div[label="AWS billing account"]')
+      .find('button')
+      .contains(awsBillingAccount)
+      .click({ force: true });
+  }
+
+  showEditAWSBillingAccountModal() {
+    cy.get('div[id="edit-billing-aws-account-modal"]').click();
   }
 
   getMachinePoolAvailabilityZones(index) {
@@ -231,6 +294,10 @@ class ClusterDetails extends Page {
   waitForClusterDetailsLoad = () => {
     cy.get('div.ins-c-spinner.cluster-details-spinner', { timeout: 30000 }).should('not.exist');
   };
+
+  isEditMachinePoolDialogOpened() {
+    cy.get('h1').contains('Edit machine pool').should('be.visible');
+  }
 
   waitForAccountSetupToSuccess() {
     cy.get('li[id="awsAccountSetup"]', { timeout: 80000 }).should('have.class', 'pf-m-success');

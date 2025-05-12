@@ -21,7 +21,6 @@ import { HelpIcon } from '@patternfly/react-icons/dist/esm/icons/help-icon';
 import styles from '@patternfly/react-styles/css/components/Form/form';
 
 import links from '~/common/installLinks.mjs';
-import { billingModels } from '~/common/subscriptionTypes';
 import { Prerequisites } from '~/components/clusters/wizards/common/Prerequisites/Prerequisites';
 import { useFormState } from '~/components/clusters/wizards/hooks';
 import { ServiceAccount } from '~/components/clusters/wizards/osd/ClusterSettings/CloudProvider/GcpByocFields/ServiceAccountAuth/ServiceAccount';
@@ -34,8 +33,9 @@ import { WorkloadIdentityFederationPrerequisites } from '~/components/clusters/w
 import { GCPAuthType } from '~/components/clusters/wizards/osd/ClusterSettings/CloudProvider/types';
 import { FieldId } from '~/components/clusters/wizards/osd/constants';
 import ExternalLink from '~/components/common/ExternalLink';
-import { useFeatureGate } from '~/hooks/useFeatureGate';
-import { OSD_GCP_WIF } from '~/redux/constants/featureConstants';
+import { OSD_GCP_WIF } from '~/queries/featureGates/featureConstants';
+import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
+import { SubscriptionCommonFieldsCluster_billing_model as SubscriptionCommonFieldsClusterBillingModel } from '~/types/accounts_mgmt.v1';
 
 export interface GcpByocFieldsProps extends WorkloadIdentityFederationProps {}
 
@@ -71,7 +71,7 @@ export const GcpByocFields = (props: GcpByocFieldsProps) => {
 
   return (
     <Form isWidthLimited onSubmit={(e) => e.preventDefault()}>
-      {billingModel !== billingModels.MARKETPLACE_GCP && (
+      {billingModel !== SubscriptionCommonFieldsClusterBillingModel.marketplace_gcp && (
         <FormAlert>
           <Alert variant="info" isInline title="Customer cloud subscription">
             Provision your cluster in a Google Cloud Platform account owned by you or your company
@@ -149,7 +149,7 @@ export const GcpByocFields = (props: GcpByocFieldsProps) => {
           )}
 
           <Prerequisites acknowledgementRequired initiallyExpanded>
-            {billingModel === billingModels.MARKETPLACE_GCP && (
+            {billingModel === SubscriptionCommonFieldsClusterBillingModel.marketplace_gcp && (
               <Hint className="pf-v5-u-mb-md pf-v5-u-mt-sm">
                 <HintTitle>
                   <strong>{gcpTitle}</strong>

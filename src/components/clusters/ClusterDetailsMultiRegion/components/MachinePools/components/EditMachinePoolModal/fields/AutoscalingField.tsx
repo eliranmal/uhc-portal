@@ -9,13 +9,12 @@ import { constants } from '~/components/clusters/common/CreateOSDFormConstants';
 import ExternalLink from '~/components/common/ExternalLink';
 import PopoverHint from '~/components/common/PopoverHint';
 import useCanClusterAutoscale from '~/hooks/useCanClusterAutoscale';
-import { Cluster } from '~/types/clusters_mgmt.v1';
 import { ClusterFromSubscription } from '~/types/types';
 
 const fieldId = 'autoscaling';
 
 type AutoscalingFieldProps = {
-  cluster: Cluster;
+  cluster: ClusterFromSubscription;
 };
 
 const AutoscalingField = ({ cluster }: AutoscalingFieldProps) => {

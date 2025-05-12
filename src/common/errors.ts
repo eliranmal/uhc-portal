@@ -20,7 +20,8 @@ const overrideErrorMessage = (
   let message = '';
 
   // override error by its kind
-  const errorKind = payload?.details?.[0]?.kind || payload?.errorDetails?.[0]?.kind;
+  const errorKind =
+    (payload?.details?.[0] as { kind: string })?.kind || payload?.errorDetails?.[0]?.kind;
   switch (errorKind) {
     case 'ExcessResources': {
       let resource = 'cluster';

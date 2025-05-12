@@ -1,36 +1,34 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useField } from 'formik';
 import { useDispatch } from 'react-redux';
 
-import { FormGroup } from '@patternfly/react-core';
-import { SelectOptionObject as SelectOptionObjectDeprecated } from '@patternfly/react-core/deprecated';
-import { Spinner } from '@redhat-cloud-services/frontend-components/Spinner';
+import { FormGroup, Spinner } from '@patternfly/react-core';
 
-import { billingModels } from '~/common/subscriptionTypes';
 import { versionComparator } from '~/common/versionComparator';
 import { FieldId } from '~/components/clusters/wizards/common/constants';
 import { useFormState } from '~/components/clusters/wizards/hooks';
+import { GCPAuthType } from '~/components/clusters/wizards/osd/ClusterSettings/CloudProvider/types';
 import ErrorBox from '~/components/common/ErrorBox';
 import { FormGroupHelperText } from '~/components/common/FormGroupHelperText';
-import FuzzySelect, { FuzzyEntryType } from '~/components/common/FuzzySelect';
+import { FuzzySelect, FuzzySelectProps } from '~/components/common/FuzzySelect/FuzzySelect';
+import { FuzzyEntryType } from '~/components/common/FuzzySelect/types';
 import { useOCPLifeCycleStatusData } from '~/components/releases/hooks';
+import { UNSTABLE_CLUSTER_VERSIONS } from '~/queries/featureGates/featureConstants';
+import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 import { clustersActions } from '~/redux/actions';
 import { useGlobalState } from '~/redux/hooks';
+import { SubscriptionCommonFieldsCluster_billing_model as SubscriptionCommonFieldsClusterBillingModel } from '~/types/accounts_mgmt.v1';
 import { Version } from '~/types/clusters_mgmt.v1';
 
-const sortFn = (a: FuzzyEntryType, b: FuzzyEntryType) => versionComparator(b.label, a.label);
+import { getVersionsData, hasUnstableVersionsCapability } from './versionSelectHelper';
 
+const sortFn = (a: FuzzyEntryType, b: FuzzyEntryType) => versionComparator(b.label, a.label);
 interface VersionSelectFieldProps {
   label: string;
   name: string;
   isDisabled?: boolean;
   onChange: (version: Version) => void;
 }
-
-const SupportStatusType = {
-  Full: 'Full Support',
-  Maintenance: 'Maintenance Support',
-};
 
 export const VersionSelectField = ({
   name,
@@ -39,6 +37,9 @@ export const VersionSelectField = ({
   onChange,
 }: VersionSelectFieldProps) => {
   const dispatch = useDispatch();
+  const organization = useGlobalState((state) => state.userProfile.organization.details);
+  const unstableOCPVersionsEnabled =
+    useFeatureGate(UNSTABLE_CLUSTER_VERSIONS) && hasUnstableVersionsCapability(organization);
   const [input, { touched, error }] = useField(name);
   const { clusterVersions: getInstallableVersionsResponse } = useGlobalState(
     (state) => state.clusters,
@@ -47,6 +48,7 @@ export const VersionSelectField = ({
     values: {
       [FieldId.ClusterVersion]: selectedClusterVersion,
       [FieldId.BillingModel]: billingModel,
+      [FieldId.GcpAuthType]: gcpAuthType,
     },
     setFieldValue,
   } = useFormState();
@@ -59,40 +61,62 @@ export const VersionSelectField = ({
     return acc;
   }, {});
 
-  const isMarketplaceGcp = billingModel === billingModels.MARKETPLACE_GCP;
+  const isMarketplaceGcp =
+    billingModel === SubscriptionCommonFieldsClusterBillingModel.marketplace_gcp;
+  const isWIF = gcpAuthType === GCPAuthType.WorkloadIdentityFederation;
 
-  const getInstallableVersions = () =>
-    dispatch(clustersActions.getInstallableVersions(false, isMarketplaceGcp));
+  const getInstallableVersions = useCallback(
+    () =>
+      dispatch(
+        clustersActions.getInstallableVersions({
+          isMarketplaceGcp,
+          isWIF,
+          includeUnstableVersions: unstableOCPVersionsEnabled,
+        }),
+      ),
+
+    [dispatch, isMarketplaceGcp, isWIF, unstableOCPVersionsEnabled],
+  );
 
   useEffect(() => {
     if (getInstallableVersionsResponse.fulfilled) {
-      setVersions(getInstallableVersionsResponse.versions);
+      if (
+        getInstallableVersionsResponse.meta?.isMarketplaceGcp !== isMarketplaceGcp ||
+        getInstallableVersionsResponse.meta?.isWIF !== isWIF
+      ) {
+        // parameters changed, reset version selection and re-fetch versions
+        setFieldValue(name, null);
+        getInstallableVersions();
+      } else {
+        setVersions(getInstallableVersionsResponse.versions);
+      }
     } else if (getInstallableVersionsResponse.error) {
       // error, close dropdown
       setIsOpen(false);
     } else if (!getInstallableVersionsResponse.pending) {
       // First time.
+      // Resetting version selection as it could be present even when no versions are available
+      // inside the store
+      setFieldValue(name, null);
       getInstallableVersions();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getInstallableVersionsResponse]);
+  }, [
+    getInstallableVersions,
+    getInstallableVersionsResponse,
+    isMarketplaceGcp,
+    isWIF,
+    name,
+    setFieldValue,
+  ]);
 
   useEffect(() => {
     if (versions.length && !selectedClusterVersion?.raw_id) {
       const versionIndex = versions.findIndex((version) => version.default === true);
       setFieldValue(name, versions[versionIndex !== -1 ? versionIndex : 0]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [versions, selectedClusterVersion?.raw_id]);
+  }, [versions, selectedClusterVersion?.raw_id, name, setFieldValue]);
 
-  const onToggle = (
-    _event:
-      | Event
-      | React.MouseEvent<Element, MouseEvent>
-      | React.ChangeEvent<Element>
-      | React.KeyboardEvent<Element>,
-    isExpanded: boolean,
-  ) => {
+  const onToggle: FuzzySelectProps['onOpenChange'] = (isExpanded) => {
     setIsOpen(isExpanded);
     // In case of backend error, don't want infinite loop reloading,
     // but allow manual reload by opening the dropdown.
@@ -101,50 +125,18 @@ export const VersionSelectField = ({
     }
   };
 
-  const onSelect = (
-    _event: React.ChangeEvent | React.MouseEvent<Element, MouseEvent>,
-    newVersionRawId: string | SelectOptionObjectDeprecated,
-  ) => {
+  const onSelect: FuzzySelectProps['onSelect'] = (_event, newVersionId) => {
     setIsOpen(false);
-    const selectedVersion = versions.find((version) => version.raw_id === newVersionRawId);
+    const selectedVersion = versions.find((version) => version.id === newVersionId);
     setFieldValue(name, selectedVersion);
     if (selectedVersion) {
       onChange(selectedVersion);
     }
   };
-
-  const versionsData = React.useMemo(() => {
-    const fullSupport: FuzzyEntryType[] = [];
-    const maintenanceSupport: FuzzyEntryType[] = [];
-
-    versions.forEach((version: Version) => {
-      const { raw_id: versionRawId, id: versionId } = version;
-      if (versionRawId && versionId) {
-        // HACK: This relies on parseFloat of '4.11.3' to return 4.11 ignoring trailing '.3'.
-        // BUG(OCMUI-1736): We rely on converting float back to exactly '4.11'
-        //   for indexing `supportVersionMap`.  Float round-tripping is fragile.
-        //   Will break when parseFloat('4.20.0').toString() returns '4.2' not '4.20'!
-        const majorMinorVersion = parseFloat(versionRawId);
-
-        const hasFullSupport = supportVersionMap?.[majorMinorVersion] === SupportStatusType.Full;
-        const versionEntry = {
-          entryId: versionRawId,
-          label: versionRawId,
-          groupKey: hasFullSupport ? 'Full support' : 'Maintenance support',
-        };
-
-        if (hasFullSupport) {
-          fullSupport.push(versionEntry);
-        } else {
-          maintenanceSupport.push(versionEntry);
-        }
-      }
-    });
-    return {
-      'Full support': fullSupport,
-      'Maintenance support': maintenanceSupport,
-    };
-  }, [supportVersionMap, versions]);
+  const versionsData = React.useMemo(
+    () => getVersionsData(versions, unstableOCPVersionsEnabled, supportVersionMap),
+    [supportVersionMap, versions, unstableOCPVersionsEnabled],
+  );
 
   return (
     <FormGroup {...input} label={label} fieldId={name} isRequired>
@@ -158,7 +150,7 @@ export const VersionSelectField = ({
       {getInstallableVersionsResponse.pending && (
         <>
           <div className="spinner-fit-container">
-            <Spinner />
+            <Spinner size="lg" aria-label="Loading..." />
           </div>
           <div className="spinner-loading-text">Loading...</div>
         </>
@@ -166,12 +158,11 @@ export const VersionSelectField = ({
 
       {getInstallableVersionsResponse.fulfilled && (
         <FuzzySelect
-          label={label}
           aria-label={label}
           isOpen={isOpen}
-          onToggle={onToggle}
+          onOpenChange={onToggle}
           onSelect={onSelect}
-          selectedEntryId={selectedClusterVersion?.raw_id}
+          selectedEntryId={selectedClusterVersion?.id}
           selectionData={versionsData}
           isDisabled={isDisabled}
           sortFn={sortFn}
@@ -183,6 +174,7 @@ export const VersionSelectField = ({
           truncation={100}
           inlineFilterPlaceholderText="Filter by version number"
           toggleId="version-selector"
+          isScrollable
         />
       )}
 

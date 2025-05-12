@@ -23,12 +23,9 @@ const GitopsDrawerPanelBody = (
         </Text>
         <Text component={TextVariants.p}>
           Red Hat OpenShift GitOps uses the open source project{' '}
-          <Text
-            component={TextVariants.a}
-            href="https://www.redhat.com/en/blog/argocd-and-gitops-whats-next"
-          >
-            Argo CD
-          </Text>{' '}
+          <ExternalLink href="https://www.redhat.com/en/blog/argocd-and-gitops-whats-next" noIcon>
+            Argo CD{' '}
+          </ExternalLink>
           as the declarative GitOps engine.
         </Text>
       </TextContent>
@@ -69,4 +66,4 @@ const GitopsDrawerPanelBody = (
   </Stack>
 );
 
-export default GitopsDrawerPanelBody;
+export { GitopsDrawerPanelBody };

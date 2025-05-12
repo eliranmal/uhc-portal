@@ -26,7 +26,7 @@ const GovCloudPage = () => {
   if (error) {
     body = <GovCloudPrereqErrorPage message={error} />;
   } else if (loading) {
-    body = <Spinner />;
+    body = <Spinner aria-label="Loading..." />;
   } else if (!tcSigned) {
     body = <GovCloudTCPage redirectURL={redirectURL} />;
   } else if (showConfirm) {

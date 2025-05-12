@@ -3,13 +3,16 @@ import React from 'react';
 import { Grid, GridItem, Label, LabelGroup } from '@patternfly/react-core';
 
 import { arrayToString, stringToArrayTrimmed, strToKeyValueObject } from '~/common/helpers';
-import { billingModels } from '~/common/subscriptionTypes';
+import { STANDARD_TRIAL_BILLING_MODEL_TYPE } from '~/common/subscriptionTypes';
 import { humanizeValueWithUnitGiB } from '~/common/units';
-import { routeSelectorsAsString } from '~/components/clusters/ClusterDetails/components/Networking/NetworkingSelector';
+import { routeSelectorsAsString } from '~/components/clusters/ClusterDetailsMultiRegion/components/Networking/NetworkingSelector';
 import parseUpdateSchedule from '~/components/clusters/common/Upgrades/parseUpdateSchedule';
 import { IMDSType } from '~/components/clusters/wizards/common';
+import { getVersionNameWithChannel } from '~/components/clusters/wizards/common/ClusterSettings/Details/versionSelectHelper';
+import { ClusterPrivacyType } from '~/components/clusters/wizards/osd//Networking/constants';
 import { GCPAuthType } from '~/components/clusters/wizards/osd/ClusterSettings/CloudProvider/types';
 import { FieldId } from '~/components/clusters/wizards/osd/constants';
+import { SubscriptionCommonFieldsCluster_billing_model as SubscriptionCommonFieldsClusterBillingModel } from '~/types/accounts_mgmt.v1';
 
 import AwsVpcTable from './AwsVpcTable';
 import SecurityGroupsTable from './SecurityGroupsTable';
@@ -37,18 +40,19 @@ const reviewValues = {
   billing_model: {
     title: 'Subscription type',
     values: {
-      [billingModels.STANDARD]: 'Annual: Fixed capacity subscription from Red Hat',
-      [billingModels.MARKETPLACE]: 'On-Demand: Flexible usage billed through Red Hat Marketplace',
-      [billingModels.MARKETPLACE_GCP]:
+      [SubscriptionCommonFieldsClusterBillingModel.standard]:
+        'Annual: Fixed capacity subscription from Red Hat',
+      [SubscriptionCommonFieldsClusterBillingModel.marketplace]:
+        'On-Demand: Flexible usage billed through Red Hat Marketplace',
+      [SubscriptionCommonFieldsClusterBillingModel.marketplace_gcp]:
         'On-Demand: Flexible usage billed through Google Cloud Marketplace',
-      'standard-trial': 'Free trial (upgradeable)',
+      [STANDARD_TRIAL_BILLING_MODEL_TYPE]: 'Free trial (upgradeable)',
     },
   },
   byoc: {
     title: 'Infrastructure type',
     isBoolean: true,
     values: {
-      // note: keys here are strings, on purpose, to match redux-form behaviour
       true: 'Customer cloud subscription',
       false: 'Red Hat cloud account',
     },
@@ -66,6 +70,10 @@ const reviewValues = {
     title: 'Authentication type',
     valueTransform: (value) =>
       value === GCPAuthType.ServiceAccounts ? 'Service Account' : 'Workload Identity Federation',
+  },
+  [FieldId.GcpWifConfig]: {
+    title: 'WIF configuration',
+    valueTransform: (value) => value.display_name,
   },
   name: {
     title: 'Cluster name',
@@ -92,7 +100,7 @@ const reviewValues = {
   },
   cluster_version: {
     title: 'Version',
-    valueTransform: (value) => value?.raw_id,
+    valueTransform: (value) => getVersionNameWithChannel(value),
   },
   hypershift: {
     title: 'Control plane',
@@ -373,27 +381,47 @@ const reviewValues = {
   },
   gpc_vpc: {
     title: 'VPC subnet settings',
-    valueTransform: (value, allValues) => (
-      <Grid>
-        <GridItem md={3}>
-          <strong>Existing VPC name</strong>
-        </GridItem>
-        <GridItem md={3}>
-          <strong>Control plane subnet name</strong>
-        </GridItem>
-        <GridItem md={3}>
-          <strong>Compute subnet name</strong>
-        </GridItem>
-        <GridItem md={3} />
-        <GridItem md={3}>{allValues.vpc_name}</GridItem>
-        <GridItem md={3}>{allValues.control_plane_subnet}</GridItem>
-        <GridItem md={3}>{allValues.compute_subnet}</GridItem>
-        <GridItem md={3} />
-      </Grid>
-    ),
+    valueTransform: (value, allValues) => {
+      const isPscCluster =
+        allValues.cluster_privacy === ClusterPrivacyType.Internal &&
+        allValues.install_to_vpc &&
+        allValues.private_service_connect;
+      return (
+        <Grid>
+          <GridItem md={3}>
+            <strong>Existing VPC name</strong>
+          </GridItem>
+          <GridItem md={3}>
+            <strong>Control plane subnet name</strong>
+          </GridItem>
+          <GridItem md={3}>
+            <strong>Compute subnet name</strong>
+          </GridItem>
+          {isPscCluster ? (
+            <GridItem md={3}>
+              <strong>Private Service Connect subnet name</strong>
+            </GridItem>
+          ) : (
+            <GridItem md={3} />
+          )}
+          <GridItem md={3}>{allValues.vpc_name}</GridItem>
+          <GridItem md={3}>{allValues.control_plane_subnet}</GridItem>
+          <GridItem md={3}>{allValues.compute_subnet}</GridItem>
+          {isPscCluster ? <GridItem md={3}>{allValues.psc_subnet}</GridItem> : <GridItem md={3} />}
+        </Grid>
+      );
+    },
   },
   configure_proxy: {
     title: 'Cluster-wide proxy',
+    isBoolean: true,
+    values: {
+      true: 'Enabled',
+      false: 'Disabled',
+    },
+  },
+  private_service_connect: {
+    title: 'Private service connect',
     isBoolean: true,
     values: {
       true: 'Enabled',

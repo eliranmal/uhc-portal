@@ -1,6 +1,7 @@
 import { normalizedProducts } from '~/common/subscriptionTypes';
-import { SubscriptionCommonFields } from '~/types/accounts_mgmt.v1';
-import { Cluster, ClusterState } from '~/types/clusters_mgmt.v1';
+import { SubscriptionCommonFieldsStatus } from '~/types/accounts_mgmt.v1';
+import { Cluster } from '~/types/clusters_mgmt.v1';
+import { ClusterState } from '~/types/clusters_mgmt.v1/enums';
 import { ClusterFromSubscription } from '~/types/types';
 
 import {
@@ -16,10 +17,12 @@ import clusterStates, {
   isCCS,
   isClusterUpgradeCompleted,
   isClusterUpgrading,
+  isGCP,
   isHibernating,
   isHypershiftCluster,
   isOffline,
   isOSD,
+  isOSDGCPWaitingForRolesOnHostProject,
   isROSA,
   isWaitingForOIDCProviderOrOperatorRolesMode,
   isWaitingHypershiftCluster,
@@ -33,10 +36,10 @@ describe('getClusterStateAndDescription', () => {
       subscription: {
         ...defaultSubscription,
         plan: {
-          id: normalizedProducts.OCP_ASSISTED_INSTALL,
+          id: normalizedProducts.OCP_AssistedInstall,
           type: 'OCP',
         },
-        status: SubscriptionCommonFields.status.DISCONNECTED,
+        status: SubscriptionCommonFieldsStatus.Disconnected,
       },
     };
     const result = getClusterStateAndDescription(cluster);
@@ -59,30 +62,30 @@ describe('getClusterStateAndDescription', () => {
   });
 
   it.each([
-    [{ subStatus: SubscriptionCommonFields.status.ACTIVE }, 'Ready'],
-    [{ subStatus: SubscriptionCommonFields.status.STALE }, 'Stale'],
-    [{ subStatus: SubscriptionCommonFields.status.ARCHIVED }, 'Archived'],
-    [{ subStatus: SubscriptionCommonFields.status.DEPROVISIONED }, 'Deleted'],
-    [{ subStatus: SubscriptionCommonFields.status.DISCONNECTED }, 'Disconnected'],
-    [{ subStatus: SubscriptionCommonFields.status.STALE }, 'Stale'],
-    [{ state: clusterStates.WAITING }, 'Waiting'],
-    [{ state: clusterStates.INSTALLING }, 'Installing'],
+    [{ subStatus: SubscriptionCommonFieldsStatus.Active }, 'Ready'],
+    [{ subStatus: SubscriptionCommonFieldsStatus.Stale }, 'Stale'],
+    [{ subStatus: SubscriptionCommonFieldsStatus.Archived }, 'Archived'],
+    [{ subStatus: SubscriptionCommonFieldsStatus.Deprovisioned }, 'Deleted'],
+    [{ subStatus: SubscriptionCommonFieldsStatus.Disconnected }, 'Disconnected'],
+    [{ subStatus: SubscriptionCommonFieldsStatus.Stale }, 'Stale'],
+    [{ state: clusterStates.waiting }, 'Waiting'],
+    [{ state: clusterStates.installing }, 'Installing'],
     [{ state: 'validating' }, 'Installing'],
-    [{ state: clusterStates.VALIDATING }, 'Installing'],
-    [{ state: clusterStates.PENDING }, 'Installing'],
-    [{ state: clusterStates.READY }, 'Ready'],
-    [{ state: clusterStates.UNINSTALLING }, 'Uninstalling'],
-    [{ state: clusterStates.RESUMING }, 'Resuming'],
-    [{ state: clusterStates.HIBERNATING }, 'Hibernating'],
-    [{ state: clusterStates.ERROR }, 'Error'],
-    [{ state: clusterStates.POWERING_DOWN }, 'Powering down'],
+    [{ state: clusterStates.validating }, 'Installing'],
+    [{ state: clusterStates.pending }, 'Installing'],
+    [{ state: clusterStates.ready }, 'Ready'],
+    [{ state: clusterStates.uninstalling }, 'Uninstalling'],
+    [{ state: clusterStates.resuming }, 'Resuming'],
+    [{ state: clusterStates.hibernating }, 'Hibernating'],
+    [{ state: clusterStates.error }, 'Error'],
+    [{ state: clusterStates.powering_down }, 'Powering down'],
     [{}, ''],
     [{ metricsState: 'running' }, 'Updating'],
   ])(
     'should show descriptions derived from %p expects to be %p',
     (
       props: {
-        subStatus?: SubscriptionCommonFields.status;
+        subStatus?: SubscriptionCommonFieldsStatus;
         state?: clusterStates | string;
         metricsState?: string;
       },
@@ -217,9 +220,9 @@ describe('getClusterStateAndDescription', () => {
 
   describe('isWaitingForOIDCProviderOrOperatorRolesMode', () => {
     it.each([
-      [ClusterState.WAITING, 'whatever', true],
-      [ClusterState.WAITING, undefined, false],
-      [ClusterState.HIBERNATING, 'whatever', false],
+      [ClusterState.waiting, 'whatever', true],
+      [ClusterState.waiting, undefined, false],
+      [ClusterState.hibernating, 'whatever', false],
     ])(
       'state: %p. It returns %p',
       (state: ClusterState, awsStsConfigId: string | undefined, expectedResult: boolean) => {
@@ -242,8 +245,8 @@ describe('getClusterStateAndDescription', () => {
 
   describe('isWaitingHypershiftCluster', () => {
     it.each([
-      [ClusterState.WAITING, true],
-      [ClusterState.HIBERNATING, false],
+      [ClusterState.waiting, true],
+      [ClusterState.hibernating, false],
     ])('state: %p. It returns %p', (state: ClusterState, expectedResult: boolean) => {
       const cluster: ClusterFromSubscription = {
         ...defaultClusterFromSubscription,
@@ -265,7 +268,7 @@ describe('getClusterStateAndDescription', () => {
   describe('isOSD', () => {
     it.each([
       [normalizedProducts.OSD, true],
-      [normalizedProducts.OSDTRIAL, true],
+      [normalizedProducts.OSDTrial, true],
       [normalizedProducts.ANY, false],
     ])('productId: %p. It returns %p', (productId: string, expectedResult: boolean) => {
       const cluster: ClusterFromSubscription = {
@@ -330,14 +333,29 @@ describe('getClusterStateAndDescription', () => {
     });
   });
 
+  describe('isGCP', () => {
+    it.each([
+      ['aws', false],
+      ['gcp', true],
+    ])('cloud provider: %p. It returns %p', (cloudProvider: string, expectedResult: boolean) => {
+      const cluster: ClusterFromSubscription = {
+        ...defaultClusterFromSubscription,
+        cloud_provider: {
+          id: cloudProvider,
+        },
+      };
+      expect(isGCP(cluster)).toBe(expectedResult);
+    });
+  });
+
   describe('isHibernating', () => {
     it.each([
-      [ClusterState.HIBERNATING, true],
-      [ClusterState.POWERING_DOWN, true],
-      [ClusterState.RESUMING, true],
+      [ClusterState.hibernating, true],
+      [ClusterState.powering_down, true],
+      [ClusterState.resuming, true],
       ['resuming', true],
-      [ClusterState.READY, false],
-      [ClusterState.READY, false],
+      [ClusterState.ready, false],
+      [ClusterState.ready, false],
       ['ready', false],
       [undefined, false],
     ])(
@@ -354,11 +372,11 @@ describe('getClusterStateAndDescription', () => {
 
   describe('isOffline', () => {
     it.each([
-      [ClusterState.HIBERNATING, true],
-      [ClusterState.POWERING_DOWN, true],
-      [ClusterState.RESUMING, true],
-      [ClusterState.UNINSTALLING, true],
-      [ClusterState.READY, false],
+      [ClusterState.hibernating, true],
+      [ClusterState.powering_down, true],
+      [ClusterState.resuming, true],
+      [ClusterState.uninstalling, true],
+      [ClusterState.ready, false],
     ])('state: %p. It returns %p', (state: ClusterState, expectedResult: boolean) => {
       const cluster: ClusterFromSubscription = {
         ...defaultClusterFromSubscription,
@@ -491,6 +509,87 @@ describe('getClusterStateAndDescription', () => {
 
       // Assert
       expect(inflightChecks).toStrictEqual([]);
+    });
+  });
+
+  describe('isOSDGCPWaitingForRolesOnHostProject', () => {
+    const gcpProjectID = 'test-project';
+    const defaultCluster = {
+      ...defaultClusterFromSubscription,
+      product: {
+        id: normalizedProducts.OSD,
+      },
+      gcp_network: {
+        vpc_project_id: gcpProjectID,
+      },
+      status: {
+        state: ClusterState.waiting,
+        description: `a description with ${gcpProjectID}`,
+      },
+    };
+
+    it.each([
+      [
+        'is true if the cluster is OSD, the cluster status is "waiting" and its description contains the gcp project of the shared VPC',
+        defaultCluster,
+        true,
+      ],
+      [
+        'is false if the cluster status is "waiting" but there is no state description',
+        {
+          ...defaultCluster,
+          status: {
+            ...defaultCluster.status,
+            description: undefined,
+          },
+        },
+        false,
+      ],
+      [
+        "is false if there's no shared VPC configured",
+        {
+          ...defaultCluster,
+          gcp_network: {},
+        },
+        false,
+      ],
+      [
+        'is false if the status is "waiting" and the state description doesn\'t include the GCP project ID',
+        {
+          ...defaultCluster,
+          status: {
+            ...defaultCluster.status,
+            description: 'a description without project id',
+          },
+        },
+        false,
+      ],
+      [
+        'is false if the cluster status is not "waiting"',
+        {
+          ...defaultCluster,
+          status: {
+            ...defaultCluster.status,
+            state: ClusterState.installing,
+          },
+        },
+        false,
+      ],
+      [
+        'is false if the cluster is not OSD',
+        {
+          ...defaultCluster,
+          product: {
+            id: normalizedProducts.ROSA,
+          },
+        },
+        false,
+      ],
+    ])('%s', (_title, cluster, result) => {
+      const showPermissionsWarning = isOSDGCPWaitingForRolesOnHostProject(cluster);
+
+      // Assert
+      expect(showPermissionsWarning).toBe(result);
     });
   });
 });

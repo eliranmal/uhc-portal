@@ -16,7 +16,7 @@ const breadcrumbs = (
     path={[
       { label: 'Cluster List' },
       { label: 'Cluster Type', path: '/create' },
-      { label: 'Oracle Cloud Infrastructure (virtual machines)' },
+      { label: 'Oracle Cloud Infrastructure' },
     ]}
   />
 );
@@ -31,9 +31,9 @@ const nonTestedPlatformsLink = (
 );
 
 const InstallOracleCloud = () => (
-  <AppPage title="Install OpenShift 4 | Red Hat OpenShift Cluster Manager | Oracle Cloud Infrastructure (virtual machines)">
+  <AppPage title="Install OpenShift 4 | Red Hat OpenShift Cluster Manager | Oracle Cloud Infrastructure">
     <InstructionsChooserPageTitle
-      cloudName="Oracle Cloud Infrastructure (virtual machines)"
+      cloudName="Oracle Cloud Infrastructure"
       breadcrumbs={breadcrumbs}
     />
     <PageSection>

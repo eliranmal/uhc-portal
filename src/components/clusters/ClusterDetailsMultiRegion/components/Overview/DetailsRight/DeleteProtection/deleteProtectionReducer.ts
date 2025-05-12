@@ -21,6 +21,8 @@ const initialState: State = {
   },
 };
 
+// KKD - hoping we can remove this reducer
+
 function deleteProtectionReducer(
   // eslint-disable-next-line default-param-last
   state = initialState,

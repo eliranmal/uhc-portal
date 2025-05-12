@@ -12,6 +12,10 @@
 
   table.install-options-table {
     margin-top: 10px;
+
+    .pf-v5-c-table__th, .pf-v5-c-table__td {
+      padding-left: 20px;
+    }
   }
 
   table.managed-subscriptions {

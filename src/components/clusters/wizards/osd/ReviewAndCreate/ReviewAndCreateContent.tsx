@@ -21,11 +21,15 @@ import ReviewSection, {
   ReviewItem,
 } from '~/components/clusters/wizards/common/ReviewCluster/ReviewSection';
 import { useFormState } from '~/components/clusters/wizards/hooks';
+import { GCPAuthType } from '~/components/clusters/wizards/osd/ClusterSettings/CloudProvider/types';
 import { FieldId, StepId } from '~/components/clusters/wizards/osd/constants';
 import config from '~/config';
 import useCanClusterAutoscale from '~/hooks/useCanClusterAutoscale';
-import { useFeatureGate } from '~/hooks/useFeatureGate';
-import { OSD_GCP_WIF } from '~/redux/constants/featureConstants';
+import { OSD_GCP_WIF, PRIVATE_SERVICE_CONNECT } from '~/queries/featureGates/featureConstants';
+import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
+
+import { MESSAGES } from '../../common/messages';
+import { ClusterPrivacyType } from '../Networking/constants';
 
 interface ReviewAndCreateContentProps {
   isPending: boolean;
@@ -48,12 +52,15 @@ export const ReviewAndCreateContent = ({ isPending }: ReviewAndCreateContentProp
       [FieldId.ApplicationIngress]: applicationIngress,
       [FieldId.SecurityGroups]: securityGroups,
       [FieldId.HasDomainPrefix]: hasDomainPrefix,
+      [FieldId.GcpAuthType]: gcpAuthType,
+      [FieldId.GcpWifConfig]: wifConfig,
     },
     values: formValues,
   } = useFormState();
   const canAutoScale = useCanClusterAutoscale(product, billingModel);
   const autoscalingEnabled = canAutoScale && !!formValues[FieldId.AutoscalingEnabled];
   const isWifEnabled = useFeatureGate(OSD_GCP_WIF);
+  const hasPSCFeatureGate = useFeatureGate(PRIVATE_SERVICE_CONNECT);
 
   const isByoc = byoc === 'true';
   const isAWS = cloudProvider === CloudProviderType.Aws;
@@ -61,10 +68,14 @@ export const ReviewAndCreateContent = ({ isPending }: ReviewAndCreateContentProp
 
   const hasSecurityGroups = isByoc && hasSelectedSecurityGroups(securityGroups);
   const hasGcpAuthType = isWifEnabled && isGCP && isByoc;
-
+  const hasWIFConfiguration =
+    hasGcpAuthType && gcpAuthType === GCPAuthType.WorkloadIdentityFederation && wifConfig;
+  const isGCPPrivateClusterInstalltoVPC =
+    clusterPrivacy === ClusterPrivacyType.Internal && installToVpc && isGCP;
   const clusterSettingsFields = [
     FieldId.CloudProvider,
     ...(hasGcpAuthType ? [FieldId.GcpAuthType] : []),
+    ...(hasWIFConfiguration ? [FieldId.GcpWifConfig] : []),
     FieldId.ClusterName,
     ...(hasDomainPrefix ? [FieldId.DomainPrefix] : []),
     FieldId.ClusterVersion,
@@ -76,6 +87,7 @@ export const ReviewAndCreateContent = ({ isPending }: ReviewAndCreateContentProp
     ...(isByoc && isAWS ? [FieldId.DisableScpChecks] : []),
     FieldId.EtcdEncryption,
     FieldId.FipsCryptography,
+    ...(isGCPPrivateClusterInstalltoVPC ? [FieldId.PrivateServiceConnect] : []),
   ];
 
   if (isPending) {
@@ -88,9 +100,7 @@ export const ReviewAndCreateContent = ({ isPending }: ReviewAndCreateContentProp
             </Bullseye>
           </StackItem>
           <StackItem>
-            <Bullseye>
-              Creating your cluster. Do not refresh this page. This request may take a moment...
-            </Bullseye>
+            <Bullseye>{MESSAGES.INITIATE_CREATE_CLUSTER_REQUEST}</Bullseye>
           </StackItem>
         </Stack>
       </Bullseye>
@@ -129,7 +139,7 @@ export const ReviewAndCreateContent = ({ isPending }: ReviewAndCreateContentProp
         {!(nodeLabels.length === 1 && isEmpty(nodeLabels[0].key)) && (
           <ReviewItem name={FieldId.NodeLabels} formValues={formValues} />
         )}
-        {isAWS && isByoc && canSelectImds(clusterVersion.raw_id) && (
+        {isAWS && isByoc && clusterVersion && canSelectImds(clusterVersion.raw_id) && (
           <ReviewItem name={FieldId.IMDS} formValues={formValues} />
         )}
       </ReviewSection>
@@ -142,8 +152,11 @@ export const ReviewAndCreateContent = ({ isPending }: ReviewAndCreateContentProp
       >
         <ReviewItem name={FieldId.ClusterPrivacy} formValues={formValues} />
         {isByoc && <ReviewItem name={FieldId.InstallToVpc} formValues={formValues} />}
-        {isByoc && clusterPrivacy === 'internal' && installToVpc && (
+        {isByoc && clusterPrivacy === ClusterPrivacyType.Internal && installToVpc && isAWS && (
           <ReviewItem name={FieldId.UsePrivateLink} formValues={formValues} />
+        )}
+        {isGCPPrivateClusterInstalltoVPC && hasPSCFeatureGate && (
+          <ReviewItem name={FieldId.PrivateServiceConnect} formValues={formValues} />
         )}
         {isByoc && isGCP && installToSharedVpc && (
           <ReviewItem name={FieldId.SharedHostProjectID} formValues={formValues} />
@@ -163,6 +176,7 @@ export const ReviewAndCreateContent = ({ isPending }: ReviewAndCreateContentProp
             <ReviewItem name={FieldId.AdditionalTrustBundle} formValues={formValues} />
           </>
         )}
+
         <ReviewItem name={FieldId.NetworkMachineCidr} formValues={formValues} />
         <ReviewItem name={FieldId.NetworkServiceCidr} formValues={formValues} />
         <ReviewItem name={FieldId.NetworkPodCidr} formValues={formValues} />

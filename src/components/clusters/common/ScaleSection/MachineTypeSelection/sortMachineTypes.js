@@ -51,6 +51,6 @@ const sortFuncs = {
 };
 
 const sortMachineTypes = (machineTypes, cloudProviderID) =>
-  [...get(machineTypes.types, cloudProviderID, [])].sort(sortFuncs[cloudProviderID]);
+  [...get(machineTypes?.types, cloudProviderID, [])].sort(sortFuncs[cloudProviderID]);
 
 export default sortMachineTypes;

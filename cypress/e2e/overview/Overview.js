@@ -11,10 +11,7 @@ describe('OCM Overview Page tests (OCP-65189)', { tags: ['smoke'] }, () => {
   it('OCM Overview Page - header and central section', () => {
     Overview.header()
       .checkTitle('Get started with OpenShift')
-      .checkLink(
-        'Learn more about OpenShift',
-        'https://www.redhat.com/en/technologies/cloud-computing/openshift',
-      )
+      .checkLink('Learn more', 'https://www.redhat.com/en/technologies/cloud-computing/openshift')
       .opensInRightTab()
       .successfullyOpens();
 
@@ -30,17 +27,11 @@ describe('OCM Overview Page tests (OCP-65189)', { tags: ['smoke'] }, () => {
       .opensExpectedPage('Create an OpenShift Dedicated Cluster');
     card.shouldHaveLabel('Managed service');
     card.cardDetails({
-      [runOn]: 'AWS or Google Cloud',
+      [runOn]: 'Google Cloud',
       [purchaseThrough]: 'Red Hat',
       [billingType]: 'Flexible or fixed',
     });
-    card
-      .checkLink(
-        'Learn more',
-        'https://www.redhat.com/en/technologies/cloud-computing/openshift/dedicated',
-      )
-      .opensInRightTab()
-      .successfullyOpens();
+    card.checkLink('View details', '/openshift/overview/osd').opensInRightTab();
 
     card = Overview.centralSectionCard('offering-card_AWS');
     card.cyObj.contains('Red Hat OpenShift Service on AWS (ROSA)');
@@ -101,10 +92,38 @@ describe('OCM Overview Page tests (OCP-65189)', { tags: ['smoke'] }, () => {
     card.shouldHaveLabel('Managed service');
     card.checkLink('View details', '/openshift/sandbox').opensInRightTab();
 
-    Overview.centralSectionHeaderLinkExists(
+    Overview.centralSectionFooterLinkExists(
       'View all OpenShift cluster types',
       '/openshift/create',
     ).opensExpectedPage('Select an OpenShift cluster type to create');
+  });
+
+  it('OCM Overview Page - Featured products section', () => {
+    Overview.featuredProductsExpected(3);
+
+    var recommendedOperator = Overview.productsOrOperatorCards(
+      'Advanced Cluster Security for Kubernetes',
+      'Protect your containerized Kubernetes workloads in all major clouds and hybrid platforms',
+    );
+    recommendedOperator.click();
+    Overview.drawerContentTitle().should('have.text', 'Advanced Cluster Security for Kubernetes');
+    Overview.drawerCloseButton();
+
+    recommendedOperator = Overview.productsOrOperatorCards(
+      'Red Hat OpenShift AI',
+      'Create and deliver generative and predictive AI models at scale across on-premise and public cloud environments',
+    );
+    recommendedOperator.click();
+    Overview.drawerContentTitle().should('have.text', 'Red Hat OpenShift AI');
+    Overview.drawerCloseButton();
+
+    recommendedOperator = Overview.productsOrOperatorCards(
+      'OpenShift Virtualization',
+      'Streamline your operations and reduce complexity when you run and manage your VMs, containers, and serverless workloads in a single platform',
+    );
+    recommendedOperator.click();
+    Overview.drawerContentTitle().should('have.text', 'OpenShift Virtualization');
+    Overview.drawerCloseButton();
   });
 
   it('OCM Overview Page - Recommended Operators section', () => {
@@ -114,7 +133,7 @@ describe('OCM Overview Page tests (OCP-65189)', { tags: ['smoke'] }, () => {
 
     Overview.recommendedOperatorsExpected(3);
 
-    var recommendedOperator = Overview.recommendedOperator(
+    var recommendedOperator = Overview.productsOrOperatorCards(
       'Red Hat OpenShift GitOps',
       'Integrate git repositories, continuous integration/continuous delivery (CI/CD) tools, and Kubernetes',
     );
@@ -122,7 +141,7 @@ describe('OCM Overview Page tests (OCP-65189)', { tags: ['smoke'] }, () => {
     Overview.drawerContentTitle().should('have.text', 'Red Hat OpenShift GitOps');
     Overview.drawerCloseButton();
 
-    recommendedOperator = Overview.recommendedOperator(
+    recommendedOperator = Overview.productsOrOperatorCards(
       'Red Hat OpenShift Pipelines',
       'Automate your application delivery using a continuous integration and continuous deployment (CI/CD) framework',
     );
@@ -130,7 +149,7 @@ describe('OCM Overview Page tests (OCP-65189)', { tags: ['smoke'] }, () => {
     Overview.drawerContentTitle().should('have.text', 'Red Hat OpenShift Pipelines');
     Overview.drawerCloseButton();
 
-    recommendedOperator = Overview.recommendedOperator(
+    recommendedOperator = Overview.productsOrOperatorCards(
       'Red Hat OpenShift Service Mesh',
       'Connect, manage, and observe microservices-based applications in a uniform way',
     );

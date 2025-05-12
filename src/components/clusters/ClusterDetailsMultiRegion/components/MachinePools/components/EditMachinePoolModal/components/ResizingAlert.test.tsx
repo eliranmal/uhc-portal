@@ -1,6 +1,7 @@
 import * as React from 'react';
 
 import { render, screen } from '~/testUtils';
+import { ClusterFromSubscription } from '~/types/types';
 
 import ResizingAlert from './ResizingAlert';
 import { masterResizeThresholds } from './utils';
@@ -10,7 +11,7 @@ describe('<ResizingAlert />', () => {
     const { container } = render(
       <ResizingAlert
         autoscalingEnabled={false}
-        cluster={{}}
+        cluster={{} as ClusterFromSubscription}
         machinePools={[
           {
             id: 'foo',
@@ -28,7 +29,7 @@ describe('<ResizingAlert />', () => {
     render(
       <ResizingAlert
         autoscalingEnabled={false}
-        cluster={{}}
+        cluster={{} as ClusterFromSubscription}
         machinePools={[
           {
             id: 'foo',
@@ -52,7 +53,7 @@ describe('<ResizingAlert />', () => {
     render(
       <ResizingAlert
         autoscalingEnabled={false}
-        cluster={{}}
+        cluster={{} as ClusterFromSubscription}
         machinePools={[
           {
             id: 'foo',

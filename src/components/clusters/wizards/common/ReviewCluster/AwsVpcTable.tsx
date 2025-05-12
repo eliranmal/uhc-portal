@@ -2,15 +2,15 @@ import React from 'react';
 
 import { Grid, GridItem } from '@patternfly/react-core';
 
-import { CloudVPC } from '~/types/clusters_mgmt.v1';
+import { CloudVpc } from '~/types/clusters_mgmt.v1';
 
-const getSubnetName = (vpc: CloudVPC, subnetId: string) => {
+const getSubnetName = (vpc: CloudVpc, subnetId: string) => {
   const subnetInfo = vpc.aws_subnets?.find((subnet) => subnet.subnet_id === subnetId);
   return subnetInfo?.name || subnetId;
 };
 
 interface AwsVpcTableProps {
-  vpc: CloudVPC;
+  vpc: CloudVpc;
   hasPublicSubnets: boolean;
   machinePoolsSubnets: {
     availabilityZone: string;

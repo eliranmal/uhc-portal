@@ -9,10 +9,21 @@ import clusterStates, {
   getStateDescription,
   isHypershiftCluster,
 } from '~/components/clusters/common/clusterStates';
-import { NodePool } from '~/types/clusters_mgmt.v1';
+import { MachinePool, NodePool, NodePoolAutoscaling } from '~/types/clusters_mgmt.v1';
 import { ClusterFromSubscription } from '~/types/types';
 
-const numberReadyNodePools = (nodePools: NodePool[]) =>
+type NormalizedNodePoolAutoscaling = Omit<NodePoolAutoscaling, 'max_replica' | 'min_replica'> & {
+  max_replicas?: number;
+  min_replicas?: number;
+};
+
+type NormalizedNodePool = Omit<NodePool, 'autoscaling'> & {
+  autoscaling?: NormalizedNodePoolAutoscaling;
+};
+
+// Despite being designed to handle HCP node pools, numberReadyNodePools function cannot accept type NodePool since we normalize the data to match the structure of NodePoolAutoscaling type to MachinePoolAutoscaling type.
+// See normalizeNodePool function in machinePoolsHelper.ts
+export const numberReadyNodePools = (nodePools: NormalizedNodePool[]) =>
   nodePools?.filter((pool) => {
     const current = pool.status?.current_replicas;
 
@@ -20,10 +31,10 @@ const numberReadyNodePools = (nodePools: NodePool[]) =>
       return false;
     }
     if (pool.autoscaling) {
-      if (!pool.autoscaling.min_replica || !pool.autoscaling.max_replica) {
+      if (!pool.autoscaling.min_replicas || !pool.autoscaling.max_replicas) {
         return false;
       }
-      return current >= pool.autoscaling.min_replica && current <= pool.autoscaling.max_replica;
+      return current >= pool.autoscaling.min_replicas && current <= pool.autoscaling.max_replicas;
     }
 
     if (pool.replicas === undefined) {
@@ -35,7 +46,7 @@ const numberReadyNodePools = (nodePools: NodePool[]) =>
 interface ClusterStatusProps {
   cluster: ClusterFromSubscription;
   limitedSupport: boolean;
-  machinePools?: NodePool[];
+  machinePools?: MachinePool[] | NormalizedNodePool[];
 }
 
 export const ClusterStatus = ({ cluster, limitedSupport, machinePools }: ClusterStatusProps) => {
@@ -48,24 +59,24 @@ export const ClusterStatus = ({ cluster, limitedSupport, machinePools }: Cluster
   }, [cluster]);
 
   const machinePoolsState = () => {
-    if (clusterState?.state === clusterStates.UNINSTALLING) {
-      return clusterStates.UNINSTALLING;
+    if (clusterState?.state === clusterStates.uninstalling) {
+      return clusterStates.uninstalling;
     }
 
     if (machinePools && numberReadyNodePools(machinePools) === 0 && machinePools.length === 0) {
       switch (clusterState?.state) {
-        case clusterStates.WAITING:
-          return clusterStates.WAITING;
-        case clusterStates.INSTALLING:
-        case clusterStates.VALIDATING:
-          return clusterStates.PENDING;
+        case clusterStates.waiting:
+          return clusterStates.waiting;
+        case clusterStates.installing:
+        case clusterStates.validating:
+          return clusterStates.pending;
         default:
-          return clusterStates.DEPROVISIONED;
+          return clusterStates.deprovisioned;
       }
     }
     return machinePools && numberReadyNodePools(machinePools) === machinePools.length
-      ? clusterStates.READY
-      : clusterStates.PENDING;
+      ? clusterStates.ready
+      : clusterStates.pending;
   };
 
   const clusterWideStateIcon = (

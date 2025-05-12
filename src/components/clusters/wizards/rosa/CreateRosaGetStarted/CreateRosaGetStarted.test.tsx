@@ -1,13 +1,10 @@
 import React from 'react';
-import { MemoryRouter } from 'react-router-dom';
 
-import { checkAccessibility, mockUseChrome, render, screen, waitFor } from '~/testUtils';
+import { checkAccessibility, mockUseChrome, render, screen } from '~/testUtils';
 
 import CreateRosaGetStarted from './CreateRosaGetStarted';
 
 mockUseChrome();
-
-const completeAWSMessage = /complete aws prerequisites/i;
 
 describe('<CreateRosaGetStarted />', () => {
   afterAll(() => jest.resetAllMocks());
@@ -16,28 +13,33 @@ describe('<CreateRosaGetStarted />', () => {
     await checkAccessibility(container);
   });
 
-  it('navigated to quick start from aws setup', async () => {
-    render(
-      <MemoryRouter initialEntries={[{ search: '?source=aws' }]}>
-        <CreateRosaGetStarted />
-      </MemoryRouter>,
-      { withRouter: false },
-    );
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: completeAWSMessage }).querySelector('svg.success'),
-      ).toBeInTheDocument();
-    });
-  });
-
-  it('navigated to quick start from other site', async () => {
+  it('FedRAMP alert is visible and has correct urls', () => {
     render(<CreateRosaGetStarted />);
 
-    await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: completeAWSMessage }).querySelector('svg.warning'),
-      ).toBeInTheDocument();
-    });
+    expect(
+      screen.getByRole('link', {
+        name: 'Learn more about ROSA in AWS GovCloud (US) with FedRAMP (new window or tab)',
+      }),
+    ).toHaveAttribute(
+      'href',
+      'https://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-rosa.html',
+    );
+    expect(
+      screen.getByRole('link', { name: 'FedRAMP access request form (new window or tab)' }),
+    ).toHaveAttribute('href', 'https://console.redhat.com/openshift/create/rosa/govcloud');
+  });
+
+  it('Create VPC command is present', () => {
+    render(<CreateRosaGetStarted />);
+    expect(
+      screen.getByText(
+        'Create a Virtual Private Network (VPC) and necessary networking components.',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('Terraform card is present', () => {
+    render(<CreateRosaGetStarted />);
+    expect(screen.getByText('Deploy with Terraform')).toBeInTheDocument();
   });
 });

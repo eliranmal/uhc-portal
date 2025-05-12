@@ -7,9 +7,9 @@ import { useDispatch } from 'react-redux';
 import { Button, ExpandableSection, Form, Stack, StackItem, Tooltip } from '@patternfly/react-core';
 
 import { getErrorMessage } from '~/common/errors';
+import getClusterName from '~/common/getClusterName';
 import { isHypershiftCluster } from '~/components/clusters/common/clusterStates';
-import { MAX_NODES_HCP } from '~/components/clusters/common/machinePools/constants';
-import { getNodeCount } from '~/components/clusters/common/machinePools/utils';
+import { getMaxNodesHCP, getNodeCount } from '~/components/clusters/common/machinePools/utils';
 import ErrorBox from '~/components/common/ErrorBox';
 import Modal from '~/components/common/Modal/Modal';
 import { closeModal } from '~/components/common/Modal/ModalActions';
@@ -17,14 +17,16 @@ import modals from '~/components/common/Modal/modals';
 import { useFetchMachineTypes } from '~/queries/ClusterDetailsQueries/MachinePoolTab/MachineTypes/useFetchMachineTypes';
 import { useEditCreateMachineOrNodePools } from '~/queries/ClusterDetailsQueries/MachinePoolTab/useEditCreateMachineOrNodePools';
 import { useFetchMachineOrNodePools } from '~/queries/ClusterDetailsQueries/MachinePoolTab/useFetchMachineOrNodePools';
+import { MAX_NODES_TOTAL_249 } from '~/queries/featureGates/featureConstants';
+import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 import { MachineTypesResponse } from '~/queries/types';
 import { useGlobalState } from '~/redux/hooks';
-import { Cluster, MachinePool } from '~/types/clusters_mgmt.v1';
-import { ErrorState } from '~/types/types';
+import { MachinePool } from '~/types/clusters_mgmt.v1';
+import { ClusterFromSubscription, ErrorState } from '~/types/types';
 
-import { clearGetMachinePoolsResponse } from '../../MachinePoolsActions';
 import { canUseSpotInstances } from '../../machinePoolsHelper';
 
+import AutoRepairField from './fields/AutoRepairField';
 import DiskSizeField from './fields/DiskSizeField';
 import useMachinePoolFormik, { EditMachinePoolValues } from './hooks/useMachinePoolFormik';
 import EditDetailsSection from './sections/EditDetailsSection';
@@ -38,14 +40,14 @@ const modalDescription =
   'A machine pool is a group of machines that are all clones of the same configuration, that can be used on demand by an application running on a pod.';
 
 type EditMachinePoolModalProps = {
-  cluster: Cluster;
+  cluster: ClusterFromSubscription;
   region?: string;
   onClose: () => void;
   onSave?: () => void;
   machinePoolId?: string;
   isEdit?: boolean;
   shouldDisplayClusterName?: boolean;
-  machinePoolsResponse: MachinePool[];
+  machinePoolsResponse?: MachinePool[];
   machineTypesResponse: MachineTypesResponse;
   isHypershift?: boolean;
   machinePoolsLoading: boolean;
@@ -78,15 +80,19 @@ const EditMachinePoolModal = ({
     () => !!isInitEdit || !!machinePoolId,
     [isInitEdit, machinePoolId],
   );
+
+  const clusterName = getClusterName(cluster);
   const [submitError, setSubmitError] = React.useState<AxiosError<any>>();
   const [currentMachinePool, setCurrentMachinePool] = React.useState<MachinePool>();
   const [isEdit, setIsEdit] = React.useState<boolean>(getIsEditValue());
   const { initialValues, validationSchema } = useMachinePoolFormik({
     machinePool: currentMachinePool,
     cluster,
-    machinePools: machinePoolsResponse,
+    machinePools: machinePoolsResponse || [],
     machineTypes: machineTypesResponse,
   });
+
+  const allow249NodesOSDCCSROSA = useFeatureGate(MAX_NODES_TOTAL_249);
 
   const setCurrentMPId = React.useCallback(
     (id: string) => setCurrentMachinePool(machinePoolsResponse?.find((mp) => mp.id === id)),
@@ -118,7 +124,7 @@ const EditMachinePoolModal = ({
       isHypershift,
       currentMachinePool?.id,
       currentMachinePool?.instance_type,
-    ) === MAX_NODES_HCP;
+    ) === getMaxNodesHCP(cluster.version?.raw_id);
 
   const { mutateAsync: editCreateMachineOrNodePoolMutation } = useEditCreateMachineOrNodePools(
     isHypershift,
@@ -151,7 +157,7 @@ const EditMachinePoolModal = ({
         <Modal
           id="edit-mp-modal"
           title={isEdit ? 'Edit machine pool' : 'Add machine pool'}
-          secondaryTitle={shouldDisplayClusterName ? cluster.name : undefined}
+          secondaryTitle={shouldDisplayClusterName ? clusterName : undefined}
           onClose={isSubmitting ? undefined : onClose}
           isPending={
             machinePoolsLoading ||
@@ -247,7 +253,9 @@ const EditMachinePoolModal = ({
                 machinePool={currentMachinePool}
                 machinePools={machinePoolsResponse || []}
                 machineTypes={machineTypesResponse}
+                allow249NodesOSDCCSROSA={allow249NodesOSDCCSROSA}
               />
+              <AutoRepairField cluster={cluster} />
               <DiskSizeField cluster={cluster} isEdit={isEdit} />
               <ExpandableSection toggleText="Edit node labels and taints">
                 <EditLabelsSection />
@@ -280,15 +288,12 @@ export const ConnectedEditMachinePoolModal = ({
 
   const onModalClose = () => {
     dispatch(closeModal());
-    if (clearMachinePools) {
-      clearGetMachinePoolsResponse()(dispatch);
-    }
   };
   const { cluster, shouldDisplayClusterName } = data as any;
   const hypershiftCluster = isHypershiftCluster(cluster);
   const clusterID = cluster?.id;
   const clusterVersionID = cluster?.version?.id;
-  const region = cluster?.subscription?.xcm_id;
+  const region = cluster?.subscription?.rh_region_id;
 
   const {
     data: machineTypes,

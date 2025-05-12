@@ -1,7 +1,7 @@
 import { MachinePool, NodePool } from '~/types/clusters_mgmt.v1';
 import { ClusterFromSubscription } from '~/types/types';
 
-import { defaultMetric } from '../../ClusterDetails/__tests__/clusterDetailsDefaultMetric.fixtures';
+import { defaultMetric } from '../../ClusterDetailsMultiRegion/__tests__/clusterDetailsDefaultMetric.fixtures';
 
 export type TotalNodesDataSelectorExpected = {
   hasMachinePoolWithAutoscaling: boolean;

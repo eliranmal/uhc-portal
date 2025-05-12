@@ -1,15 +1,15 @@
-import { InsightsRuleCategories } from '~/components/clusters/ClusterDetails/components/Insights/InsightsConstants';
+import { InsightsRuleCategories } from '~/components/clusters/ClusterDetailsMultiRegion/components/Insights/InsightsConstants';
 import { ClusterFromSubscription } from '~/types/types';
 
-import { hasCpuAndMemory } from '../../clusters/ClusterDetails/clusterDetailsHelper';
+import { hasCpuAndMemory } from '../../clusters/ClusterDetailsMultiRegion/clusterDetailsHelper';
 import {
   hasResourceUsageMetrics,
   resourceUsageIssuesHelper,
-} from '../../clusters/ClusterDetails/components/Monitoring/monitoringHelper';
+} from '../../clusters/ClusterDetailsMultiRegion/components/Monitoring/monitoringHelper';
 import { getIssuesCount, getSeverityName, groupTagHitsByGroups } from '../overviewHelpers';
 
-jest.mock('../../clusters/ClusterDetails/clusterDetailsHelper');
-jest.mock('../../clusters/ClusterDetails/components/Monitoring/monitoringHelper');
+jest.mock('../../clusters/ClusterDetailsMultiRegion/clusterDetailsHelper');
+jest.mock('../../clusters/ClusterDetailsMultiRegion/components/Monitoring/monitoringHelper');
 
 describe('groupTagHitsByGroups', () => {
   it.each([

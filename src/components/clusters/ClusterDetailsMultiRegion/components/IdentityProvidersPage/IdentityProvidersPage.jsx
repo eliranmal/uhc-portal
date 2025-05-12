@@ -1,10 +1,13 @@
+/* eslint-disable react/no-unstable-nested-components */
 import React from 'react';
+import { Formik } from 'formik';
+import { isEqual } from 'lodash';
 import get from 'lodash/get';
 import PropTypes from 'prop-types';
 import { useDispatch } from 'react-redux';
 import { useParams } from 'react-router-dom';
-import { reset } from 'redux-form';
 
+import PageHeader from '@patternfly/react-component-groups/dist/dynamic/PageHeader';
 import {
   Button,
   Card,
@@ -13,140 +16,153 @@ import {
   Grid,
   GridItem,
   PageSection,
+  Spinner,
   Split,
   SplitItem,
 } from '@patternfly/react-core';
-import { PageHeader, PageHeaderTitle } from '@redhat-cloud-services/frontend-components/PageHeader';
-import { Spinner } from '@redhat-cloud-services/frontend-components/Spinner';
 
 import { Link, Navigate } from '~/common/routing';
 import { AppPage } from '~/components/App/AppPage';
 import { isHypershiftCluster } from '~/components/clusters/common/clusterStates';
+import { usePostIDPForm } from '~/queries/ClusterDetailsQueries/IDPPage/usePostIDPForm';
+import { useFetchClusterDetails } from '~/queries/ClusterDetailsQueries/useFetchClusterDetails';
+import {
+  refetchClusterIdentityProviders,
+  useFetchClusterIdentityProviders,
+} from '~/queries/ClusterDetailsQueries/useFetchClusterIdentityProviders';
+import { ENHANCED_HTPASSWRD } from '~/queries/featureGates/featureConstants';
+import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 
 import getClusterName from '../../../../../common/getClusterName';
 import { isValid } from '../../../../../common/helpers';
-import { fetchClusterDetails } from '../../../../../redux/actions/clustersActions';
 import { setGlobalError } from '../../../../../redux/actions/globalErrorActions';
-import { SubscriptionCommonFields } from '../../../../../types/accounts_mgmt.v1';
+import { SubscriptionCommonFieldsStatus } from '../../../../../types/accounts_mgmt.v1';
 import Breadcrumbs from '../../../../common/Breadcrumbs';
 import Unavailable from '../../../../common/Unavailable';
 
+import HtpasswdDetails from './components/HtpasswdDetails/HtpasswdDetails';
+import { isSingleUserHtpasswd } from './components/HtpasswdDetails/htpasswdUtilities';
+import {
+  IdentityProvidersPageFormInitialValues,
+  IdentityProvidersPageValidationSchema,
+} from './components/IdentityProvidersPageFormikHelpers';
 import IDPForm from './components/IDPForm';
 import {
-  getClusterIdentityProviders,
-  resetCreatedClusterIDPResponse,
-} from './IdentityProvidersActions';
-import { IDPTypeNames, singularFormIDP } from './IdentityProvidersHelper';
+  getCreateIDPRequestData,
+  getInitialValuesForEditing,
+  IDPformValues,
+  IDPObjectNames,
+  IDPTypeNames,
+  singularFormIDP,
+} from './IdentityProvidersHelper';
 
 const PAGE_TITLE = 'Red Hat OpenShift Cluster Manager';
 
 const IdentityProvidersPage = (props) => {
-  const {
-    clusterIDPs,
-    handleSubmit,
-    clusterDetails,
-    submitIDPResponse,
-    selectedMappingMethod,
-    change,
-    clearFields,
-    IDPList,
-    initialValues,
-    idpEdited,
-    editedType,
-    isEditForm,
-    selectedIDP,
-    pristine,
-    invalid,
-    HTPasswdErrors,
-  } = props;
-
+  const { isEditForm } = props;
   const params = useParams();
+  const subscriptionID = params.id;
+
+  const canViewHtpasswd = useFeatureGate(ENHANCED_HTPASSWRD);
+
+  const {
+    cluster,
+    isLoading: isClusterDetailsLoading,
+    isError: isClusterDetailsError,
+    error: clusterDetailsError,
+  } = useFetchClusterDetails(subscriptionID);
+
+  const isManaged = cluster?.managed;
+  const clusterID = cluster?.id;
+  const subscriptionStatus = cluster?.subscription.status;
+  const region = cluster?.subscription?.rh_region_id;
+
+  const {
+    clusterIdentityProviders: clusterIDPs,
+    isLoading: isClusterIDPsLoading,
+    isSuccess: isClusterIDPsSuccess,
+  } = useFetchClusterIdentityProviders(cluster?.id, region);
+
+  const {
+    isPending: isPostIDPFormPending,
+    isError: isPostIDPFormError,
+    error: postIDPFormError,
+    mutate: postIDPFormMutate,
+    isSuccess: isPostIDPFormSuccess,
+  } = usePostIDPForm(clusterID, region);
+
+  const IDPList = clusterIDPs?.items || [];
+
+  const hasIDPUpdateAccess = cluster?.idpActions?.update;
+
   const dispatch = useDispatch();
-  const { cluster } = clusterDetails;
-
-  const prevClusterDetails = React.useRef(clusterDetails);
-
-  React.useEffect(() => {
-    document.title = 'Red Hat OpenShift Cluster Manager';
-
-    const subscriptionID = params.id;
-    if (isValid(subscriptionID) && get(cluster, 'subscription.id', '') !== subscriptionID) {
-      dispatch(fetchClusterDetails(subscriptionID));
-    } else if (get(cluster, 'subscription.id', '') === subscriptionID) {
-      dispatch(getClusterIdentityProviders(cluster.id));
+  let idpEdited = {};
+  let editedType = '';
+  let selectedIDP = '';
+  if (isEditForm) {
+    if (isClusterIDPsSuccess) {
+      idpEdited = clusterIDPs.items.find((idp) => idp.name === params.idpName) || {};
+      editedType = get(IDPObjectNames, idpEdited.type, '');
+      selectedIDP = idpEdited.type;
     }
-
-    return () => {
-      dispatch(resetCreatedClusterIDPResponse());
-      dispatch(reset('CreateIdentityProvider'));
-    };
-    // should run only once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  } else if (!isEditForm && params.idpTypeName) {
+    selectedIDP = get(IDPformValues, params.idpTypeName.toUpperCase(), false);
+  }
 
   React.useEffect(() => {
-    const subscriptionID = params.id;
-
-    if (get(prevClusterDetails.current, 'cluster.subscription.id') === subscriptionID) {
-      const clusterName = getClusterName(clusterDetails.cluster);
+    if (cluster?.subscription.id === subscriptionID) {
+      const clusterName = getClusterName(cluster);
       document.title = `${clusterName} | Red Hat OpenShift Cluster Manager`;
     }
-    if (
-      !prevClusterDetails.current?.cluster?.id &&
-      clusterDetails.fulfilled &&
-      clusterDetails?.cluster?.id
-    ) {
-      /* we only know the Cluster Service `cluster_id` after the subscription request has returned.
-      only then we can fetch Cluster Service specific data */
-      const { cluster } = clusterDetails;
-      const clusterID = get(cluster, 'id');
-      const isManaged = get(clusterDetails, 'cluster.managed', false);
-      const subscriptionStatus = get(cluster, 'subscription.status');
+
+    if (!isClusterDetailsLoading && cluster?.id) {
       if (
         isValid(clusterID) &&
-        subscriptionStatus !== SubscriptionCommonFields.status.DEPROVISIONED &&
+        subscriptionStatus !== SubscriptionCommonFieldsStatus.Deprovisioned &&
         isManaged
       ) {
-        dispatch(getClusterIdentityProviders(clusterID));
+        refetchClusterIdentityProviders();
       }
-      prevClusterDetails.current = clusterDetails;
     }
-  }, [dispatch, params.id, clusterDetails]);
+  }, [cluster, isClusterDetailsLoading, isManaged, subscriptionStatus, subscriptionID, clusterID]);
 
-  if (submitIDPResponse.fulfilled) {
-    return <Navigate replace to={`/details/s/${cluster.subscription.id}#accessControl`} />;
+  if (isPostIDPFormSuccess) {
+    return <Navigate replace to={`/details/s/${cluster?.subscription.id}#accessControl`} />;
   }
 
   const requestedSubscriptionID = params.id;
+  const clusterSubscriptionID = cluster?.subscription.id;
 
   const clusterPending =
-    get(cluster, 'subscription.id') !== requestedSubscriptionID && !clusterDetails.error;
-  const idpsPending = get(clusterIDPs, 'pending', false);
+    clusterSubscriptionID !== requestedSubscriptionID && !isClusterDetailsError;
 
-  if ((clusterPending || idpsPending) && !clusterDetails.error) {
+  if ((clusterPending || isClusterIDPsLoading) && !isClusterDetailsError) {
     return (
       <AppPage title={PAGE_TITLE}>
         <div id="clusterdetails-content">
           <div className="cluster-loading-container">
-            <Spinner centered />
+            <div className="pf-v5-u-text-align-center">
+              <Spinner size="lg" aria-label="Loading..." />
+            </div>
           </div>
         </div>
       </AppPage>
     );
   }
 
+  const htpasswd = IDPList.find(
+    (idp) => idp.name === params.idpName && idp.type === IDPformValues.HTPASSWD,
+  );
+
   const errorState = () => (
     <AppPage title={PAGE_TITLE}>
-      <Unavailable message="Error retrieving IDP page" response={clusterDetails} />
-      {clusterPending && <Spinner />}
+      <Unavailable message="Error retrieving IDP page" response={cluster} />
+      {clusterPending && <Spinner size="lg" aria-label="Loading..." />}
     </AppPage>
   );
 
-  if (
-    clusterDetails.error &&
-    (!cluster || get(cluster, 'subscription.id') !== requestedSubscriptionID)
-  ) {
-    if (clusterDetails.errorCode === 404 || clusterDetails.errorCode === 403) {
+  if (isClusterDetailsError && (!cluster || clusterSubscriptionID !== requestedSubscriptionID)) {
+    if (clusterDetailsError.errorCode === 404 || clusterDetailsError.errorCode === 403) {
       dispatch(
         setGlobalError(
           <>
@@ -154,7 +170,7 @@ const IdentityProvidersPage = (props) => {
             have been deleted or you don&apos;t have permission to see it.
           </>,
           'identityProvidersPage',
-          clusterDetails.errorMessage,
+          clusterDetailsError.errorMessage,
         ),
       );
       return <Navigate replace to="/cluster-list" />;
@@ -162,7 +178,6 @@ const IdentityProvidersPage = (props) => {
     return errorState();
   }
 
-  const isManaged = get(clusterDetails, 'cluster.managed', false);
   if (!isManaged) {
     dispatch(
       setGlobalError(
@@ -178,85 +193,145 @@ const IdentityProvidersPage = (props) => {
 
   if (
     (!isEditForm && !selectedIDP && !params.idpTypeName) ||
-    (isEditForm && clusterIDPs.fulfilled && !editedType)
+    (isEditForm && isClusterIDPsSuccess && !selectedIDP)
   ) {
-    return <Navigate replace to={`/details/s/${cluster.subscription.id}#accessControl`} />;
+    return <Navigate replace to={`/details/s/${cluster?.subscription.id}#accessControl`} />;
   }
+
+  if (!isClusterDetailsLoading && !hasIDPUpdateAccess && htpasswd && canViewHtpasswd) {
+    return <Navigate replace to={`/details/s/${cluster?.subscription.id}#accessControl`} />;
+  }
+
   const idpTypeName = IDPTypeNames[selectedIDP];
   const title = isEditForm
     ? `Edit identity provider: ${idpEdited.name}`
     : `Add identity provider: ${idpTypeName}`;
-  const clusterName = getClusterName(clusterDetails.cluster);
+  const clusterName = getClusterName(cluster);
   const secondaryTitle = isEditForm
     ? title
     : `Add ${singularFormIDP[selectedIDP]} identity provider`;
+
+  const isFormReadyForSubmit = (formik) => {
+    if (Object.keys(formik.errors).length > 0 || formik.isSubmitting) {
+      return true;
+    }
+    return false;
+  };
+
   return (
     <AppPage title={PAGE_TITLE}>
-      <PageHeader>
-        <Breadcrumbs
-          path={[
-            { label: 'Cluster List' },
-            { label: clusterName, path: `/details/s/${cluster.subscription.id}` },
-            {
-              label: 'Access control',
-              path: `/details/s/${cluster.subscription.id}#accessControl`,
-            },
-            { label: title },
-          ]}
-        />
-        <PageHeaderTitle title={title} />
-      </PageHeader>
+      <PageHeader
+        title={title}
+        breadcrumbs={
+          <Breadcrumbs
+            path={[
+              { label: 'Cluster List' },
+              { label: clusterName, path: `/details/s/${cluster.subscription.id}` },
+              {
+                label: 'Access control',
+                path: `/details/s/${cluster.subscription.id}#accessControl`,
+              },
+              { label: title },
+            ]}
+          />
+        }
+      />
       <PageSection>
-        <Card>
-          <CardBody>
-            <Grid>
-              <GridItem md={8}>
-                {clusterIDPs.fulfilled ? (
-                  <IDPForm
-                    selectedIDP={selectedIDP}
-                    idpTypeName={idpTypeName}
-                    formTitle={secondaryTitle}
-                    submitIDPResponse={submitIDPResponse}
-                    selectedMappingMethod={selectedMappingMethod}
-                    clusterUrls={{
-                      console: get(cluster, 'console.url'),
-                      api: get(cluster, 'api.url'),
-                    }}
-                    change={change}
-                    clearFields={clearFields}
-                    IDPList={IDPList}
-                    isEditForm={isEditForm}
-                    idpEdited={idpEdited}
-                    idpName={initialValues.name}
-                    isHypershift={isHypershiftCluster(cluster)}
-                    HTPasswdErrors={HTPasswdErrors}
-                  />
-                ) : (
-                  <Spinner />
-                )}
-              </GridItem>
-            </Grid>
-          </CardBody>
-          <CardFooter>
-            <Split hasGutter>
-              <SplitItem>
-                <Button
-                  variant="primary"
-                  type="submit"
-                  isDisabled={pristine || invalid}
-                  onClick={handleSubmit}
-                >
-                  {isEditForm ? 'Save' : 'Add'}
-                </Button>
-              </SplitItem>
-              <SplitItem>
-                <Link to={`/details/s/${cluster.subscription.id}#accessControl`}>
-                  <Button variant="secondary">Cancel</Button>
-                </Link>
-              </SplitItem>
-            </Split>
-          </CardFooter>
-        </Card>
+        {htpasswd && canViewHtpasswd ? (
+          <HtpasswdDetails
+            idpName={htpasswd.name}
+            idpId={htpasswd.id}
+            clusterId={cluster.id}
+            region={region}
+            idpActions={cluster.idpActions}
+            isSingleUserHtpasswd={isSingleUserHtpasswd(htpasswd.htpasswd)}
+          />
+        ) : (
+          <Formik
+            enableReinitialize
+            initialValues={
+              isEditForm
+                ? getInitialValuesForEditing(idpEdited, editedType)
+                : {
+                    ...IdentityProvidersPageFormInitialValues(selectedIDP),
+                  }
+            }
+            validationSchema={IdentityProvidersPageValidationSchema(selectedIDP)}
+            onSubmit={async (values) => {
+              const submitRequest = getCreateIDPRequestData(values);
+              postIDPFormMutate(submitRequest, {
+                onSuccess: () => refetchClusterIdentityProviders(clusterID),
+              });
+            }}
+          >
+            {(formik) => {
+              const isModified = isEqual(formik.values, formik.initialValues);
+              return (
+                <Card>
+                  <CardBody>
+                    <Grid>
+                      <GridItem md={8}>
+                        {isClusterIDPsSuccess ? (
+                          <IDPForm
+                            selectedIDP={selectedIDP}
+                            idpTypeName={idpTypeName}
+                            formTitle={secondaryTitle}
+                            clusterUrls={{
+                              console: get(cluster, 'console.url'),
+                              api: get(cluster, 'api.url'),
+                            }}
+                            isPostIDPFormError={isPostIDPFormError}
+                            postIDPFormError={postIDPFormError}
+                            isPostIDPFormPending={isPostIDPFormPending}
+                            IDPList={IDPList}
+                            idpEdited={idpEdited}
+                            idpName={idpTypeName}
+                            isHypershift={isHypershiftCluster(cluster)}
+                            HTPasswdErrors={formik.errors?.users}
+                            isClusterIDPsLoading={isClusterIDPsLoading}
+                            isEditForm={isEditForm}
+                          />
+                        ) : (
+                          <Spinner size="lg" aria-label="Loading..." />
+                        )}
+                      </GridItem>
+                    </Grid>
+                  </CardBody>
+                  <CardFooter>
+                    <Split hasGutter>
+                      <SplitItem>
+                        <Button
+                          variant="primary"
+                          type="submit"
+                          isDisabled={
+                            isPostIDPFormPending || isModified || isFormReadyForSubmit(formik)
+                          }
+                          isLoading={isPostIDPFormPending}
+                          onClick={formik.submitForm}
+                        >
+                          {isEditForm ? 'Save' : 'Add'}
+                        </Button>
+                      </SplitItem>
+                      <SplitItem>
+                        <Button
+                          variant="secondary"
+                          component={(props) => (
+                            <Link
+                              {...props}
+                              to={`/details/s/${cluster.subscription.id}#accessControl`}
+                            />
+                          )}
+                        >
+                          Cancel
+                        </Button>
+                      </SplitItem>
+                    </Split>
+                  </CardFooter>
+                </Card>
+              );
+            }}
+          </Formik>
+        )}
       </PageSection>
     </AppPage>
   );
@@ -264,40 +339,9 @@ const IdentityProvidersPage = (props) => {
 
 IdentityProvidersPage.propTypes = {
   isEditForm: PropTypes.bool,
-  clusterIDPs: PropTypes.object.isRequired,
-  clusterDetails: PropTypes.shape({
-    cluster: PropTypes.object,
-    error: PropTypes.bool,
-    errorCode: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-    errorMessage: PropTypes.oneOfType([PropTypes.string, PropTypes.node, PropTypes.element]),
-    fulfilled: PropTypes.bool,
-    pending: PropTypes.bool,
-  }),
-  handleSubmit: PropTypes.func.isRequired,
-  selectedMappingMethod: PropTypes.string,
-  change: PropTypes.func.isRequired,
-  clearFields: PropTypes.func.isRequired,
-  IDPList: PropTypes.array.isRequired,
-  idpEdited: PropTypes.object,
-  editedType: PropTypes.string,
-  initialValues: PropTypes.shape({
-    idpId: PropTypes.string,
-    name: PropTypes.string,
-  }).isRequired,
-  selectedIDP: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
-  pristine: PropTypes.bool.isRequired,
-  invalid: PropTypes.bool.isRequired,
-  HTPasswdErrors: PropTypes.object.isRequired,
-  submitIDPResponse: PropTypes.object,
 };
 
 IdentityProvidersPage.defaultProps = {
-  clusterDetails: {
-    cluster: null,
-    error: false,
-    errorMessage: '',
-    fulfilled: false,
-  },
   isEditForm: false,
 };
 

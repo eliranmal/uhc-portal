@@ -44,7 +44,7 @@ describe('<InstallationLogView />', () => {
     expect(getLogs).toHaveBeenCalledTimes(0);
     // offset=1 because we have one line on mount in this test
     render(<InstallationLogView {...defaultProps} />);
-    expect(getLogs).toHaveBeenCalledWith(clusterDetails.cluster.id, 1, 'install');
+    expect(getLogs).toHaveBeenCalledWith(clusterDetails.cluster.id, 1, 'install', undefined);
   });
 
   it('should fetch logs using a timer', () => {
@@ -54,21 +54,22 @@ describe('<InstallationLogView />', () => {
     expect(getLogs).toHaveBeenCalledTimes(1);
     jest.runOnlyPendingTimers();
     expect(getLogs).toHaveBeenCalledTimes(2); // one call on mount, second on timer
-    expect(getLogs).toHaveBeenLastCalledWith(clusterDetails.cluster.id, 1, 'install');
+    expect(getLogs).toHaveBeenLastCalledWith(clusterDetails.cluster.id, 1, 'install', undefined);
   });
 
   it('should fetch logs with offset using a timer', () => {
     const { rerender } = render(<InstallationLogView {...defaultProps} />);
-    expect(getLogs).toHaveBeenCalledWith(clusterDetails.cluster.id, 1, 'install');
+    expect(getLogs).toHaveBeenCalledWith(clusterDetails.cluster.id, 1, 'install', undefined);
     jest.runOnlyPendingTimers();
     rerender(<InstallationLogView {...defaultProps} lines="hello\nworld" len={2} />);
     jest.runOnlyPendingTimers();
-    expect(getLogs).toHaveBeenLastCalledWith(clusterDetails.cluster.id, 2, 'install');
+    expect(getLogs).toHaveBeenLastCalledWith(clusterDetails.cluster.id, 2, 'install', undefined);
   });
 
   it('should not fetch logs when pending', () => {
     const { rerender } = render(<InstallationLogView {...defaultProps} />);
     expect(getLogs).toHaveBeenCalledTimes(1);
+    jest.clearAllMocks();
     rerender(<InstallationLogView {...defaultProps} pending />);
     jest.runOnlyPendingTimers();
     expect(getLogs).toHaveBeenCalledTimes(1);
@@ -107,7 +108,7 @@ describe('<InstallationLogView />', () => {
     const { container } = render(
       <InstallationLogView
         {...defaultProps}
-        cluster={{ ...clusterDetails.cluster, state: clusterStates.ERROR }}
+        cluster={{ ...clusterDetails.cluster, state: clusterStates.error }}
       />,
     );
     expect(container).toHaveTextContent('');
@@ -135,7 +136,7 @@ describe('<InstallationLogView />', () => {
 
     it('getLogs() offset should be 0', () => {
       render(<InstallationLogView {...emptyProps} />);
-      expect(getLogs).toHaveBeenLastCalledWith(clusterDetails.cluster.id, 0, 'install');
+      expect(getLogs).toHaveBeenLastCalledWith(clusterDetails.cluster.id, 0, 'install', undefined);
     });
   });
 });

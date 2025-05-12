@@ -13,6 +13,7 @@ export const useTCSigned = (): [boolean, string, boolean, string | undefined] =>
       setIsLoading(true);
       try {
         const response = await authorizationsService.selfTermsReview({
+          check_optional_terms: true,
           event_code: 'govCloud',
           site_code: 'cloudServices',
         });

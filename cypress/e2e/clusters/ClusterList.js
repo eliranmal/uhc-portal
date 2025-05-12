@@ -1,9 +1,13 @@
 import ClusterListPage from '../../pageobjects/ClusterList.page';
 import CreateClusterPage from '../../pageobjects/CreateCluster.page';
+
 describe(
   'Check all cluster lists page items presence and its actions (OCP-21339)',
   { tags: ['smoke'] },
   () => {
+    /* WARNING! The "/cluster-list" route is used by catchpoint tests which determine
+    website operation status on 'http:///status.redhat.com'.  If this route is changed, 
+    then the related catchpoint tests must be updated. For more info. see: https://issues.redhat.com/browse/OCMUI-2398 */
     before(() => {
       cy.visit('/cluster-list');
       ClusterListPage.waitForDataReady();
@@ -35,6 +39,7 @@ describe(
           ClusterListPage.clickClusterTypes('ROSA');
           ClusterListPage.clickClusterTypes('ARO');
           ClusterListPage.clickClusterTypes('RHOIC');
+          ClusterListPage.clickClusterTypeFilters();
           ClusterListPage.isCreateClusterBtnVisible();
           ClusterListPage.createClusterButton().click();
           CreateClusterPage.isCreateClusterPageHeaderVisible();
@@ -61,6 +66,13 @@ describe(
       ClusterListPage.isRegisterClusterUrl();
       ClusterListPage.isRegisterClusterScreen();
       cy.go('back');
+    });
+    // WARNING! This test mimics the catchpoint test.  Please see comments above.
+    it('[Catchpoint] Cluster list should contain at least on anchor with "/openshift/details/"', () => {
+      ClusterListPage.checkForDetailsInAnchor();
+    });
+    it('Cluster list page: first anchor should navigate to details page', () => {
+      ClusterListPage.checkIfFirstAnchorNavigatesToCorrectRoute();
     });
   },
 );

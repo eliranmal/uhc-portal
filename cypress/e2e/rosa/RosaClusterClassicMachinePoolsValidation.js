@@ -173,7 +173,7 @@ describe(
       });
 
       it(`Step - Expand and verify the ROSA ${clusterPropertiesFile.Availability} machine pool details created in the previous step`, () => {
-        ClusterMachinePoolDetails.clickMachinePoolExpandableCollapsible(0);
+        ClusterMachinePoolDetails.clickMachinePoolExpandableCollapsible(0, 0);
 
         ClusterMachinePoolDetails.validateTextforCreatedLabels(
           clusterPropertiesFile.NodeLabel[0].Key,

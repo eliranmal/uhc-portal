@@ -32,13 +32,13 @@ describe('useEditCluster hook', () => {
 
     (clusterService.editCluster as jest.Mock).mockImplementation(mockClusterService.editCluster);
 
-    const { result } = renderHook(() => useEditCluster('mockClusterID'));
+    const { result } = renderHook(() => useEditCluster());
 
     await act(async () => {
-      await result.current.mutate({} as Cluster);
+      await result.current.mutate({ clusterID: 'mockClusterID', cluster: {} as Cluster });
     });
 
-    await waitFor(() => result.current.isError === true);
+    await waitFor(() => result.current.isSuccess);
 
     expect(result.current.data).toEqual({ data: 'mock data' });
     expect(result.current.isError).toBe(false);
@@ -47,15 +47,18 @@ describe('useEditCluster hook', () => {
   });
 
   it('Patch useEditCluster error response', async () => {
+    // Mock the network request using axios
+    const formattedError = { error: 'mocked Error message' };
     const mockClusterService = {
       editCluster: jest.fn().mockRejectedValue(new Error('mock error')),
     };
     (clusterService.editCluster as jest.Mock).mockImplementation(mockClusterService.editCluster);
-    (formatErrorData as jest.Mock).mockImplementation(() => 'mocked Error message');
-    const { result } = renderHook(() => useEditCluster('mockClusterID'));
+    (formatErrorData as jest.Mock).mockReturnValue(formattedError);
+
+    const { result } = renderHook(() => useEditCluster());
 
     await act(async () => {
-      await result.current.mutate({} as Cluster);
+      await result.current.mutate({ clusterID: 'mockClusterID', cluster: {} as Cluster });
     });
 
     await waitFor(() => result.current.isError === true);
@@ -64,5 +67,27 @@ describe('useEditCluster hook', () => {
     expect(mockClusterService.editCluster).toHaveBeenCalledWith('mockClusterID', {});
     expect(result.current.error).toBe('mocked Error message');
     expect(formatErrorData).toHaveBeenCalledWith(false, true, new Error('mock error'));
+  });
+
+  it('should set error when clusterID is undefined', async () => {
+    const { result } = renderHook(() => useEditCluster());
+
+    await act(async () => {
+      result.current.mutate({} as any);
+    });
+
+    await waitFor(() => result.current.isError);
+    expect(result.current.isError).toBe(true);
+  });
+
+  it('should set error when clusterID is empty string', async () => {
+    const { result } = renderHook(() => useEditCluster());
+
+    await act(async () => {
+      result.current.mutate({ clusterID: '', cluster: {} as Cluster });
+    });
+
+    await waitFor(() => result.current.isError);
+    expect(result.current.isError).toBe(true);
   });
 });

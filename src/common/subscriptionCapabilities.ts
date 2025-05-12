@@ -1,6 +1,5 @@
-import { SubscriptionCommonFields } from '~/types/accounts_mgmt.v1';
+import { Subscription, SubscriptionCommonFieldsStatus } from '~/types/accounts_mgmt.v1';
 
-import type { Subscription } from '../types/accounts_mgmt.v1/models/Subscription';
 import { ClusterFromSubscription } from '../types/types';
 
 /**
@@ -27,7 +26,7 @@ const hasCapability = (subscription: Subscription | undefined, name: string): bo
 
   if (name === subscriptionCapabilities.SUBSCRIBED_OCP_MARKETPLACE) {
     // subscribed_ocp_marketplace does not apply to disconnected clusters
-    if (subscription?.status === SubscriptionCommonFields.status.DISCONNECTED) {
+    if (subscription?.status === SubscriptionCommonFieldsStatus.Disconnected) {
       return false;
     }
     // sub must have already been created

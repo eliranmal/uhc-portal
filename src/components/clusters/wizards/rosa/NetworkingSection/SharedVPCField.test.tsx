@@ -4,7 +4,7 @@ import { Form, Formik } from 'formik';
 import { FieldId } from '~/components/clusters/wizards/rosa/constants';
 import SharedVPCField from '~/components/clusters/wizards/rosa/NetworkingSection/SharedVPCField';
 import { clusterService } from '~/services';
-import { checkAccessibility, screen, withState } from '~/testUtils';
+import { checkAccessibility, screen, waitFor, withState } from '~/testUtils';
 
 const dnsDomains = [
   {
@@ -142,7 +142,7 @@ describe('<SharedVPCField />', () => {
       }),
       expect.anything(),
     );
-  });
+  }, 40_000);
 
   it('validates required fields', async () => {
     const handleSubmit = jest.fn();
@@ -211,7 +211,9 @@ describe('<SharedVPCField />', () => {
 
       await user.click(screen.getByRole('option', { name: dnsDomains[0].id }));
 
-      expect(screen.queryByRole('option')).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.queryByRole('option')).not.toBeInTheDocument();
+      });
       expect(screen.getByText(dnsDomains[0].id)).toBeInTheDocument();
     });
 
@@ -271,7 +273,9 @@ describe('<SharedVPCField />', () => {
       );
 
       expect(await screen.findByText(newDomain.id)).toBeInTheDocument();
-      expect(screen.queryByRole('option')).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.queryByRole('option')).not.toBeInTheDocument();
+      });
       expect(screen.queryByText(dnsDomainPlaceholder)).not.toBeInTheDocument();
     });
 

@@ -4,7 +4,7 @@ import {
   LoadBalancerFlavor,
   NamespaceOwnershipPolicy,
   WildcardPolicy,
-} from '../../../../../types/clusters_mgmt.v1';
+} from '../../../../../types/clusters_mgmt.v1/enums';
 
 import { createDefaultRouterRequest, sendNetworkConfigRequests } from './NetworkingActions';
 
@@ -144,20 +144,20 @@ describe('createDefaultRouterRequest', () => {
     newData.isDefaultRouterNamespaceOwnershipPolicyStrict = true;
     expect(createDefaultRouterRequest(newData, currentData)).toEqual({
       id: 'router-id',
-      route_namespace_ownership_policy: NamespaceOwnershipPolicy.STRICT,
+      route_namespace_ownership_policy: NamespaceOwnershipPolicy.Strict,
     });
 
     newData.isDefaultRouterNamespaceOwnershipPolicyStrict = false;
     expect(createDefaultRouterRequest(newData, currentData)).toEqual({
       id: 'router-id',
-      route_namespace_ownership_policy: NamespaceOwnershipPolicy.INTER_NAMESPACE_ALLOWED,
+      route_namespace_ownership_policy: NamespaceOwnershipPolicy.InterNamespaceAllowed,
     });
 
     newData.isDefaultRouterNamespaceOwnershipPolicyStrict = false;
     currentData.default.isNamespaceOwnershipPolicyStrict = true;
     expect(createDefaultRouterRequest(newData, currentData)).toEqual({
       id: 'router-id',
-      route_namespace_ownership_policy: NamespaceOwnershipPolicy.INTER_NAMESPACE_ALLOWED,
+      route_namespace_ownership_policy: NamespaceOwnershipPolicy.InterNamespaceAllowed,
     });
   });
 
@@ -189,20 +189,20 @@ describe('createDefaultRouterRequest', () => {
     newData.isDefaultRouterWildcardPolicyAllowed = true;
     expect(createDefaultRouterRequest(newData, currentData)).toEqual({
       id: 'router-id',
-      route_wildcard_policy: WildcardPolicy.WILDCARDS_ALLOWED,
+      route_wildcard_policy: WildcardPolicy.WildcardsAllowed,
     });
 
     newData.isDefaultRouterWildcardPolicyAllowed = false;
     expect(createDefaultRouterRequest(newData, currentData)).toEqual({
       id: 'router-id',
-      route_wildcard_policy: WildcardPolicy.WILDCARDS_DISALLOWED,
+      route_wildcard_policy: WildcardPolicy.WildcardsDisallowed,
     });
 
     newData.isDefaultRouterWildcardPolicyAllowed = false;
     currentData.default.isWildcardPolicyAllowed = true;
     expect(createDefaultRouterRequest(newData, currentData)).toEqual({
       id: 'router-id',
-      route_wildcard_policy: WildcardPolicy.WILDCARDS_DISALLOWED,
+      route_wildcard_policy: WildcardPolicy.WildcardsDisallowed,
     });
   });
 
@@ -234,21 +234,21 @@ describe('createDefaultRouterRequest', () => {
     newData.is_nlb_load_balancer = true;
     expect(createDefaultRouterRequest(newData, currentData)).toEqual({
       id: 'router-id',
-      load_balancer_type: LoadBalancerFlavor.NLB,
+      load_balancer_type: LoadBalancerFlavor.nlb,
     });
 
     newData.is_nlb_load_balancer = false;
-    currentData.default.loadBalancer = LoadBalancerFlavor.NLB;
+    currentData.default.loadBalancer = LoadBalancerFlavor.nlb;
     expect(createDefaultRouterRequest(newData, currentData)).toEqual({
       id: 'router-id',
-      load_balancer_type: LoadBalancerFlavor.CLASSIC,
+      load_balancer_type: LoadBalancerFlavor.classic,
     });
 
     newData.is_nlb_load_balancer = true;
-    currentData.default.loadBalancer = LoadBalancerFlavor.CLASSIC;
+    currentData.default.loadBalancer = LoadBalancerFlavor.classic;
     expect(createDefaultRouterRequest(newData, currentData)).toEqual({
       id: 'router-id',
-      load_balancer_type: LoadBalancerFlavor.NLB,
+      load_balancer_type: LoadBalancerFlavor.nlb,
     });
   });
 
@@ -266,13 +266,13 @@ describe('createDefaultRouterRequest', () => {
     });
 
     newData.is_nlb_load_balancer = true;
-    currentData.default.loadBalancer = LoadBalancerFlavor.NLB;
+    currentData.default.loadBalancer = LoadBalancerFlavor.nlb;
     expect(createDefaultRouterRequest(newData, currentData)).toEqual({
       id: 'router-id',
     });
 
     newData.is_nlb_load_balancer = false;
-    currentData.default.loadBalancer = LoadBalancerFlavor.CLASSIC;
+    currentData.default.loadBalancer = LoadBalancerFlavor.classic;
     expect(createDefaultRouterRequest(newData, currentData)).toEqual({
       id: 'router-id',
     });
@@ -401,7 +401,7 @@ describe('createDefaultRouterRequest', () => {
 
     expect(createDefaultRouterRequest(newData, currentData)).toEqual({
       id: 'router-id',
-      route_wildcard_policy: WildcardPolicy.WILDCARDS_ALLOWED,
+      route_wildcard_policy: WildcardPolicy.WildcardsAllowed,
       cluster_routes_hostname: 'bar',
       cluster_routes_tls_secret_ref: 'zzz',
       route_selectors: {

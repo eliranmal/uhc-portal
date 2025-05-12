@@ -1,24 +1,29 @@
 import React from 'react';
 import { FormikValues, useField, useFormikContext } from 'formik';
 
-import { FormGroup } from '@patternfly/react-core';
 import {
-  Select as SelectDeprecated,
-  SelectOption as SelectOptionDeprecated,
-  SelectOptionObject as SelectOptionObjectDeprecated,
-} from '@patternfly/react-core/deprecated';
+  FormGroup,
+  MenuToggle,
+  MenuToggleElement,
+  Select,
+  SelectList,
+  SelectOption,
+  SelectProps,
+} from '@patternfly/react-core';
 
 import { FormGroupHelperText } from '~/components/common/FormGroupHelperText';
 
+import './BooleanDropdownField.scss';
+
 interface BooleanDropdownFieldProps {
   name: string;
-  label?: string;
+  label: string;
   helperText?: React.ReactNode;
   isDisabled?: boolean;
 }
 
-const isTrue = (sel: SelectOptionObjectDeprecated) => sel.toString() === 'true';
-const isFalse = (sel: SelectOptionObjectDeprecated) => sel.toString() === 'false';
+const isTrue = (sel: string | number | undefined) => sel?.toString() === 'true';
+const isFalse = (sel: string | number | undefined) => sel?.toString() === 'false';
 
 const trueOption = {
   toString: () => 'true',
@@ -45,30 +50,42 @@ export const BooleanDropdownField = ({
   const onToggle = () => {
     setIsOpen(!isOpen);
   };
-
-  const onSelect = (
-    event: React.MouseEvent | React.ChangeEvent,
-    selection: SelectOptionObjectDeprecated,
-  ) => {
+  const onSelect: SelectProps['onSelect'] = (_event, selection) => {
+    setIsOpen(false);
     setFieldValue(name, isTrue(selection));
     setFieldTouched(name);
-    setIsOpen(false);
   };
+
+  const toggle = (toggleRef: React.Ref<MenuToggleElement>) => (
+    <MenuToggle
+      ref={toggleRef}
+      onClick={onToggle}
+      isExpanded={isOpen}
+      isDisabled={isDisabled}
+      isFullWidth
+      className="boolean-dropdown-menu-toggle"
+    >
+      {field.value?.toString() ?? falseOption.toString()}
+    </MenuToggle>
+  );
 
   return (
     <FormGroup role="group" fieldId={name} label={label}>
-      <SelectDeprecated
-        onToggle={onToggle}
-        onSelect={onSelect}
+      <Select
         isOpen={isOpen}
-        isDisabled={isDisabled}
-        selections={field.value ? trueOption : falseOption}
+        toggle={toggle}
+        onSelect={onSelect}
+        onOpenChange={setIsOpen}
+        selected={field.value ? trueOption : falseOption}
       >
-        {options.map((opObj) => (
-          <SelectOptionDeprecated value={opObj} key={opObj.toString()} />
-        ))}
-      </SelectDeprecated>
-
+        <SelectList>
+          {options.map((opObj) => (
+            <SelectOption value={opObj} key={opObj.toString()}>
+              {opObj.toString()}
+            </SelectOption>
+          ))}
+        </SelectList>
+      </Select>
       <FormGroupHelperText touched={touched} error={error}>
         {helperText}
       </FormGroupHelperText>

@@ -44,6 +44,7 @@ function AddOnsParameterList(props) {
         <p className="ocm-addons-tab--configuration-title">
           Configuration
           <Button
+            aria-label="edit configuration"
             ouiaId={`update-addon-${activeCardID}`}
             variant="link"
             isDisabled={!cluster.canEdit}

@@ -11,7 +11,7 @@ const canAllowAdminSelector = (state) => {
   );
   const clusterState = get(state, 'clusters.details.cluster.state');
 
-  if (product === normalizedProducts.RHMI || clusterState !== clusterStates.READY) {
+  if (product === normalizedProducts.RHMI || clusterState !== clusterStates.ready) {
     return false;
   }
 

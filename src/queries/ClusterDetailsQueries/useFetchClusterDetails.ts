@@ -17,7 +17,10 @@ import { useFetchUpgradeGates } from './useFetchUpgradeGates';
  * Function responsible for invalidation of cluster details (refetch)
  */
 export const invalidateClusterDetailsQueries = () => {
-  queryClient.invalidateQueries({ queryKey: [queryConstants.FETCH_CLUSTER_DETAILS_QUERY_KEY] });
+  queryClient.invalidateQueries({
+    predicate: (query) =>
+      query.queryKey.some((key) => key === queryConstants.FETCH_CLUSTER_DETAILS_QUERY_KEY),
+  });
 };
 
 /**
@@ -52,6 +55,7 @@ export const useFetchClusterDetails = (subscriptionID: string) => {
     subscriptionID,
     queryConstants.FETCH_CLUSTER_DETAILS_QUERY_KEY,
     subscription?.subscription.status,
+    subscription?.subscription.cluster_id as string,
   );
 
   const {
@@ -92,6 +96,7 @@ export const useFetchClusterDetails = (subscriptionID: string) => {
     subscription,
     queryConstants.FETCH_CLUSTER_DETAILS_QUERY_KEY,
   );
+
   const {
     isLoading: isInflightChecksLoading,
     data: inflightChecksResponse,
@@ -99,7 +104,7 @@ export const useFetchClusterDetails = (subscriptionID: string) => {
   } = useFetchInflightChecks(
     subscription?.subscription.cluster_id as string,
     subscription,
-    queryConstants.FETCH_CLUSTER_DETAILS_QUERY_KEY,
+    subscription?.subscription.rh_region_id,
   );
 
   const { isLoading: isAIClusterLoading, data: aiClusterResponse } = useFetchAiCluster(
@@ -107,6 +112,7 @@ export const useFetchClusterDetails = (subscriptionID: string) => {
     queryConstants.FETCH_CLUSTER_DETAILS_QUERY_KEY,
     subscription?.subscription,
   );
+
   const isFetching =
     isSubscriptionFetching ||
     isActionsPermissionsFetching ||
@@ -179,6 +185,7 @@ export const useFetchClusterDetails = (subscriptionID: string) => {
       return {
         isLoading: false,
         cluster: cluster.data,
+        isSuccess: true,
         isError: isClusterDetailsError,
         error: clusterDetailsError,
         isFetching,
@@ -186,14 +193,15 @@ export const useFetchClusterDetails = (subscriptionID: string) => {
     }
 
     if (aiClusterResponse) {
-      aiClusterResponse.canEdit = canEdit;
-      aiClusterResponse.canEditOCMRoles = canEditOCMRoles;
-      aiClusterResponse.canViewOCMRoles = canViewOCMRoles;
-      aiClusterResponse.canDelete = false; // OCP clusters can't be deleted
-      aiClusterResponse.subscription = subscription?.subscription;
+      const aiCluster = { ...aiClusterResponse };
+      aiCluster.canEdit = canEdit;
+      aiCluster.canEditOCMRoles = canEditOCMRoles;
+      aiCluster.canViewOCMRoles = canViewOCMRoles;
+      aiCluster.canDelete = false; // OCP clusters can't be deleted
+      aiCluster.subscription = subscription?.subscription;
       return {
         isLoading: false,
-        cluster: aiClusterResponse,
+        cluster: aiCluster,
         isFetching,
       };
     }

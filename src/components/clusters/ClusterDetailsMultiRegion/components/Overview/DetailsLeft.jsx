@@ -7,10 +7,14 @@ import {
   DescriptionListDescription,
   DescriptionListGroup,
   DescriptionListTerm,
+  Skeleton,
 } from '@patternfly/react-core';
 
-import { isHypershiftCluster } from '~/components/clusters/common/clusterStates';
+import { Owner } from '~/components/clusters/ClusterDetailsMultiRegion/components/Overview/Owner/Owner';
+import { isCCS, isGCP, isHypershiftCluster } from '~/components/clusters/common/clusterStates';
 import getBillingModelLabel from '~/components/clusters/common/getBillingModelLabel';
+import { OSD_GCP_WIF } from '~/queries/featureGates/featureConstants';
+import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 
 import { normalizedProducts } from '../../../../../common/subscriptionTypes';
 import PopoverHint from '../../../../common/PopoverHint';
@@ -31,13 +35,32 @@ const getIdFields = (cluster, showAssistedId) => {
   }
   return { id, idLabel: label };
 };
-function DetailsLeft({ cluster, cloudProviders, showAssistedId }) {
+function DetailsLeft({ cluster, cloudProviders, showAssistedId, wifConfigData }) {
   const cloudProviderId = cluster.cloud_provider ? cluster.cloud_provider.id : null;
   const region = cluster?.region?.id;
   const planType = get(cluster, 'subscription.plan.type');
   const isROSA = planType === normalizedProducts.ROSA;
   const isHypershift = isHypershiftCluster(cluster);
   const isRHOIC = cluster?.subscription?.plan?.type === normalizedProducts.RHOIC;
+
+  const isWifEnabled = useFeatureGate(OSD_GCP_WIF);
+  // Only OSD GCP CCS clusters have the authentication type property as they are the only ones that have
+  // more than an option for authentication (service account and WIF)
+  const hasAuthenticationType = isWifEnabled && isGCP(cluster) && isCCS(cluster);
+  // We only have information about the wif configuration, we imply that if a wif config is not used
+  // the user chose the other GCP authentication type, the service account
+  const isWifCluster = hasAuthenticationType && cluster?.gcp?.authentication?.kind === 'WifConfig';
+  const authenticationType = isWifCluster ? 'Workload Identity Federation' : 'Service Account';
+  const wifConfigName = useMemo(() => {
+    switch (true) {
+      case wifConfigData?.isLoading:
+        return <Skeleton fontSize="md" width="10em" screenreaderText="Loading WIF configuration" />;
+      case wifConfigData?.isSuccess:
+        return wifConfigData?.displayName;
+      default:
+        return 'N/A';
+    }
+  }, [wifConfigData]);
 
   let cloudProvider;
   if (cloudProviderId && cloudProviders && cloudProviders[cloudProviderId]) {
@@ -103,6 +126,22 @@ function DetailsLeft({ cluster, cloudProviders, showAssistedId }) {
           </DescriptionListDescription>
         </DescriptionListGroup>
       )}
+      {hasAuthenticationType && (
+        <DescriptionListGroup>
+          <DescriptionListTerm>Authentication type</DescriptionListTerm>
+          <DescriptionListDescription>
+            <span data-testid="authenticationType">{authenticationType}</span>
+          </DescriptionListDescription>
+        </DescriptionListGroup>
+      )}
+      {isWifCluster && (
+        <DescriptionListGroup>
+          <DescriptionListTerm>WIF configuration</DescriptionListTerm>
+          <DescriptionListDescription>
+            <span data-testid="wifConfiguration">{wifConfigName}</span>
+          </DescriptionListDescription>
+        </DescriptionListGroup>
+      )}
       {cluster.managed && (
         <DescriptionListGroup>
           <DescriptionListTerm>Availability</DescriptionListTerm>
@@ -161,13 +200,7 @@ function DetailsLeft({ cluster, cloudProviders, showAssistedId }) {
           <Timestamp value={get(cluster, 'creation_timestamp', 'N/A')} />
         </DescriptionListDescription>
       </DescriptionListGroup>
-      <DescriptionListGroup>
-        <DescriptionListTerm>Owner</DescriptionListTerm>
-        <DescriptionListDescription>
-          {get(cluster, 'subscription.creator.name') ||
-            get(cluster, 'subscription.creator.username', 'N/A')}
-        </DescriptionListDescription>
-      </DescriptionListGroup>
+      <Owner />
       {cluster.managed && !isROSA && (
         <>
           <DescriptionListGroup>
@@ -192,6 +225,11 @@ DetailsLeft.propTypes = {
   cluster: PropTypes.any,
   cloudProviders: PropTypes.object.isRequired,
   showAssistedId: PropTypes.bool.isRequired,
+  wifConfigData: PropTypes.shape({
+    displayName: PropTypes.string,
+    isLoading: PropTypes.bool,
+    isSuccess: PropTypes.bool,
+  }),
 };
 
 export default DetailsLeft;

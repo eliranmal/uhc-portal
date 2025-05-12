@@ -21,7 +21,7 @@ import links from '~/common/installLinks.mjs';
 import { getAwsBillingAccountsFromQuota } from '~/components/clusters/common/quotaSelectors';
 import { useFormState } from '~/components/clusters/wizards/hooks';
 import { useGlobalState } from '~/redux/hooks/useGlobalState';
-import { CloudAccount } from '~/types/accounts_mgmt.v1/models/CloudAccount';
+import { CloudAccount } from '~/types/accounts_mgmt.v1';
 
 import { required } from '../../../../../../common/validators';
 import { getAWSBillingAccountIDs } from '../../../../../../redux/actions/rosaActions';

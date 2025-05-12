@@ -24,7 +24,7 @@ const categories: Categories[] = [
   {
     key: 'CLI',
     title: 'Command-line interface (CLI) tools',
-    tools: [tools.OC, tools.OCM, tools.ROSA, tools.KN, tools.TKN],
+    tools: [tools.OC, tools.OCM, tools.ROSA, tools.KN, tools.TKN, tools.ARGO_CD, tools.SHP_CLI],
   },
   {
     key: 'DEV',

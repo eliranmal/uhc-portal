@@ -25,7 +25,7 @@ import PullSecretSection from '../install/instructions/components/PullSecretSect
 import TokenErrorAlert from '../install/instructions/components/TokenErrorAlert';
 
 const pendoID = window.location.pathname;
-const docURL = links.INSTALL_CRC_GETTING_STARTED;
+const docURL = links.OPENSHIFT_LOCAL_SUPPORT_AND_COMMUNITY_DOCS;
 
 const LocalTab = ({ token }) => {
   const track = useAnalytics();
@@ -84,7 +84,7 @@ const LocalTab = ({ token }) => {
                 });
               }}
             >
-              View the OpenShift Local Getting started guide{' '}
+              For more information on the OpenShift Local support and community docs click here{' '}
               <Icon size="sm">
                 <ExternalLinkAltIcon color="#0066cc" />
               </Icon>

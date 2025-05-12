@@ -1,59 +1,38 @@
 import * as React from 'react';
-import { Formik, FormikValues } from 'formik';
+import { Form, Formik, FormikValues } from 'formik';
 
-import { billingModels } from '~/common/subscriptionTypes';
 import { VersionSelectField } from '~/components/clusters/wizards/common/ClusterSettings/Details/VersionSelectField';
+import {
+  lifecycleResponseData,
+  versionsData,
+} from '~/components/clusters/wizards/common/ClusterSettings/Details/VersionSelectField.fixtures';
 import { FieldId } from '~/components/clusters/wizards/common/constants';
+import { GCPAuthType } from '~/components/clusters/wizards/osd/ClusterSettings/CloudProvider/types';
+import { UNSTABLE_CLUSTER_VERSIONS } from '~/queries/featureGates/featureConstants';
 import clusterService from '~/services/clusterService';
-import { screen, withState } from '~/testUtils';
-import { Version } from '~/types/clusters_mgmt.v1';
+import getOCPLifeCycleStatus from '~/services/productLifeCycleService';
+import { checkAccessibility, screen, withState } from '~/testUtils';
+import { SubscriptionCommonFieldsCluster_billing_model as SubscriptionCommonFieldsClusterBillingModel } from '~/types/accounts_mgmt.v1';
 
-const getInstallableVersionsSpy = jest.spyOn(clusterService, 'getInstallableVersions');
-
-const data: Version[] = [
-  {
-    kind: 'Version',
-    raw_id: '4.13.1',
-    id: '4.13.1',
-    enabled: true,
-    default: false,
-    channel_group: 'stable',
-    rosa_enabled: true,
-    hosted_control_plane_enabled: true,
-    gcp_marketplace_enabled: true,
-    end_of_life_timestamp: '2024-09-17T00:00:00Z',
-  },
-  {
-    kind: 'Version',
-    raw_id: '4.12.13',
-    id: '4.12.13',
-    enabled: true,
-    default: true,
-    channel_group: 'stable',
-    rosa_enabled: true,
-    hosted_control_plane_enabled: true,
-    gcp_marketplace_enabled: true,
-    end_of_life_timestamp: '2024-09-17T00:00:00Z',
-  },
-  {
-    kind: 'Version',
-    raw_id: '4.12.12',
-    id: '4.12.12',
-    enabled: true,
-    default: false,
-    channel_group: 'stable',
-    rosa_enabled: true,
-    hosted_control_plane_enabled: true,
-    gcp_marketplace_enabled: true,
-    end_of_life_timestamp: '2024-09-17T00:00:00Z',
-  },
-];
+jest.mock('~/services/productLifeCycleService');
+jest.mock('~/services/clusterService');
 
 const standardValues: FormikValues = {
-  [FieldId.BillingModel]: billingModels.STANDARD,
+  [FieldId.BillingModel]: SubscriptionCommonFieldsClusterBillingModel.standard,
+};
+const clusterVersionValue: FormikValues = {
+  [FieldId.ClusterVersion]: versionsData[0],
+};
+const standardValuesWithVersion: FormikValues = {
+  ...standardValues,
+  ...clusterVersionValue,
 };
 const marketplaceGcpValues = {
-  [FieldId.BillingModel]: billingModels.MARKETPLACE_GCP,
+  [FieldId.BillingModel]: SubscriptionCommonFieldsClusterBillingModel.marketplace_gcp,
+};
+const wifValues = {
+  [FieldId.BillingModel]: SubscriptionCommonFieldsClusterBillingModel.standard,
+  [FieldId.GcpAuthType]: GCPAuthType.WorkloadIdentityFederation,
 };
 
 describe('<VersionSelectField />', () => {
@@ -61,11 +40,16 @@ describe('<VersionSelectField />', () => {
     fulfilled: false,
     error: false,
     pending: false,
-    versions: data,
+    versions: versionsData,
   };
   const loaded = {
     ...notLoaded,
     fulfilled: true,
+    meta: {
+      isMarketplaceGcp: false,
+      isWIF: false,
+      includeUnstableVersions: false,
+    },
   };
   const notLoadedState = {
     clusters: {
@@ -76,101 +60,155 @@ describe('<VersionSelectField />', () => {
     clusters: {
       clusterVersions: loaded,
     },
+    features: {
+      [UNSTABLE_CLUSTER_VERSIONS]: false,
+    },
+  };
+  const loadedStateUnmatchedVersions = {
+    ...loadedState,
+    clusters: {
+      clusterVersions: {
+        ...loaded,
+        meta: {
+          isRosa: true,
+        },
+      },
+    },
   };
   const defaultProps = {
     name: FieldId.ClusterVersion,
-    label: 'Version (Google Cloud Marketplace enabled)',
+    label: 'Version',
     isDisabled: false,
     onChange: jest.fn(),
   };
 
-  it.skip('to call clusterService.getInstallableVersions with: isRosa false, isMarketplaceGcp false', async () => {
-    // NOTE: the skipped tests are failing because by using await screen.findByText
-    // is causing the tests to return with the following error:
-    // thrown: Object {
-    //   "status": 500,
-    // }
+  beforeEach(() => {
+    (getOCPLifeCycleStatus as jest.Mock).mockReturnValue({ data: lifecycleResponseData });
+    (clusterService.getInstallableVersions as jest.Mock).mockReturnValue({
+      data: { items: versionsData, kind: 'VersionList', page: 1, size: 1, total: 3 },
+    });
+  });
 
-    // Further investigation is needed but it maybe that if the
-    // test wait for all the state changes, a child item is hitting
-    // something that isn't mocked correctly.
-    withState(notLoadedState).render(
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it.each([
+    ['with no params', standardValues, false, false, false],
+    ['for GCP marketplace', marketplaceGcpValues, true, false, false],
+    ['for WIF authentication', wifValues, false, true, false],
+  ])(
+    'fetches cluster version %s',
+    async (title, formikValues, isMarketplaceGcp, isWIF, includeUnstableVersions) => {
+      withState(notLoadedState).render(
+        <Formik initialValues={formikValues} onSubmit={() => {}}>
+          <VersionSelectField {...defaultProps} />
+        </Formik>,
+      );
+
+      expect(clusterService.getInstallableVersions).toHaveBeenCalledWith({
+        isMarketplaceGcp,
+        isWIF,
+        includeUnstableVersions,
+      });
+      expect(await screen.findByText('Version')).toBeInTheDocument();
+    },
+  );
+
+  it('re-fetches cluster versions and reset selected version if the versions available do not match the existing cluster type', async () => {
+    const onSubmit = jest.fn();
+    const { user } = withState(loadedStateUnmatchedVersions).render(
+      <Formik initialValues={standardValuesWithVersion} onSubmit={onSubmit}>
+        <Form>
+          <VersionSelectField {...defaultProps} />
+          <button type="submit">Submit</button>
+        </Form>
+      </Formik>,
+    );
+
+    expect(clusterService.getInstallableVersions).toHaveBeenCalledWith({
+      isMarketplaceGcp: false,
+      isWIF: false,
+      includeUnstableVersions: false,
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.not.objectContaining(clusterVersionValue),
+      expect.anything(),
+    );
+  });
+
+  it('fetches versions and reset selected version when versions data is not present', async () => {
+    const onSubmit = jest.fn();
+    const { user } = withState(notLoadedState).render(
+      <Formik initialValues={standardValuesWithVersion} onSubmit={onSubmit}>
+        <Form>
+          <VersionSelectField {...defaultProps} />
+          <button type="submit">Submit</button>
+        </Form>
+      </Formik>,
+    );
+
+    expect(clusterService.getInstallableVersions).toHaveBeenCalledWith({
+      isMarketplaceGcp: false,
+      isWIF: false,
+      includeUnstableVersions: false,
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.not.objectContaining(clusterVersionValue),
+      expect.anything(),
+    );
+  });
+
+  it('is accessible', async () => {
+    const { container } = withState(loadedState).render(
       <Formik initialValues={standardValues} onSubmit={() => {}}>
         <VersionSelectField {...defaultProps} />
       </Formik>,
     );
 
-    expect(getInstallableVersionsSpy).toHaveBeenCalledWith(false, false, false);
-
-    expect(
-      await screen.findByText('Version (Google Cloud Marketplace enabled)'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('Version')).toBeInTheDocument();
+    await checkAccessibility(container);
   });
 
-  it.skip('to call clusterService.getInstallableVersions with: isRosa false, isMarketplaceGcp true', async () => {
-    // NOTE: the skipped tests are failing because by using await screen.findByText
-    // is causing the tests to return with the following error:
-    // thrown: Object {
-    //   "status": 500,
-    // }
-
-    // Further investigation is needed but it maybe that if the
-    // test wait for all the state changes, a child item is hitting
-    // something that isn't mocked correctly.
-
-    withState(notLoadedState).render(
-      <Formik initialValues={marketplaceGcpValues} onSubmit={() => {}}>
-        <VersionSelectField {...defaultProps} />
-      </Formik>,
-    );
-
-    expect(getInstallableVersionsSpy).toHaveBeenCalledWith(false, true, false);
-
-    expect(
-      await screen.findByText('Version (Google Cloud Marketplace enabled)'),
-    ).toBeInTheDocument();
-  });
-
-  it.skip('to shows the right default version', async () => {
-    // NOTE: the skipped tests are failing because by using await screen.findByText
-    // is causing the tests to return with the following error:
-    // thrown: Object {
-    //   "status": 500,
-    // }
-
-    // Further investigation is needed but it maybe that if the
-    // test wait for all the state changes, a child item is hitting
-    // something that isn't mocked correctly.
+  it('shows the right default version', async () => {
     withState(loadedState).render(
       <Formik initialValues={standardValues} onSubmit={() => {}}>
         <VersionSelectField {...defaultProps} />
       </Formik>,
     );
+
+    expect(clusterService.getInstallableVersions).not.toHaveBeenCalled();
+    expect(await screen.findByText('Version')).toBeInTheDocument();
     expect(screen.queryByText('4.13.1')).not.toBeInTheDocument();
     expect(await screen.findByText('4.12.13')).toBeInTheDocument();
   });
 
-  it.skip('to open the toggle', async () => {
-    // NOTE: the skipped tests are failing because by using await screen.findByText
-    // is causing the tests to return with the following error:
-    // thrown: Object {
-    //   "status": 500,
-    // }
-
-    // Further investigation is needed but it maybe that if the
-    // test wait for all the state changes, a child item is hitting
-    // something that isn't mocked correctly.
-    const { container, user } = withState(loadedState).render(
+  it('handles opening the toggle', async () => {
+    const { user } = withState(loadedState).render(
       <Formik initialValues={standardValues} onSubmit={() => {}}>
         <VersionSelectField {...defaultProps} />
       </Formik>,
     );
 
-    expect(screen.queryByText('Version (Google Cloud Marketplace enabled)')).toBeInTheDocument();
-    expect(container.querySelector('fieldset')).not.toBeInTheDocument();
-    const menuToggle = container.querySelector('#version-selector')!;
-    expect(menuToggle).toBeInTheDocument();
-    await user.click(menuToggle);
-    expect(container.querySelector('fieldset')).toBeInTheDocument();
+    expect(clusterService.getInstallableVersions).not.toHaveBeenCalled();
+    expect(screen.queryByText('Version')).toBeInTheDocument();
+    expect(screen.queryByText('Full support')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', {
+        name: /options menu/i,
+      }),
+    ).toBeInTheDocument();
+    await user.click(
+      screen.getByRole('button', {
+        name: /options menu/i,
+      }),
+    );
+    expect(screen.getByText('Full support')).toBeInTheDocument();
   });
 });

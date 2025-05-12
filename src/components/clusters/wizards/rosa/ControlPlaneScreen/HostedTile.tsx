@@ -1,29 +1,43 @@
 import React from 'react';
 
-import { Alert, List, Text, TextVariants, Tile } from '@patternfly/react-core';
+import { Alert, Label, List, Text, TextVariants, Tile } from '@patternfly/react-core';
+import { StarIcon } from '@patternfly/react-icons/dist/esm/icons/star-icon';
 
 import links from '~/common/installLinks.mjs';
 import ExternalLink from '~/components/common/ExternalLink';
 
-import { defaultMarginBottomSpacing, hypershiftValue, ListItem } from './ControlPlaneCommon';
+import {
+  defaultMarginBottomSpacing,
+  defaultMarginTopBottomSpacing,
+  hypershiftValue,
+  ListItem,
+} from './ControlPlaneCommon';
 
 type HostedTileProps = {
   handleChange: (string: hypershiftValue) => void;
-  isSelected: boolean;
   isHostedDisabled: boolean;
+  isSelected: boolean;
 };
 
-const HostedTile = ({ handleChange, isSelected, isHostedDisabled }: HostedTileProps) => (
+const HostedTile = ({ handleChange, isHostedDisabled, isSelected }: HostedTileProps) => (
   <Tile
     title="Hosted"
     isDisplayLarge
     isStacked
     onClick={() => !isHostedDisabled && handleChange('true')}
-    isSelected={isSelected}
     isDisabled={isHostedDisabled}
+    isSelected={isSelected}
     className="controlPlaneScreenTile"
     data-testid="hosted-control-planes"
   >
+    <Label
+      variant="filled"
+      color="blue"
+      icon={<StarIcon data-icon="star" />}
+      className={defaultMarginTopBottomSpacing}
+    >
+      Recommended
+    </Label>
     {isHostedDisabled && (
       <Alert
         variant="info"
@@ -38,10 +52,10 @@ const HostedTile = ({ handleChange, isSelected, isHostedDisabled }: HostedTilePr
         className={defaultMarginBottomSpacing}
       />
     )}
+
     <Text component={TextVariants.p} className={defaultMarginBottomSpacing}>
-      Run an OpenShift cluster where the control plane is decoupled from the data plane, and is
-      treated like a multi-tenant workload on a hosted service cluster. The data plane is on a
-      separate network domain that allows segmentation between management and workload traffic.
+      Run an OpenShift cluster with a decoupled control plane as a multi-tenant workload and a data
+      plane on a separate network for segmented management and workload traffic.
     </Text>
     <List isPlain className={defaultMarginBottomSpacing}>
       <ListItem>Control plane resources are hosted in a Red Hat-owned AWS account</ListItem>
@@ -54,13 +68,9 @@ const HostedTile = ({ handleChange, isSelected, isHostedDisabled }: HostedTilePr
       variant="warning"
       isInline
       isPlain
-      title="Virtual Private Cloud is required"
+      title="A Virtual Private Cloud is required for ROSA clusters hosted by Red Hat"
       className={defaultMarginBottomSpacing}
     >
-      <Text component={TextVariants.p}>
-        To create a ROSA cluster that is hosted by Red Hat, you must be able to create clusters on a
-        VPC.
-      </Text>
       <Text component={TextVariants.p}>
         <ExternalLink href={links.VIRTUAL_PRIVATE_CLOUD_URL}>
           Learn more about Virtual Private Cloud

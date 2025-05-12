@@ -6,17 +6,17 @@ import { Alert, AlertVariant, Spinner } from '@patternfly/react-core';
 import { SupportedFeature } from '~/common/featureCompatibility';
 import { validateSecurityGroups } from '~/common/validators';
 import { getIncompatibleVersionReason } from '~/common/versionCompatibility';
-import EditSecurityGroups from '~/components/clusters/ClusterDetails/components/SecurityGroups/EditSecurityGroups';
-import SecurityGroupsEmptyAlert from '~/components/clusters/ClusterDetails/components/SecurityGroups/SecurityGroupsEmptyAlert';
-import SecurityGroupsNoChangeAlert from '~/components/clusters/ClusterDetails/components/SecurityGroups/SecurityGroupsNoChangeAlert';
+import EditSecurityGroups from '~/components/clusters/ClusterDetailsMultiRegion/components/SecurityGroups/EditSecurityGroups';
+import SecurityGroupsEmptyAlert from '~/components/clusters/ClusterDetailsMultiRegion/components/SecurityGroups/SecurityGroupsEmptyAlert';
+import SecurityGroupsNoChangeAlert from '~/components/clusters/ClusterDetailsMultiRegion/components/SecurityGroups/SecurityGroupsNoChangeAlert';
 import { isHypershiftCluster, isROSA } from '~/components/clusters/common/clusterStates';
-import { useAWSVPCFromCluster } from '~/components/clusters/commonMultiRegion/useAWSVPCFromCluster';
+import { useAWSVPCFromCluster } from '~/components/clusters/common/useAWSVPCFromCluster';
 import { FieldId } from '~/components/clusters/wizards/common';
 import { useFormState } from '~/components/clusters/wizards/hooks';
-import { Cluster } from '~/types/clusters_mgmt.v1';
+import { ClusterFromSubscription } from '~/types/types';
 
 export interface EditSecurityGroupsFieldProps {
-  cluster: Cluster;
+  cluster: ClusterFromSubscription;
   isReadOnly: boolean;
 }
 
@@ -30,7 +30,7 @@ const EditSecurityGroupsField = ({ cluster, isReadOnly }: EditSecurityGroupsFiel
   const { clusterVpc, isLoading, errorReason } = useAWSVPCFromCluster(cluster);
 
   if (isLoading) {
-    return <Spinner>Loading security groups</Spinner>;
+    return <Spinner aria-label="Loading...">Loading security groups</Spinner>;
   }
 
   if (!clusterVpc) {

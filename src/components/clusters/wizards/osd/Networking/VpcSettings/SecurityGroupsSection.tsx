@@ -7,15 +7,15 @@ import { SupportedFeature } from '~/common/featureCompatibility';
 import links from '~/common/installLinks.mjs';
 import { validateSecurityGroups } from '~/common/validators';
 import { getIncompatibleVersionReason } from '~/common/versionCompatibility';
-import EditSecurityGroups from '~/components/clusters/ClusterDetails/components/SecurityGroups/EditSecurityGroups';
-import SecurityGroupsEmptyAlert from '~/components/clusters/ClusterDetails/components/SecurityGroups/SecurityGroupsEmptyAlert';
+import EditSecurityGroups from '~/components/clusters/ClusterDetailsMultiRegion/components/SecurityGroups/EditSecurityGroups';
+import SecurityGroupsEmptyAlert from '~/components/clusters/ClusterDetailsMultiRegion/components/SecurityGroups/SecurityGroupsEmptyAlert';
 import { CheckboxField } from '~/components/clusters/wizards/form';
 import { useFormState } from '~/components/clusters/wizards/hooks';
 import { FieldId } from '~/components/clusters/wizards/osd/constants';
-import { CloudVPC } from '~/types/clusters_mgmt.v1';
+import { CloudVpc } from '~/types/clusters_mgmt.v1';
 
 type SecurityGroupFieldProps = {
-  selectedVPC: CloudVPC;
+  selectedVPC: CloudVpc;
   label?: string;
   input: { onChange: (selectedGroupIds: string[]) => void; value: string[] };
   isHypershift: boolean;

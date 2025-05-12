@@ -14,18 +14,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { Button, Split, SplitItem, ToolbarItem } from '@patternfly/react-core';
 import {
-  Dropdown as DropdownDeprecated,
-  DropdownItem as DropdownItemDeprecated,
-  DropdownPosition as DropdownPositionDeprecated,
-  KebabToggle as KebabToggleDeprecated,
-} from '@patternfly/react-core/deprecated';
+  Button,
+  Dropdown,
+  DropdownItem,
+  DropdownList,
+  MenuToggle,
+  Split,
+  SplitItem,
+  ToolbarItem,
+} from '@patternfly/react-core';
+import EllipsisVIcon from '@patternfly/react-icons/dist/esm/icons/ellipsis-v-icon';
 
 import { Link } from '~/common/routing';
+import { AUTO_CLUSTER_TRANSFER_OWNERSHIP } from '~/queries/featureGates/featureConstants';
+import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 import { isRestrictedEnv } from '~/restrictedEnv';
 
 const useMediaQuery = (query) => {
@@ -49,31 +55,36 @@ const useMediaQuery = (query) => {
 };
 
 const dropdownRegisterCluster = (
-  <DropdownItemDeprecated
-    component="button"
-    key="registercluster"
-    data-testid="register-cluster-item"
-  >
-    <div>
-      <Link to="/register" className="pf-v5-c-dropdown__menu-item">
-        Register disconnected cluster
-      </Link>
-    </div>
-  </DropdownItemDeprecated>
+  <DropdownItem key="registercluster" data-testid="register-cluster-item">
+    <Link to="/register" className="pf-v5-c-dropdown__menu-item">
+      Register disconnected cluster
+    </Link>
+  </DropdownItem>
 );
 const toolbarViewArchivedClusters = (
   <ToolbarItem key="archived" alignSelf="center">
     <Link to="/archived">View cluster archives</Link>
   </ToolbarItem>
 );
+const toolbarViewRequest = (
+  <ToolbarItem key="cluster-request" alignSelf="center">
+    <Link to="/cluster-request">View cluster requests</Link>
+  </ToolbarItem>
+);
+const dropdownRequest = (
+  <DropdownItem key="cluster-request-dropdown" data-testid="cluster-request-dropdown-item">
+    <Link to="/cluster-request" className="pf-v5-c-dropdown__menu-item">
+      View cluster requests
+    </Link>
+  </DropdownItem>
+);
+
 const dropdownArchived = (
-  <DropdownItemDeprecated component="button" key="archived">
-    <div>
-      <Link to="/archived" className="pf-v5-c-dropdown__menu-item">
-        View cluster archives
-      </Link>
-    </div>
-  </DropdownItemDeprecated>
+  <DropdownItem key="archived" data-testid="archived-cluster-item">
+    <Link to="/archived" className="pf-v5-c-dropdown__menu-item">
+      View cluster archives
+    </Link>
+  </DropdownItem>
 );
 const toolbarCreateCluster = (
   <ToolbarItem key="createcluster">
@@ -97,7 +108,7 @@ const toolbarRegisterCluster = (
   </ToolbarItem>
 );
 
-const useItems = (isDashboardView) => {
+const useItems = (isDashboardView, showClusterRequest) => {
   const wide = useMediaQuery('(min-width: 900px)');
 
   const toolbarItems = [];
@@ -109,16 +120,20 @@ const useItems = (isDashboardView) => {
       if (wide) {
         toolbarItems.push(toolbarRegisterCluster);
         dropdownItems.push(dropdownArchived);
+        if (showClusterRequest) dropdownItems.push(dropdownRequest);
       } else {
         dropdownItems.push(dropdownRegisterCluster);
         dropdownItems.push(dropdownArchived);
+        if (showClusterRequest) dropdownItems.push(dropdownRequest);
       }
     } else if (wide) {
       toolbarItems.push(toolbarRegisterCluster);
       toolbarItems.push(toolbarViewArchivedClusters);
+      if (showClusterRequest) toolbarItems.push(toolbarViewRequest);
     } else {
       dropdownItems.push(dropdownRegisterCluster);
       dropdownItems.push(dropdownArchived);
+      if (showClusterRequest) dropdownItems.push(dropdownRequest);
     }
   }
 
@@ -126,8 +141,11 @@ const useItems = (isDashboardView) => {
 };
 
 const ClusterListActions = ({ className, isDashboardView }) => {
-  const [isOpen, onToggle] = useState(false);
-  const [dropdownItems, toolbarItems] = useItems(isDashboardView);
+  const showClusterRequest = useFeatureGate(AUTO_CLUSTER_TRANSFER_OWNERSHIP);
+  const [isOpen, setIsOpen] = useState(false);
+  const [dropdownItems, toolbarItems] = useItems(isDashboardView, showClusterRequest);
+  const toggleRef = useRef();
+
   if (isDashboardView) {
     return (
       <Split hasGutter>
@@ -135,16 +153,36 @@ const ClusterListActions = ({ className, isDashboardView }) => {
           <SplitItem key="toolbar">{toolbarItem}</SplitItem>
         ))}
         <SplitItem key="dropdown">
-          <DropdownDeprecated
+          <Dropdown
             data-testid="cluster-list-extra-actions-dropdown"
-            onSelect={() => onToggle(!isOpen)}
-            toggle={<KebabToggleDeprecated onToggle={(_event, value) => onToggle(value)} />}
             isOpen={isOpen}
-            isPlain
-            dropdownItems={dropdownItems}
+            onOpenChange={(isOpen) => setIsOpen(isOpen)}
             className={className}
-            position={DropdownPositionDeprecated.right}
-          />
+            popperProps={{ position: 'right' }}
+            toggle={{
+              toggleRef,
+              toggleNode: (
+                <MenuToggle
+                  id="cluster-list-extra-actions"
+                  aria-label="Actions"
+                  ref={toggleRef}
+                  isExpanded={isOpen}
+                  onClick={() => {
+                    setIsOpen(!isOpen);
+                  }}
+                  variant="plain"
+                >
+                  <EllipsisVIcon />
+                </MenuToggle>
+              ),
+            }}
+          >
+            <DropdownList>
+              {dropdownItems.map((dropdownItem) => (
+                <DropdownItem key={dropdownItem}>{dropdownItem}</DropdownItem>
+              ))}
+            </DropdownList>
+          </Dropdown>
         </SplitItem>
       </Split>
     );
@@ -154,15 +192,36 @@ const ClusterListActions = ({ className, isDashboardView }) => {
       {toolbarItems}
       {dropdownItems.length > 0 && (
         <ToolbarItem>
-          <DropdownDeprecated
-            onSelect={() => onToggle(!isOpen)}
-            toggle={<KebabToggleDeprecated onToggle={(_event, value) => onToggle(value)} />}
+          <Dropdown
+            data-testid="cluster-list-extra-actions-dropdown"
             isOpen={isOpen}
-            isPlain
-            dropdownItems={dropdownItems}
+            onOpenChange={(isOpen) => setIsOpen(isOpen)}
             className={className}
-            position={DropdownPositionDeprecated.right}
-          />
+            popperProps={{ position: 'right' }}
+            toggle={{
+              toggleRef,
+              toggleNode: (
+                <MenuToggle
+                  id="cluster-list-extra-actions"
+                  aria-label="Actions"
+                  ref={toggleRef}
+                  isExpanded={isOpen}
+                  onClick={() => {
+                    setIsOpen(!isOpen);
+                  }}
+                  variant="plain"
+                >
+                  <EllipsisVIcon />
+                </MenuToggle>
+              ),
+            }}
+          >
+            <DropdownList>
+              {dropdownItems.map((dropdownItem) => (
+                <DropdownItem key={dropdownItem}>{dropdownItem}</DropdownItem>
+              ))}
+            </DropdownList>
+          </Dropdown>
         </ToolbarItem>
       )}
     </>

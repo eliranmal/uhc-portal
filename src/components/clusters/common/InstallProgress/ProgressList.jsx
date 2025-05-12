@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { ProgressStep, ProgressStepper, Spinner } from '@patternfly/react-core';
 import UnknownIcon from '@patternfly/react-icons/dist/esm/icons/unknown-icon';
 
-import { InflightCheckState } from '~/types/clusters_mgmt.v1';
+import { InflightCheckState } from '~/types/clusters_mgmt.v1/enums';
 
 import clusterStates, {
   getInflightChecks,
@@ -21,7 +21,7 @@ import ActionRequiredLink from './ActionRequiredLink';
 
 import './ProgressList.scss';
 
-function ProgressList({ cluster, actionRequiredInitialOpen, hasNetworkOndemand }) {
+function ProgressList({ cluster, actionRequiredInitialOpen, regionalInstance }) {
   const isROSACluster = isROSA(cluster);
   const isOSDCluster = isOSD(cluster);
   const isOSDGCPPending = isOSDGCPPendingOnHostProject(cluster);
@@ -31,9 +31,9 @@ function ProgressList({ cluster, actionRequiredInitialOpen, hasNetworkOndemand }
     isWaitingForOIDCProviderOrOperatorRolesMode(cluster);
 
   // helper variables for isPending
-  const isPendingState = cluster.state === clusterStates.PENDING;
-  const isWaitingState = cluster.state === clusterStates.WAITING;
-  const isValidating = cluster.state === clusterStates.VALIDATING;
+  const isPendingState = cluster.state === clusterStates.pending;
+  const isWaitingState = cluster.state === clusterStates.waiting;
+  const isValidating = cluster.state === clusterStates.validating;
   const isAutoMode = cluster?.aws?.sts?.auto_mode;
   const hasOIDCConfig = cluster?.aws?.sts?.oidc_config?.id;
   const doesNotHaveStatusMessage =
@@ -54,7 +54,7 @@ function ProgressList({ cluster, actionRequiredInitialOpen, hasNetworkOndemand }
     // ROSA this is already created
     if (
       isOSDCluster &&
-      (cluster.state === clusterStates.WAITING || isOSDGCPPending || isOSDGCPWaiting)
+      (cluster.state === clusterStates.waiting || isOSDGCPPending || isOSDGCPWaiting)
     ) {
       const accountSetup = isOSDGCPWaiting
         ? {
@@ -84,7 +84,7 @@ function ProgressList({ cluster, actionRequiredInitialOpen, hasNetworkOndemand }
           awsAccountSetup: completed,
           oidcAndOperatorRolesSetup: {
             variant: 'warning',
-            text: <ActionRequiredLink cluster={cluster} />,
+            text: <ActionRequiredLink cluster={cluster} regionalInstance={regionalInstance} />,
             isCurrent: true,
           },
           networkSettings: pending,
@@ -100,7 +100,11 @@ function ProgressList({ cluster, actionRequiredInitialOpen, hasNetworkOndemand }
           oidcAndOperatorRolesSetup: {
             variant: 'warning',
             text: (
-              <ActionRequiredLink cluster={cluster} initiallyOpen={actionRequiredInitialOpen} />
+              <ActionRequiredLink
+                cluster={cluster}
+                initiallyOpen={actionRequiredInitialOpen}
+                regionalInstance={regionalInstance}
+              />
             ),
             isCurrent: true,
           },
@@ -129,7 +133,7 @@ function ProgressList({ cluster, actionRequiredInitialOpen, hasNetworkOndemand }
       if (
         isPendingState ||
         isValidating ||
-        inflightChecks.some((check) => check.state === InflightCheckState.RUNNING)
+        inflightChecks.some((check) => check.state === InflightCheckState.running)
       ) {
         return {
           awsAccountSetup: completed,
@@ -145,8 +149,8 @@ function ProgressList({ cluster, actionRequiredInitialOpen, hasNetworkOndemand }
     }
 
     // first steps completed
-    const networkSettings = hasInflightErrors && hasNetworkOndemand ? warning : completed;
-    if (cluster.state === clusterStates.INSTALLING) {
+    const networkSettings = hasInflightErrors ? warning : completed;
+    if (cluster.state === clusterStates.installing) {
       if (!cluster.status.dns_ready) {
         return {
           awsAccountSetup: completed,
@@ -168,13 +172,13 @@ function ProgressList({ cluster, actionRequiredInitialOpen, hasNetworkOndemand }
         },
       };
     }
-    if (cluster.state === clusterStates.ERROR || cluster.state === clusterStates.READY) {
+    if (cluster.state === clusterStates.error || cluster.state === clusterStates.ready) {
       return {
         awsAccountSetup: completed,
         oidcAndOperatorRolesSetup: completed,
         DNSSetup: completed,
         networkSettings,
-        clusterInstallation: cluster.state === clusterStates.ERROR ? failed : completed,
+        clusterInstallation: cluster.state === clusterStates.error ? failed : completed,
       };
     }
     return {
@@ -251,8 +255,13 @@ function ProgressList({ cluster, actionRequiredInitialOpen, hasNetworkOndemand }
 
 ProgressList.propTypes = {
   cluster: PropTypes.object.isRequired,
-  hasNetworkOndemand: PropTypes.bool,
   actionRequiredInitialOpen: PropTypes.bool,
+  regionalInstance: PropTypes.shape({
+    environment: PropTypes.string,
+    id: PropTypes.string,
+    isDefault: PropTypes.bool,
+    url: PropTypes.string,
+  }),
 };
 
 export default ProgressList;

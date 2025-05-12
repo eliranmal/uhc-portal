@@ -1,9 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import isEmpty from 'lodash/isEmpty';
 import PropTypes from 'prop-types';
 
 import {
   Bullseye,
+  Button,
+  Flex,
+  FlexItem,
   Spinner,
   Stack,
   StackItem,
@@ -23,15 +26,23 @@ import {
   stepNameById as rosaStepNameById,
 } from '~/components/clusters/wizards/rosa/rosaWizardConstants';
 import HiddenCheckbox from '~/components/common/FormikFormComponents/HiddenCheckbox';
+import { SyncEditorModal } from '~/components/SyncEditor/SyncEditorModal';
 import config from '~/config';
 import useCanClusterAutoscale from '~/hooks/useCanClusterAutoscale';
-import { useFeatureGate } from '~/hooks/useFeatureGate';
-import { HYPERSHIFT_WIZARD_FEATURE } from '~/redux/constants/featureConstants';
+import {
+  CREATE_CLUSTER_YAML_EDITOR,
+  HYPERSHIFT_WIZARD_FEATURE,
+  MULTIREGION_PREVIEW_ENABLED,
+} from '~/queries/featureGates/featureConstants';
+import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 
+import { ClusterRequestTranslatorFactory } from '../../common/ClusterRequestTranslator/ClusterRequestTranslatorFactory';
 import { DebugClusterRequest } from '../../common/DebugClusterRequest';
+import { MESSAGES } from '../../common/messages';
 import ReviewSection, {
   FormikReviewItem as ReviewItem,
 } from '../../common/ReviewCluster/ReviewSection';
+import { createClusterRequest, upgradeScheduleRequest } from '../../common/submitOSDRequest';
 
 import ReviewRoleItem from './ReviewRoleItem';
 
@@ -44,8 +55,11 @@ const ReviewClusterScreen = ({
   getOCMRoleResponse,
   clearGetUserRoleResponse,
   clearGetOcmRoleResponse,
+  createCluster,
   isSubmitPending,
+  createClusterResponse,
 }) => {
+  const isCreateClusterYamlEditorEnabled = useFeatureGate(CREATE_CLUSTER_YAML_EDITOR);
   const {
     values: {
       [FieldId.ApplicationIngress]: applicationIngress,
@@ -75,14 +89,17 @@ const ReviewClusterScreen = ({
       [FieldId.WorkerVolumeSizeGib]: workerVolumeSizeGib,
       [FieldId.BillingModel]: billingModel,
       [FieldId.CustomerManagedKey]: customerManagedKey,
+      [FieldId.ClusterName]: clusterName,
     },
     values: formValues,
     setFieldValue,
   } = useFormState();
+
   const { goToStepByIndex, getStep } = useWizardContext();
   const canAutoScale = useCanClusterAutoscale(product, billingModel);
   const autoscalingEnabled = canAutoScale && !!autoscalingEnabledValue;
   const isHypershiftSelected = hypershiftValue === 'true';
+  const isMultiRegionEnabled = useFeatureGate(MULTIREGION_PREVIEW_ENABLED) && isHypershiftSelected;
 
   const hasEtcdEncryption = isHypershiftSelected && !!etcdKeyArn;
   const clusterVersionRawId = clusterVersion?.raw_id;
@@ -110,6 +127,50 @@ const ReviewClusterScreen = ({
   const [ocmRole, setOcmRole] = useState('');
   const [errorWithAWSAccountRoles, setErrorWithAWSAccountRoles] = useState(false);
   const isHypershiftEnabled = useFeatureGate(HYPERSHIFT_WIZARD_FEATURE);
+
+  const [isSyncEditorModalOpen, setIsSyncEditorModalOpen] = useState(false);
+
+  const syncEditorModal = useMemo(
+    () =>
+      isSyncEditorModalOpen ? (
+        <SyncEditorModal
+          isOpen={isSyncEditorModalOpen}
+          closeCallback={() => setIsSyncEditorModalOpen(false)}
+          content={ClusterRequestTranslatorFactory.createClusterRequestTranslator(product).toYaml(
+            createClusterRequest({ isWizard: true }, formValues),
+          )}
+          schema={{
+            uri: 'https://api.openshift.com/api/clusters_mgmt/v1/openapi#/components/schemas/Cluster',
+            fileMatch: ['*'],
+          }}
+          submitButtonLabel="Create Cluster"
+          downloadFileName={`${product}-cluster-${clusterName}.yaml`}
+          onSubmit={(values) => {
+            const upgradeSchedule = upgradeScheduleRequest(formValues);
+            createCluster(values, upgradeSchedule);
+          }}
+          translatorToObject={
+            ClusterRequestTranslatorFactory.createClusterRequestTranslator(product).fromYaml
+          }
+          isRequestPending={createClusterResponse.pending}
+          isRequestFulfilled={createClusterResponse.fulfilled}
+          requestErrorMessage={createClusterResponse.errorMessage}
+          requestPendingMessage={MESSAGES.INITIATE_CREATE_CLUSTER_REQUEST}
+          closeWarningMessage="You won't be able to view or download the YAML after cluster creation begins."
+          readOnlyMessage="Cannot edit while cluster creation is being processed."
+        />
+      ) : null,
+    [
+      clusterName,
+      createCluster,
+      createClusterResponse.errorMessage,
+      createClusterResponse.fulfilled,
+      createClusterResponse.pending,
+      formValues,
+      isSyncEditorModalOpen,
+      product,
+    ],
+  );
 
   useEffect(() => {
     clearGetUserRoleResponse();
@@ -158,6 +219,14 @@ const ReviewClusterScreen = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getUserRoleResponse, getOCMRoleResponse, userRole, ocmRole, errorWithAWSAccountRoles]);
 
+  // ensure regionalInstance does not exist if !isMultiRegionEnabled
+  useEffect(() => {
+    if (!isMultiRegionEnabled) {
+      setFieldValue(FieldId.RegionalInstance, undefined);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMultiRegionEnabled]);
+
   const getStepIndex = (stepKey) => {
     let step = stepKey;
     if (stepKey === 'CLUSTER_SETTINGS') {
@@ -173,174 +242,182 @@ const ReviewClusterScreen = ({
     ? 'ACCOUNTS_AND_ROLES_AS_SECOND_STEP'
     : 'ACCOUNTS_AND_ROLES_AS_FIRST_STEP';
 
-  if (isSubmitPending) {
-    return (
-      <Bullseye>
-        <Stack>
-          <StackItem>
-            <Bullseye>
-              <Spinner size="xl" />
-            </Bullseye>
-          </StackItem>
-          <StackItem>
-            <Bullseye>
-              Creating your cluster. Do not refresh this page. This request may take a moment...
-            </Bullseye>
-          </StackItem>
-        </Stack>
-      </Bullseye>
-    );
-  }
-
-  return (
-    <div className="ocm-create-osd-review-screen">
-      <Title headingLevel="h2" className="pf-v5-u-pb-md">
-        Review your ROSA cluster
-      </Title>
-      <HiddenCheckbox name={FieldId.DetectedOcmAndUserRoles} />
-      {isHypershiftEnabled && (
+  return isSubmitPending ? (
+    <Bullseye>
+      <Stack>
+        <StackItem>
+          <Bullseye>
+            <Spinner size="xl" />
+          </Bullseye>
+        </StackItem>
+        <StackItem>
+          <Bullseye>{MESSAGES.INITIATE_CREATE_CLUSTER_REQUEST}</Bullseye>
+        </StackItem>
+      </Stack>
+    </Bullseye>
+  ) : (
+    <>
+      <div className="ocm-create-osd-review-screen">
+        <Flex>
+          <FlexItem>
+            <Title headingLevel="h2" className="pf-v5-u-pb-md">
+              Review your ROSA cluster
+            </Title>
+          </FlexItem>
+          {isCreateClusterYamlEditorEnabled ? (
+            <FlexItem align={{ default: 'alignRight' }}>
+              <Button variant="secondary" onClick={() => setIsSyncEditorModalOpen(true)}>
+                Edit YAML
+              </Button>
+            </FlexItem>
+          ) : null}
+        </Flex>
+        <HiddenCheckbox name={FieldId.DetectedOcmAndUserRoles} />
+        {isHypershiftEnabled && (
+          <ReviewSection
+            title={getStepName('CONTROL_PLANE')}
+            onGoToStep={() => goToStepByIndex(getStepIndex('CONTROL_PLANE'))}
+          >
+            {ReviewItem(FieldId.Hypershift)}
+          </ReviewSection>
+        )}
         <ReviewSection
-          title={getStepName('CONTROL_PLANE')}
-          onGoToStep={() => goToStepByIndex(getStepIndex('CONTROL_PLANE'))}
+          title={getStepName(accountStepId)}
+          onGoToStep={() => goToStepByIndex(getStepIndex(accountStepId))}
+          initiallyExpanded={errorWithAWSAccountRoles}
         >
-          {ReviewItem(FieldId.Hypershift)}
+          {ReviewItem(FieldId.AssociatedAwsId)}
+          {isHypershiftSelected && ReviewItem(FieldId.BillingAccountId)}
+          {ReviewRoleItem({
+            name: 'ocm-role',
+            getRoleResponse: getOCMRoleResponse,
+            content: ocmRole,
+          })}
+          {ReviewRoleItem({
+            name: 'user-role',
+            getRoleResponse: getUserRoleResponse,
+            content: userRole,
+          })}
+          {ReviewItem(FieldId.InstallerRoleArn)}
+          {ReviewItem(FieldId.SupportRoleArn)}
+          {!isHypershiftSelected && ReviewItem(FieldId.ControlPlaneRoleArn)}
+          {ReviewItem(FieldId.WorkerRoleArn)}
         </ReviewSection>
-      )}
-      <ReviewSection
-        title={getStepName(accountStepId)}
-        onGoToStep={() => goToStepByIndex(getStepIndex(accountStepId))}
-        initiallyExpanded={errorWithAWSAccountRoles}
-      >
-        {ReviewItem(FieldId.AssociatedAwsId)}
-        {isHypershiftSelected && ReviewItem(FieldId.BillingAccountId)}
-        {ReviewRoleItem({
-          name: 'ocm-role',
-          getRoleResponse: getOCMRoleResponse,
-          content: ocmRole,
-        })}
-        {ReviewRoleItem({
-          name: 'user-role',
-          getRoleResponse: getUserRoleResponse,
-          content: userRole,
-        })}
-        {ReviewItem(FieldId.InstallerRoleArn)}
-        {ReviewItem(FieldId.SupportRoleArn)}
-        {!isHypershiftSelected && ReviewItem(FieldId.ControlPlaneRoleArn)}
-        {ReviewItem(FieldId.WorkerRoleArn)}
-      </ReviewSection>
-      <ReviewSection
-        title={getStepName('CLUSTER_SETTINGS')}
-        onGoToStep={() => goToStepByIndex(getStepIndex('CLUSTER_SETTINGS'))}
-      >
-        {clusterSettingsFields.map((fieldName) => ReviewItem(fieldName))}
-      </ReviewSection>
-      <ReviewSection
-        title="Default machine pool"
-        onGoToStep={() => goToStepByIndex(getStepIndex('CLUSTER_SETTINGS__MACHINE_POOL'))}
-      >
-        {ReviewItem(FieldId.MachineType)}
-        {canAutoScale && ReviewItem(FieldId.AutoscalingEnabled)}
-        {autoscalingEnabled
-          ? ReviewItem(FieldId.MinReplicas, {
-              [FieldId.MultiAz]: multiAz,
-              [FieldId.Hypershift]: hypershiftValue,
-              [FieldId.MaxReplicas]: maxReplicas,
-            })
-          : ReviewItem(FieldId.NodesCompute, {
-              [FieldId.MultiAz]: multiAz,
-              [FieldId.Hypershift]: hypershiftValue,
+        <ReviewSection
+          title={getStepName('CLUSTER_SETTINGS')}
+          onGoToStep={() => goToStepByIndex(getStepIndex('CLUSTER_SETTINGS'))}
+        >
+          {clusterSettingsFields.map((fieldName) => ReviewItem(fieldName))}
+        </ReviewSection>
+        <ReviewSection
+          title="Default machine pool"
+          onGoToStep={() => goToStepByIndex(getStepIndex('CLUSTER_SETTINGS__MACHINE_POOL'))}
+        >
+          {ReviewItem(FieldId.MachineType)}
+          {canAutoScale && ReviewItem(FieldId.AutoscalingEnabled)}
+          {autoscalingEnabled
+            ? ReviewItem(FieldId.MinReplicas, {
+                [FieldId.MultiAz]: multiAz,
+                [FieldId.Hypershift]: hypershiftValue,
+                [FieldId.MaxReplicas]: maxReplicas,
+              })
+            : ReviewItem(FieldId.NodesCompute, {
+                [FieldId.MultiAz]: multiAz,
+                [FieldId.Hypershift]: hypershiftValue,
+              })}
+          {ReviewItem(isHypershiftSelected ? FieldId.SelectedVpc : FieldId.InstallToVpc)}
+          {installToVPCSelected &&
+            isHypershiftSelected &&
+            ReviewItem('aws_hosted_machine_pools', {
+              [FieldId.MachinePoolsSubnets]: machinePoolsSubnets,
+              [FieldId.SelectedVpc]: selectedVpc,
             })}
-        {ReviewItem(isHypershiftSelected ? FieldId.SelectedVpc : FieldId.InstallToVpc)}
-        {installToVPCSelected &&
-          isHypershiftSelected &&
-          ReviewItem('aws_hosted_machine_pools', {
-            [FieldId.MachinePoolsSubnets]: machinePoolsSubnets,
-            [FieldId.SelectedVpc]: selectedVpc,
-          })}
-        {!(nodeLabels?.length === 1 && isEmpty(nodeLabels[0].key)) &&
-          ReviewItem(FieldId.NodeLabels)}
-        {!isHypershiftSelected && canSelectImds(clusterVersionRawId) && ReviewItem(FieldId.IMDS)}
-        {workerVolumeSizeGib && ReviewItem(FieldId.WorkerVolumeSizeGib)}
-      </ReviewSection>
-      <ReviewSection
-        title={getStepName('NETWORKING')}
-        onGoToStep={() => goToStepByIndex(getStepIndex('NETWORKING__CONFIGURATION'))}
-      >
-        {ReviewItem(FieldId.ClusterPrivacy)}
-        {clusterPrivacyPublicSubnetId &&
-          isHypershiftSelected &&
-          ReviewItem(FieldId.ClusterPrivacyPublicSubnetId, {
-            [FieldId.SelectedVpc]: selectedVpc,
-          })}
-        {clusterPrivacy === 'internal' &&
-          installToVPCSelected &&
-          ReviewItem(FieldId.UsePrivateLink)}
-        {installToVPCSelected &&
-          !isHypershiftSelected &&
-          ReviewItem('aws_standalone_vpc', {
-            [FieldId.SelectedVpc]: selectedVpc,
-            [FieldId.MachinePoolsSubnets]: machinePoolsSubnets,
-            [FieldId.UsePrivateLink]: usePrivateLink,
-          })}
-        {installToVPCSelected &&
-          !isHypershiftSelected &&
-          hasSecurityGroups &&
-          ReviewItem(FieldId.SecurityGroups, {
-            [FieldId.SelectedVpc]: selectedVpc,
-          })}
-        {sharedVpc?.is_selected && !isHypershiftSelected && ReviewItem(FieldId.SharedVpc)}
-        {installToVPCSelected && ReviewItem(FieldId.ConfigureProxy)}
-        {installToVPCSelected && configureProxySelected && ReviewItem(FieldId.HttpProxyUrl)}
-        {installToVPCSelected && configureProxySelected && ReviewItem(FieldId.HttpsProxyUrl)}
-        {installToVPCSelected && configureProxySelected && ReviewItem(FieldId.NoProxyDomains)}
-        {installToVPCSelected &&
-          configureProxySelected &&
-          ReviewItem(FieldId.AdditionalTrustBundle)}
-        {ReviewItem(FieldId.NetworkMachineCidr)}
-        {ReviewItem(FieldId.NetworkServiceCidr)}
-        {ReviewItem(FieldId.NetworkPodCidr)}
-        {ReviewItem(FieldId.NetworkHostPrefix)}
+          {!(nodeLabels?.length === 1 && isEmpty(nodeLabels[0].key)) &&
+            ReviewItem(FieldId.NodeLabels)}
+          {!isHypershiftSelected && canSelectImds(clusterVersionRawId) && ReviewItem(FieldId.IMDS)}
+          {workerVolumeSizeGib && ReviewItem(FieldId.WorkerVolumeSizeGib)}
+        </ReviewSection>
+        <ReviewSection
+          title={getStepName('NETWORKING')}
+          onGoToStep={() => goToStepByIndex(getStepIndex('NETWORKING__CONFIGURATION'))}
+        >
+          {ReviewItem(FieldId.ClusterPrivacy)}
+          {clusterPrivacyPublicSubnetId &&
+            isHypershiftSelected &&
+            ReviewItem(FieldId.ClusterPrivacyPublicSubnetId, {
+              [FieldId.SelectedVpc]: selectedVpc,
+            })}
+          {clusterPrivacy === 'internal' &&
+            installToVPCSelected &&
+            ReviewItem(FieldId.UsePrivateLink)}
+          {installToVPCSelected &&
+            !isHypershiftSelected &&
+            ReviewItem('aws_standalone_vpc', {
+              [FieldId.SelectedVpc]: selectedVpc,
+              [FieldId.MachinePoolsSubnets]: machinePoolsSubnets,
+              [FieldId.UsePrivateLink]: usePrivateLink,
+            })}
+          {installToVPCSelected &&
+            !isHypershiftSelected &&
+            hasSecurityGroups &&
+            ReviewItem(FieldId.SecurityGroups, {
+              [FieldId.SelectedVpc]: selectedVpc,
+            })}
+          {sharedVpc?.is_selected && !isHypershiftSelected && ReviewItem(FieldId.SharedVpc)}
+          {installToVPCSelected && ReviewItem(FieldId.ConfigureProxy)}
+          {installToVPCSelected && configureProxySelected && ReviewItem(FieldId.HttpProxyUrl)}
+          {installToVPCSelected && configureProxySelected && ReviewItem(FieldId.HttpsProxyUrl)}
+          {installToVPCSelected && configureProxySelected && ReviewItem(FieldId.NoProxyDomains)}
+          {installToVPCSelected &&
+            configureProxySelected &&
+            ReviewItem(FieldId.AdditionalTrustBundle)}
+          {ReviewItem(FieldId.NetworkMachineCidr)}
+          {ReviewItem(FieldId.NetworkServiceCidr)}
+          {ReviewItem(FieldId.NetworkPodCidr)}
+          {ReviewItem(FieldId.NetworkHostPrefix)}
 
-        {!isHypershiftSelected && ReviewItem(FieldId.ApplicationIngress)}
-        {applicationIngress !== 'default' && !isHypershiftSelected && (
-          <>
-            {ReviewItem(FieldId.DefaultRouterSelectors)}
-            {ReviewItem(FieldId.DefaultRouterExcludedNamespacesFlag)}
-            {ReviewItem(FieldId.IsDefaultRouterWildcardPolicyAllowed)}
-            {ReviewItem(FieldId.IsDefaultRouterNamespaceOwnershipPolicyStrict)}
-          </>
-        )}
-      </ReviewSection>
-      <ReviewSection
-        title={getStepName('CLUSTER_ROLES_AND_POLICIES')}
-        onGoToStep={() => goToStepByIndex(getStepIndex('CLUSTER_ROLES_AND_POLICIES'))}
-      >
-        {!isHypershiftSelected && ReviewItem(FieldId.RosaRolesProviderCreationMode)}
-        {byoOidcConfigId && (
-          <>
-            {ReviewItem(FieldId.ByoOidcConfigIdManaged)}
-            {ReviewItem(FieldId.ByoOidcConfigId)}
-          </>
-        )}
-        {ReviewItem(FieldId.CustomOperatorRolesPrefix)}
-      </ReviewSection>
-      <ReviewSection
-        title="Updates"
-        onGoToStep={() => goToStepByIndex(getStepIndex('CLUSTER_UPDATES'))}
-      >
-        {ReviewItem(FieldId.UpgradePolicy)}
-        {upgradePolicy === 'automatic' && ReviewItem(FieldId.AutomaticUpgradeSchedule)}
-        {!isHypershiftSelected && ReviewItem(FieldId.NodeDrainGracePeriod)}
-      </ReviewSection>
+          {!isHypershiftSelected && ReviewItem(FieldId.ApplicationIngress)}
+          {applicationIngress !== 'default' && !isHypershiftSelected && (
+            <>
+              {ReviewItem(FieldId.DefaultRouterSelectors)}
+              {ReviewItem(FieldId.DefaultRouterExcludedNamespacesFlag)}
+              {ReviewItem(FieldId.IsDefaultRouterWildcardPolicyAllowed)}
+              {ReviewItem(FieldId.IsDefaultRouterNamespaceOwnershipPolicyStrict)}
+            </>
+          )}
+        </ReviewSection>
+        <ReviewSection
+          title={getStepName('CLUSTER_ROLES_AND_POLICIES')}
+          onGoToStep={() => goToStepByIndex(getStepIndex('CLUSTER_ROLES_AND_POLICIES'))}
+        >
+          {!isHypershiftSelected && ReviewItem(FieldId.RosaRolesProviderCreationMode)}
+          {byoOidcConfigId && (
+            <>
+              {ReviewItem(FieldId.ByoOidcConfigIdManaged)}
+              {ReviewItem(FieldId.ByoOidcConfigId)}
+            </>
+          )}
+          {ReviewItem(FieldId.CustomOperatorRolesPrefix)}
+        </ReviewSection>
+        <ReviewSection
+          title="Updates"
+          onGoToStep={() => goToStepByIndex(getStepIndex('CLUSTER_UPDATES'))}
+        >
+          {ReviewItem(FieldId.UpgradePolicy)}
+          {upgradePolicy === 'automatic' && ReviewItem(FieldId.AutomaticUpgradeSchedule)}
+          {!isHypershiftSelected && ReviewItem(FieldId.NodeDrainGracePeriod)}
+        </ReviewSection>
 
-      {config.fakeOSD && (
-        <DebugClusterRequest
-          cloudProvider={cloudProvider}
-          product={product}
-          formValues={formValues}
-        />
-      )}
-    </div>
+        {config.fakeOSD && (
+          <DebugClusterRequest
+            cloudProvider={cloudProvider}
+            product={product}
+            formValues={formValues}
+          />
+        )}
+      </div>
+      {syncEditorModal}
+    </>
   );
 };
 
@@ -351,7 +428,19 @@ ReviewClusterScreen.propTypes = {
   getUserRoleResponse: PropTypes.object.isRequired,
   clearGetUserRoleResponse: PropTypes.func.isRequired,
   clearGetOcmRoleResponse: PropTypes.func.isRequired,
+  createCluster: PropTypes.func.isRequired,
   isSubmitPending: PropTypes.bool,
+  createClusterResponse: PropTypes.shape({
+    fulfilled: PropTypes.bool,
+    error: PropTypes.bool,
+    errorMessage: PropTypes.string,
+    pending: PropTypes.bool,
+    cluster: PropTypes.shape({
+      subscription: PropTypes.shape({
+        id: PropTypes.string,
+      }),
+    }),
+  }),
 };
 
 export default ReviewClusterScreen;

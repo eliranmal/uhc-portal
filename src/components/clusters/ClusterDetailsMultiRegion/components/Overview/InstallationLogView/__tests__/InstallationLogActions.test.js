@@ -1,10 +1,15 @@
-import { clusterService } from '../../../../../../../services';
+import * as clusterService from '~/services/clusterService';
+
 import { installationLogActions } from '../InstallationLogActions';
 import { installationLogConstants } from '../InstallationLogConstants';
 
-jest.mock('../../../../../../../services/clusterService');
+const mockGetClusterServiceForRegion = jest.spyOn(clusterService, 'getClusterServiceForRegion');
+const mockedGetLogs = jest.fn();
 
 describe('installationLogActions', () => {
+  mockedGetLogs.mockResolvedValue('hello world');
+  mockGetClusterServiceForRegion.mockReturnValue({ getLogs: mockedGetLogs });
+
   let mockDispatch;
   beforeEach(() => {
     mockDispatch = jest.fn();
@@ -21,14 +26,14 @@ describe('installationLogActions', () => {
   it('calls clusterService.getLogs', () => {
     const fakeId = '1234';
     installationLogActions.getLogs(fakeId)(mockDispatch);
-    expect(clusterService.getLogs).toBeCalledWith(fakeId, 0, 'install');
+    expect(mockedGetLogs).toBeCalledWith(fakeId, 0, 'install');
   });
 
   it('calls clusterService.getLogs with offset', () => {
     const fakeId = '1234';
     const offset = 50;
     installationLogActions.getLogs(fakeId, offset, 'install')(mockDispatch);
-    expect(clusterService.getLogs).toBeCalledWith(fakeId, offset, 'install');
+    expect(mockedGetLogs).toBeCalledWith(fakeId, offset, 'install');
   });
 
   it('dispatches successfully', () => {

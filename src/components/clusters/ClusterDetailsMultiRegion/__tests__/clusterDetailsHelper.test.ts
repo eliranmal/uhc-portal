@@ -1,6 +1,10 @@
 import { isHibernating, isHypershiftCluster } from '~/components/clusters/common/clusterStates';
-import { ClusterResource, Subscription, SubscriptionCommonFields } from '~/types/accounts_mgmt.v1';
-import { Cluster, ClusterState } from '~/types/clusters_mgmt.v1';
+import {
+  ClusterResource,
+  Subscription,
+  SubscriptionCommonFieldsStatus,
+} from '~/types/accounts_mgmt.v1';
+import { ClusterState } from '~/types/clusters_mgmt.v1/enums';
 import { ClusterFromSubscription } from '~/types/types';
 
 import {
@@ -81,9 +85,9 @@ describe('clusterDetailsHelper', () => {
         multiAz: boolean | undefined,
         expectedResult: boolean,
       ) => {
-        const defaultCluster: Readonly<Cluster> = {
+        const defaultCluster: Readonly<ClusterFromSubscription> = {
           multi_az: multiAz,
-        };
+        } as ClusterFromSubscription;
         isHypershiftClusterMock.mockReturnValueOnce(isHypershiftClusterResult);
         expect(isMultiAZ(defaultCluster)).toBe(expectedResult);
       },
@@ -92,16 +96,16 @@ describe('clusterDetailsHelper', () => {
 
   describe('isArchivedSubscription', () => {
     it.each([
-      [SubscriptionCommonFields.status.ARCHIVED, true],
-      [SubscriptionCommonFields.status.DEPROVISIONED, true],
-      [SubscriptionCommonFields.status.ACTIVE, false],
-      [SubscriptionCommonFields.status.DISCONNECTED, false],
-      [SubscriptionCommonFields.status.RESERVED, false],
-      [SubscriptionCommonFields.status.STALE, false],
+      [SubscriptionCommonFieldsStatus.Archived, true],
+      [SubscriptionCommonFieldsStatus.Deprovisioned, true],
+      [SubscriptionCommonFieldsStatus.Active, false],
+      [SubscriptionCommonFieldsStatus.Disconnected, false],
+      [SubscriptionCommonFieldsStatus.Reserved, false],
+      [SubscriptionCommonFieldsStatus.Stale, false],
       [undefined, false],
     ])(
       'status: %p. It returns %p',
-      (status: SubscriptionCommonFields.status | undefined, expectedResult: boolean) => {
+      (status: SubscriptionCommonFieldsStatus | undefined, expectedResult: boolean) => {
         const defaultCluster: Readonly<ClusterFromSubscription> = {
           ...defaultClusterFromSubscription,
           subscription: {
@@ -120,13 +124,13 @@ describe('clusterDetailsHelper', () => {
     });
 
     it.each([
-      [false, 'consoleurlvalue', ClusterState.READY, true, false, false],
-      [true, 'consoleurlvalue', ClusterState.READY, true, false, true],
-      [true, '', ClusterState.READY, true, false, true],
-      [true, undefined, ClusterState.READY, true, false, true],
+      [false, 'consoleurlvalue', ClusterState.ready, true, false, false],
+      [true, 'consoleurlvalue', ClusterState.ready, true, false, true],
+      [true, '', ClusterState.ready, true, false, true],
+      [true, undefined, ClusterState.ready, true, false, true],
       [true, 'consoleurlvalue', undefined, true, false, true],
       [true, 'consoleurlvalue', undefined, false, false, false],
-      [true, 'consoleurlvalue', ClusterState.READY, true, true, false],
+      [true, 'consoleurlvalue', ClusterState.ready, true, true, false],
     ])(
       'managed: %p, consoleUrl: %p, clusterState: %p, isHibernatingResult: %p, isArchivedSubscription: %p. It returns %p',
       (
@@ -146,7 +150,7 @@ describe('clusterDetailsHelper', () => {
           state,
           subscription: {
             ...defaultSubscription,
-            status: isArchivedSubscription ? SubscriptionCommonFields.status.ARCHIVED : undefined,
+            status: isArchivedSubscription ? SubscriptionCommonFieldsStatus.Archived : undefined,
           },
         };
         isHibernatingMock.mockReturnValue(isHibernatingResult);
@@ -161,11 +165,11 @@ describe('clusterDetailsHelper', () => {
     });
 
     it.each([
-      [true, 'consoleurlvalue', ClusterState.READY, true, false, 'aws', false, true],
-      [true, 'consoleurlvalue', ClusterState.READY, true, false, 'X', false, false],
-      [true, 'consoleurlvalue', ClusterState.READY, true, false, undefined, false, false],
-      [true, 'consoleurlvalue', ClusterState.READY, true, false, 'aws', true, false],
-      [true, 'consoleurlvalue', ClusterState.READY, true, false, 'aws', undefined, true],
+      [true, 'consoleurlvalue', ClusterState.ready, true, false, 'aws', false, true],
+      [true, 'consoleurlvalue', ClusterState.ready, true, false, 'X', false, false],
+      [true, 'consoleurlvalue', ClusterState.ready, true, false, undefined, false, false],
+      [true, 'consoleurlvalue', ClusterState.ready, true, false, 'aws', true, false],
+      [true, 'consoleurlvalue', ClusterState.ready, true, false, 'aws', undefined, true],
     ])(
       'managed: %p, consoleUrl: %p, clusterState: %p, isHibernatingResult: %p, isArchivedSubscription: %p. It returns %p',
       (
@@ -187,7 +191,7 @@ describe('clusterDetailsHelper', () => {
           state,
           subscription: {
             ...defaultSubscription,
-            status: isArchivedSubscription ? SubscriptionCommonFields.status.ARCHIVED : undefined,
+            status: isArchivedSubscription ? SubscriptionCommonFieldsStatus.Archived : undefined,
           },
           cloud_provider: {
             id: cloudProviderId,
@@ -208,8 +212,8 @@ describe('clusterDetailsHelper', () => {
     });
 
     it.each([
-      [true, undefined, ClusterState.READY, true, false, true],
-      [true, undefined, ClusterState.READY, false, false, false],
+      [true, undefined, ClusterState.ready, true, false, true],
+      [true, undefined, ClusterState.ready, false, false, false],
     ])(
       'managed: %p, consoleUrl: %p, clusterState: %p, isHypershiftClusterResult: %p, isArchivedSubscription: %p. It returns %p',
       (
@@ -229,7 +233,7 @@ describe('clusterDetailsHelper', () => {
           state,
           subscription: {
             ...defaultSubscription,
-            status: isArchivedSubscription ? SubscriptionCommonFields.status.ARCHIVED : undefined,
+            status: isArchivedSubscription ? SubscriptionCommonFieldsStatus.Archived : undefined,
           },
         };
         isHypershiftClusterMock.mockReturnValue(isHypershiftClusterResult);

@@ -12,19 +12,20 @@ import {
 
 import { getQueryParam } from '~/common/queryHelpers';
 import { hasSecurityGroupIds } from '~/common/securityGroupsHelpers';
+import AIClusterStatus from '~/components/AIComponents/AIClusterStatus';
+import { OverviewBillingAccount } from '~/components/clusters/ClusterDetailsMultiRegion/components/Overview/BillingAccount/OverviewBillingAccount';
 import clusterStates, {
   canViewMachinePoolTab,
   isHypershiftCluster,
   isROSA,
 } from '~/components/clusters/common/clusterStates';
-import ClusterStatusErrorDisplay from '~/components/clusters/commonMultiRegion/ClusterStatusErrorDisplay';
-import { useAWSVPCFromCluster } from '~/components/clusters/commonMultiRegion/useAWSVPCFromCluster';
+import ClusterStatusErrorDisplay from '~/components/clusters/common/ClusterStatusErrorDisplay';
+import { useAWSVPCFromCluster } from '~/components/clusters/common/useAWSVPCFromCluster';
 import { IMDSType } from '~/components/clusters/wizards/common';
-import AIClusterStatus from '~/components/common/AIClusterStatus';
 import useCanClusterAutoscale from '~/hooks/useCanClusterAutoscale';
-import { useGlobalState } from '~/redux/hooks';
+import { useFetchMachineOrNodePools } from '~/queries/ClusterDetailsQueries/MachinePoolTab/useFetchMachineOrNodePools';
 import { isRestrictedEnv } from '~/restrictedEnv';
-import { SubscriptionCommonFields } from '~/types/accounts_mgmt.v1';
+import { SubscriptionCommonFieldsStatus } from '~/types/accounts_mgmt.v1';
 
 import links from '../../../../../../common/installLinks.mjs';
 import { isAISubscriptionWithoutMetrics } from '../../../../../../common/isAssistedInstallerCluster';
@@ -41,8 +42,18 @@ import ClusterNetwork from '../ClusterNetwork';
 import DeleteProtection from './DeleteProtection/DeleteProtection';
 import { ClusterStatus } from './ClusterStatus';
 
-function DetailsRight({ cluster, hasAutoscaleCluster, isDeprovisioned, clusterDetailsLoading }) {
-  const machinePools = useGlobalState((state) => state.machinePools.getMachinePools.data);
+function DetailsRight({ cluster, hasAutoscaleCluster, isDeprovisioned, clusterDetailsFetching }) {
+  const isHypershift = isHypershiftCluster(cluster);
+  const region = cluster?.subscription?.rh_region_id;
+  const clusterID = cluster?.id;
+  const clusterVersionID = cluster?.version?.id;
+
+  const { data: machinePools } = useFetchMachineOrNodePools(
+    clusterID,
+    isHypershift,
+    clusterVersionID,
+    region,
+  );
 
   const nodesSectionData = totalNodesDataSelector(cluster, machinePools);
 
@@ -77,7 +88,6 @@ function DetailsRight({ cluster, hasAutoscaleCluster, isDeprovisioned, clusterDe
   );
   const isAWS = cluster.subscription?.cloud_provider_id === 'aws';
   const isGCP = cluster.subscription?.cloud_provider_id === 'gcp';
-  const isHypershift = isHypershiftCluster(cluster);
   const isROSACluster = isROSA(cluster);
   const infraAccount = cluster.subscription?.cloud_account_id || null;
   const hypershiftEtcdEncryptionKey = isHypershift && cluster.aws?.etcd_encryption?.kms_key_arn;
@@ -88,7 +98,7 @@ function DetailsRight({ cluster, hasAutoscaleCluster, isDeprovisioned, clusterDe
   );
   const showWorkerNodesTogether = getQueryParam('showWorkerNodesTogether') === 'true';
   const isDisconnected =
-    get(cluster, 'subscription.status', '') === SubscriptionCommonFields.status.DISCONNECTED;
+    get(cluster, 'subscription.status', '') === SubscriptionCommonFieldsStatus.Disconnected;
 
   const billingMarketplaceAccount = get(cluster, 'subscription.billing_marketplace_account', '');
 
@@ -123,16 +133,17 @@ function DetailsRight({ cluster, hasAutoscaleCluster, isDeprovisioned, clusterDe
   const secureBoot = isGCP && cluster.gcp?.security?.secure_boot;
 
   const showDeleteProtection = cluster.managed && !isArchivedSubscription(cluster);
-  const isClusterUninstalling = cluster.state === clusterStates.UNINSTALLING;
+  const isClusterUninstalling = cluster.state === clusterStates.uninstalling;
 
   return (
     <DescriptionList>
       {showDeleteProtection ? (
         <DeleteProtection
           clusterID={cluster.id}
+          region={cluster.subscription?.rh_region_id}
           protectionEnabled={cluster.delete_protection?.enabled}
           canToggle={cluster.canUpdateClusterResource}
-          pending={clusterDetailsLoading}
+          pending={clusterDetailsFetching}
           isUninstalling={isClusterUninstalling}
         />
       ) : null}
@@ -208,14 +219,7 @@ function DetailsRight({ cluster, hasAutoscaleCluster, isDeprovisioned, clusterDe
           </DescriptionListDescription>
         </DescriptionListGroup>
       )}
-      {billingMarketplaceAccount && (
-        <DescriptionListGroup>
-          <DescriptionListTerm>Billing marketplace account</DescriptionListTerm>
-          <DescriptionListDescription>
-            <span data-testid="billingMarketplaceAccount">{billingMarketplaceAccount}</span>
-          </DescriptionListDescription>
-        </DescriptionListGroup>
-      )}
+      {billingMarketplaceAccount && <OverviewBillingAccount />}
       {cluster.managed && !cluster.ccs?.enabled && (
         <>
           <DescriptionListGroup>
@@ -429,7 +433,7 @@ DetailsRight.propTypes = {
   cluster: PropTypes.any,
   isDeprovisioned: PropTypes.bool,
   hasAutoscaleCluster: PropTypes.bool,
-  clusterDetailsLoading: PropTypes.bool,
+  clusterDetailsFetching: PropTypes.bool,
 };
 
 export default DetailsRight;

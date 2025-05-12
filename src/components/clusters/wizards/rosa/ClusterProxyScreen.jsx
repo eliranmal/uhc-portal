@@ -23,7 +23,7 @@ import {
 import {
   ACCEPT,
   MAX_FILE_SIZE,
-} from '~/components/clusters/ClusterDetails/components/IdentityProvidersPage/components/CAUpload';
+} from '~/components/clusters/ClusterDetailsMultiRegion/components/IdentityProvidersPage/components/CAUpload';
 import { constants } from '~/components/clusters/common/CreateOSDFormConstants';
 import {
   DISABLED_NO_PROXY_PLACEHOLDER,
@@ -37,15 +37,15 @@ import {
 import { useFormState } from '~/components/clusters/wizards/hooks';
 import { FieldId } from '~/components/clusters/wizards/rosa/constants';
 import ExternalLink from '~/components/common/ExternalLink';
-import ReduxFileUpload from '~/components/common/ReduxFormComponents/ReduxFileUpload';
-import ReduxVerticalFormGroup from '~/components/common/ReduxFormComponents/ReduxVerticalFormGroup';
+import ReduxFileUpload from '~/components/common/ReduxFormComponents_deprecated/ReduxFileUpload';
+import ReduxVerticalFormGroup from '~/components/common/ReduxFormComponents_deprecated/ReduxVerticalFormGroup';
 
 function ClusterProxyScreen() {
   const {
     setFieldTouched,
     setFieldValue, // Set value of form field directly
-    getFieldProps, // Access: name, value, onBlur, onChange for a <Field>, useful for mapping to a field that expects the redux-form props
-    getFieldMeta, // Access: error, touched for a <Field>, useful for mapping to a field that expects the redux-form props
+    getFieldProps, // Access: name, value, onBlur, onChange for a <Field>, useful for mapping to a field
+    getFieldMeta, // Access: error, touched for a <Field>, useful for mapping to a field
     values: {
       [FieldId.HttpProxyUrl]: httpProxyUrl,
       [FieldId.HttpsProxyUrl]: httpsProxyUrl,

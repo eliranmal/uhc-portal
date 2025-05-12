@@ -1,26 +1,36 @@
 import React, { useRef, useState } from 'react';
 import PropTypes from 'prop-types';
+import { useDispatch } from 'react-redux';
 
 import { Dropdown, MenuToggle, Tooltip } from '@patternfly/react-core';
 import EllipsisVIcon from '@patternfly/react-icons/dist/esm/icons/ellipsis-v-icon';
+
+import { useToggleSubscriptionReleased } from '~/queries/ClusterActionsQueries/useToggleSubscriptionReleased';
+import { useGlobalState } from '~/redux/hooks';
+
+import { openModal } from '../../../common/Modal/ModalActions';
 
 import { dropDownItems } from './ClusterActionsDropdownItems';
 
 const ClusterActionsDropdown = (props) => {
   const [isOpen, setIsOpen] = useState(false);
 
+  const dispatch = useDispatch();
+  const username = useGlobalState((state) => state.userProfile.keycloakProfile.username);
+
   const {
     cluster,
     showConsoleButton,
-    openModal,
     isKebab,
     disabled,
     canSubscribeOCP,
     canTransferClusterOwnership,
-    toggleSubscriptionReleased,
+    isAutoClusterTransferOwnershipEnabled,
     canHibernateCluster,
     refreshFunc,
   } = props;
+
+  const isClusterOwner = cluster.subscription?.creator?.username === username;
 
   const onToggle = () => {
     setIsOpen(!isOpen);
@@ -30,16 +40,21 @@ const ClusterActionsDropdown = (props) => {
     setIsOpen(false);
   };
 
+  const { mutate: toggleSubscriptionReleased } = useToggleSubscriptionReleased();
+
   const menuItems = dropDownItems({
     cluster,
     showConsoleButton,
-    openModal,
+    openModal: (modalName, data) => dispatch(openModal(modalName, data)),
     canSubscribeOCP,
     canTransferClusterOwnership,
+    isAutoClusterTransferOwnershipEnabled,
+    isClusterOwner,
     canHibernateCluster,
-    toggleSubscriptionReleased,
     refreshFunc,
     inClusterList: false,
+    toggleSubscriptionReleased,
+    dispatch,
   });
 
   const toggleRef = useRef();
@@ -86,13 +101,12 @@ const ClusterActionsDropdown = (props) => {
 ClusterActionsDropdown.propTypes = {
   cluster: PropTypes.object.isRequired,
   showConsoleButton: PropTypes.bool.isRequired,
-  openModal: PropTypes.func.isRequired,
   isKebab: PropTypes.bool,
   disabled: PropTypes.bool,
   canSubscribeOCP: PropTypes.bool.isRequired,
   canTransferClusterOwnership: PropTypes.bool.isRequired,
+  isAutoClusterTransferOwnershipEnabled: PropTypes.bool.isRequired,
   canHibernateCluster: PropTypes.bool.isRequired,
-  toggleSubscriptionReleased: PropTypes.func.isRequired,
   refreshFunc: PropTypes.func.isRequired,
 };
 

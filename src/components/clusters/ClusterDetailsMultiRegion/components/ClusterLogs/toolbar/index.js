@@ -1,4 +1,3 @@
-import get from 'lodash/get';
 import { connect } from 'react-redux';
 
 import {
@@ -10,15 +9,11 @@ import { viewConstants } from '../../../../../../redux/constants';
 
 import ClusterLogsToolbar from './ClusterLogsToolbar';
 
-const mapStateToProps = (state, ownProps) => {
-  const cluster = get(state, 'clusters.details.cluster', {});
-  return {
-    viewOptions: state.viewOptions[viewConstants.CLUSTER_LOGS_VIEW],
-    currentFilter: state.viewOptions[ownProps.view].filter || { conditionalFilterFlags: {} },
-    currentFlags: state.viewOptions[ownProps.view].flags.conditionalFilterFlags || {},
-    createdAt: get(cluster, 'creation_timestamp', ''),
-  };
-};
+const mapStateToProps = (state, ownProps) => ({
+  viewOptions: state.viewOptions[viewConstants.CLUSTER_LOGS_VIEW],
+  currentFilter: state.viewOptions[ownProps.view].filter || { conditionalFilterFlags: {} },
+  currentFlags: state.viewOptions[ownProps.view].flags.conditionalFilterFlags || {},
+});
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
   setFilter: (filter) => dispatch(onListFilterSet(filter, ownProps.view)),

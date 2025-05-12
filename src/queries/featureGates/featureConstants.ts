@@ -1,0 +1,51 @@
+/*
+This file contains all the feature gates used in the OCMUI application.
+
+To add a new feature gate, add an export like this:
+     export const VAR_TO_BE_USED_IN_APP = 'feature-name-used-in-unleash';
+
+Then add this constant to the default export below
+
+NOTE:  When adding a new feature gate or changing who has the feature gate enabled/disabled,
+Be sure to create/update the feature gate in Unleash:
+  * Staging: https://ocm-stage.unleash.devshift.net/projects/default/features
+  * Production: https://ocm.unleash.devshift.net/projects/default/features
+
+In addition, update this spreadsheet used by QE testers:
+https://docs.google.com/spreadsheets/d/16aMLmHXHGenkDQb82nhnCbCj5OEraWENK6pcaDYG7bw/edit?gid=1338784370#gid=1338784370
+*/
+
+export const HYPERSHIFT_WIZARD_FEATURE = 'hypershift-creation-wizard';
+export const HCP_USE_UNMANAGED = 'hcp-use-unmanaged-policies';
+export const ENABLE_MACHINE_CONFIGURATION = 'enable-machine-configuration';
+export const CLI_SSO_AUTHORIZATION = 'cli-sso-authorization';
+export const MULTIREGION_PREVIEW_ENABLED = 'multi-region-support';
+export const CLUSTER_OWNERSHIP_TRANSFER = 'cluster-ownership-transfer';
+export const AUTO_CLUSTER_TRANSFER_OWNERSHIP = 'ocmui-cluster-ownership-transfer';
+export const OSD_GCP_WIF = 'gcp-workload-identity-federation';
+export const CREATE_CLUSTER_YAML_EDITOR = 'enable-create-cluster-yaml-editor';
+export const UNSTABLE_CLUSTER_VERSIONS = 'ocmui-unstable-cluster-versions';
+export const EDIT_BILLING_ACCOUNT = 'ocmui-edit-billing-account';
+export const PRIVATE_SERVICE_CONNECT = 'ocmui-gcp-private-service-connect';
+export const BYPASS_COMPUTE_NODE_COUNT_LIMIT_CLASSIC_OSD_GCP =
+  'bypass-compute-node-count-limit-classic-osd-gcp';
+export const MAX_NODES_TOTAL_249 = 'ocmui-max-nodes-total-249';
+export const ENHANCED_HTPASSWRD = 'ocmui-enhanced-htpasswrd';
+
+export default {
+  AUTO_CLUSTER_TRANSFER_OWNERSHIP,
+  HYPERSHIFT_WIZARD_FEATURE,
+  HCP_USE_UNMANAGED,
+  ENABLE_MACHINE_CONFIGURATION,
+  CLI_SSO_AUTHORIZATION,
+  MULTIREGION_PREVIEW_ENABLED,
+  CLUSTER_OWNERSHIP_TRANSFER,
+  OSD_GCP_WIF,
+  CREATE_CLUSTER_YAML_EDITOR,
+  UNSTABLE_CLUSTER_VERSIONS,
+  EDIT_BILLING_ACCOUNT,
+  PRIVATE_SERVICE_CONNECT,
+  BYPASS_COMPUTE_NODE_COUNT_LIMIT_CLASSIC_OSD_GCP,
+  MAX_NODES_TOTAL_249,
+  ENHANCED_HTPASSWRD,
+} as const;

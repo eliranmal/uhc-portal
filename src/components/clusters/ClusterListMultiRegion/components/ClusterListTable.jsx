@@ -1,6 +1,7 @@
 import React from 'react';
 import get from 'lodash/get';
 import PropTypes from 'prop-types';
+import { useDispatch } from 'react-redux';
 
 import {
   Button,
@@ -15,14 +16,31 @@ import {
 } from '@patternfly/react-core';
 import ExclamationTriangleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
-import { SortByDirection, Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
+import {
+  ActionsColumn,
+  SortByDirection,
+  Table,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
+} from '@patternfly/react-table';
 import { global_warning_color_100 as warningColor } from '@patternfly/react-tokens/dist/esm/global_warning_color_100';
 
 import { Link } from '~/common/routing';
-import AIClusterStatus from '~/components/common/AIClusterStatus';
+import AIClusterStatus from '~/components/AIComponents/AIClusterStatus';
+import { useToggleSubscriptionReleased } from '~/queries/ClusterActionsQueries/useToggleSubscriptionReleased';
+import { AUTO_CLUSTER_TRANSFER_OWNERSHIP } from '~/queries/featureGates/featureConstants';
+import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
+import { findRegionalInstance } from '~/queries/helpers';
+import { useFetchGetAvailableRegionalInstances } from '~/queries/RosaWizardQueries/useFetchGetAvailableRegionalInstances';
+import { useGlobalState } from '~/redux/hooks';
 
-import getClusterName from '../../../../common/getClusterName';
+import getClusterName, { UNNAMED_CLUSTER } from '../../../../common/getClusterName';
 import { isAISubscriptionWithoutMetrics } from '../../../../common/isAssistedInstallerCluster';
+import { actionResolver as multiRegionActionResolver } from '../../common/ClusterActionsDropdown/ClusterActionsDropdownItems';
+import { ClusterLocationLabel } from '../../common/ClusterLocationLabel';
 import ClusterStateIcon from '../../common/ClusterStateIcon';
 import clusterStates, {
   getClusterStateAndDescription,
@@ -32,10 +50,12 @@ import clusterStates, {
 } from '../../common/clusterStates';
 import ClusterTypeLabel from '../../common/ClusterTypeLabel';
 import ClusterUpdateLink from '../../common/ClusterUpdateLink';
+import { canSubscribeOCPListFromClusters } from '../../common/EditSubscriptionSettingsDialog/canSubscribeOCPListSelector';
 import getClusterVersion from '../../common/getClusterVersion';
+import { useCanHibernateClusterListFromClusters } from '../../common/HibernateClusterModal/HibernateClusterModalSelectors';
 import ActionRequiredLink from '../../common/InstallProgress/ActionRequiredLink';
 import ProgressList from '../../common/InstallProgress/ProgressList';
-import { ClusterLocationLabel } from '../../commonMultiRegion/ClusterLocationLabel';
+import { canTransferClusterOwnershipListFromClusters } from '../../common/TransferClusterOwnershipDialog/utils/transferClusterOwnershipDialogSelectors';
 
 import ClusterCreatedIndicator from './ClusterCreatedIndicator';
 
@@ -79,6 +99,7 @@ export const columns = {
   },
   actions: { title: '', screenReaderText: 'cluster actions' },
 };
+
 function ClusterListTable(props) {
   const {
     clusters,
@@ -87,8 +108,20 @@ function ClusterListTable(props) {
     activeSortIndex,
     activeSortDirection,
     setSort,
-    useClientSortPaging,
+    refreshFunc,
+    isClustersDataPending,
   } = props;
+
+  const dispatch = useDispatch();
+  const canSubscribeOCPList = canSubscribeOCPListFromClusters(clusters);
+  const canTransferClusterOwnershipList = canTransferClusterOwnershipListFromClusters(clusters);
+  const canHibernateClusterList = useCanHibernateClusterListFromClusters(clusters);
+
+  const { mutate: toggleSubscriptionReleasedMultiRegion } = useToggleSubscriptionReleased();
+
+  const { data: availableRegionalInstances } = useFetchGetAvailableRegionalInstances(true);
+  const isAutoClusterTransferOwnershipEnabled = useFeatureGate(AUTO_CLUSTER_TRANSFER_OWNERSHIP);
+  const username = useGlobalState((state) => state.userProfile.keycloakProfile.username);
 
   const getSortParams = (columnIndex) => ({
     sortBy: {
@@ -123,8 +156,7 @@ function ClusterListTable(props) {
     const columnOptions = columns[column];
 
     const sort =
-      columnOptions.sortIndex &&
-      (useClientSortPaging || (!useClientSortPaging && columnOptions.apiSortOption))
+      columnOptions.sortIndex && columnOptions.apiSortOption
         ? getSortParams(columnOptions.sortIndex)
         : undefined;
 
@@ -151,9 +183,19 @@ function ClusterListTable(props) {
   const clusterRow = (cluster) => {
     const provider = get(cluster, 'cloud_provider.id', 'N/A');
 
-    const clusterName = linkToClusterDetails(cluster, getClusterName(cluster));
+    const clusterNameText = getClusterName(cluster);
+    const clusterName =
+      isClustersDataPending && clusterNameText === UNNAMED_CLUSTER ? (
+        <Skeleton screenreaderText="loading cluster name" />
+      ) : (
+        linkToClusterDetails(cluster, clusterNameText)
+      );
 
     const clusterStatus = () => {
+      if (isClustersDataPending) {
+        // cluster status may not be loaded.
+        return <Skeleton screenreaderText="loading cluster status" />;
+      }
       if (isAISubscriptionWithoutMetrics(cluster.subscription)) {
         return <AIClusterStatus status={cluster.state} className="clusterstate" />;
       }
@@ -168,7 +210,13 @@ function ClusterListTable(props) {
           limitedSupport={hasLimitedSupport}
         />
       );
-      if (state === clusterStates.ERROR) {
+
+      const regionalInstance = findRegionalInstance(
+        cluster?.region?.id,
+        availableRegionalInstances,
+      );
+
+      if (state === clusterStates.error) {
         return (
           <span>
             <Popover
@@ -201,19 +249,21 @@ function ClusterListTable(props) {
         isWaitingForOIDCProviderOrOperatorRolesMode(cluster) ||
         isOSDGCPWaitingForRolesOnHostProject(cluster)
       ) {
-        // Show a popover for manual creation of ROSA operator roles and OIDC provider.
+        // Show a popover for manual creation of ROSA operator roles and OIDC provider and for
+        // OSD GCP service accounts roles
         return (
           <ActionRequiredLink
             cluster={cluster}
             icon={<ExclamationTriangleIcon color={warningColor.value} />}
+            regionalInstance={regionalInstance}
           />
         );
       }
       if (
-        state === clusterStates.WAITING ||
-        state === clusterStates.PENDING ||
-        state === clusterStates.VALIDATING ||
-        state === clusterStates.INSTALLING
+        state === clusterStates.waiting ||
+        state === clusterStates.pending ||
+        state === clusterStates.validating ||
+        state === clusterStates.installing
       ) {
         return (
           <Popover
@@ -257,6 +307,7 @@ function ClusterListTable(props) {
         <ClusterUpdateLink cluster={cluster} openModal={openModal} hideOSDUpdates />
       </span>
     );
+    const isClusterOwner = cluster.subscription?.creator?.username === username;
 
     return (
       <Tr key={cluster.id}>
@@ -281,7 +332,26 @@ function ClusterListTable(props) {
             cloudProviderID={provider}
           />
         </Td>
-        <Td isActionCell />
+        <Td isActionCell>
+          {!isPending && cluster ? (
+            <ActionsColumn
+              items={multiRegionActionResolver(
+                cluster,
+                true,
+                openModal,
+                canSubscribeOCPList[cluster.id] || false,
+                canHibernateClusterList[cluster.id] || false,
+                canTransferClusterOwnershipList[cluster.id] || false,
+                isAutoClusterTransferOwnershipEnabled,
+                isClusterOwner,
+                toggleSubscriptionReleasedMultiRegion,
+                refreshFunc,
+                true,
+                dispatch,
+              )}
+            />
+          ) : null}
+        </Td>
       </Tr>
     );
   };
@@ -305,7 +375,8 @@ ClusterListTable.propTypes = {
   activeSortDirection: PropTypes.string,
   setSort: PropTypes.func,
   isPending: PropTypes.bool,
-  useClientSortPaging: PropTypes.bool,
+  refreshFunc: PropTypes.func.isRequired,
+  isClustersDataPending: PropTypes.bool,
 };
 
 export default ClusterListTable;

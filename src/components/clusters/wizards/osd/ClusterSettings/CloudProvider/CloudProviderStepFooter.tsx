@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 
 import { useWizardContext } from '@patternfly/react-core';
+import { WizardContextProps } from '@patternfly/react-core/dist/esm/components/Wizard/WizardContext';
 
 import {
   getCloudProverInfo,
@@ -11,7 +12,11 @@ import { useFormState } from '~/components/clusters/wizards/hooks';
 import { CreateOsdWizardFooter } from '~/components/clusters/wizards/osd/CreateOsdWizardFooter';
 import { useGlobalState } from '~/redux/hooks';
 
-export const CloudProviderStepFooter = () => {
+export const CloudProviderStepFooter = ({
+  onWizardContextChange,
+}: {
+  onWizardContextChange(context: Partial<WizardContextProps>): void;
+}) => {
   const dispatch = useDispatch();
   const { values } = useFormState();
   const { goToNextStep } = useWizardContext();
@@ -45,5 +50,11 @@ export const CloudProviderStepFooter = () => {
     goToNextStep,
   ]);
 
-  return <CreateOsdWizardFooter onNext={onNext} isLoading={pendingValidation} />;
+  return (
+    <CreateOsdWizardFooter
+      onNext={onNext}
+      isLoading={pendingValidation}
+      onWizardContextChange={onWizardContextChange}
+    />
+  );
 };

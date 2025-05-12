@@ -1,16 +1,19 @@
 import { useMutation } from '@tanstack/react-query';
 
-import { buildMachinePoolRequest } from '~/components/clusters/ClusterDetails/components/MachinePools/components/EditMachinePoolModal/utils';
 import { isMPoolAz } from '~/components/clusters/ClusterDetailsMultiRegion/clusterDetailsHelper';
 import { EditMachinePoolValues } from '~/components/clusters/ClusterDetailsMultiRegion/components/MachinePools/components/EditMachinePoolModal/hooks/useMachinePoolFormik';
-import { buildNodePoolRequest } from '~/components/clusters/ClusterDetailsMultiRegion/components/MachinePools/components/EditMachinePoolModal/utils';
+import {
+  buildMachinePoolRequest,
+  buildNodePoolRequest,
+} from '~/components/clusters/ClusterDetailsMultiRegion/components/MachinePools/components/EditMachinePoolModal/utils';
 import { isROSA } from '~/components/clusters/common/clusterStates';
 import { getClusterService, getClusterServiceForRegion } from '~/services/clusterService';
-import { Cluster, MachinePool } from '~/types/clusters_mgmt.v1';
+import { MachinePool } from '~/types/clusters_mgmt.v1';
+import { ClusterFromSubscription } from '~/types/types';
 
 export const useEditCreateMachineOrNodePools = (
   isHypershift: boolean | undefined,
-  cluster: Cluster,
+  cluster: ClusterFromSubscription,
   currentMachinePool?: MachinePool,
 ) => {
   const { data, isPending, isError, isSuccess, mutate, mutateAsync } = useMutation({

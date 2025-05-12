@@ -3,11 +3,11 @@ import clusterStates from '../../../../common/clusterStates';
 const shouldShowLogs = (cluster) =>
   cluster.managed &&
   cluster.canEdit &&
-  (cluster.state === clusterStates.WAITING ||
-    cluster.state === clusterStates.PENDING ||
-    cluster.state === clusterStates.INSTALLING ||
-    cluster.state === clusterStates.VALIDATING ||
-    cluster.state === clusterStates.ERROR ||
-    cluster.state === clusterStates.UNINSTALLING);
+  (cluster.state === clusterStates.waiting ||
+    cluster.state === clusterStates.pending ||
+    cluster.state === clusterStates.installing ||
+    cluster.state === clusterStates.validating ||
+    cluster.state === clusterStates.error ||
+    cluster.state === clusterStates.uninstalling);
 
 export default shouldShowLogs;

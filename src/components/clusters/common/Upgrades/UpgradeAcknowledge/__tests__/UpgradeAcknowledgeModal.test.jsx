@@ -1,9 +1,20 @@
 import React from 'react';
+import * as reactRedux from 'react-redux';
 
+import { useGlobalState } from '~/redux/hooks';
 import apiRequest from '~/services/apiRequest';
 import { render, screen, userEvent, waitFor } from '~/testUtils';
 
 import UpgradeAcknowledgeModal from '../UpgradeAcknowledgeModal/UpgradeAcknowledgeModal';
+
+jest.mock('react-redux', () => ({
+  ...jest.requireActual('react-redux'),
+  useDispatch: jest.fn(),
+}));
+
+jest.mock('~/redux/hooks', () => ({
+  useGlobalState: jest.fn(),
+}));
 
 const ackWord = 'Acknowledge';
 const approvalButton = 'Approve and continue';
@@ -18,25 +29,29 @@ const clickSubmitButton = async (user) => {
   });
   await user.click(screen.getByRole('button', { name: approvalButton }));
 };
-
+const useDispatchMock = jest.spyOn(reactRedux, 'useDispatch');
+const mockedDispatch = jest.fn();
+useDispatchMock.mockReturnValue(mockedDispatch);
 describe('<UpgradeAcknowledgeModal> ', () => {
-  const mockSetUpgradePolicy = jest.fn();
-  const mockSetGate = jest.fn();
-  const mockCloseModal = jest.fn();
   const modalData = {
     fromVersion: '1.2.3',
     toVersion: '1.3.4',
     unmetAcknowledgements: [{ id: 'unMetAck1' }, { id: 'unMetAck2' }],
+    isHypershift: false,
+    isSTSEnabled: false,
   };
   const defaultProps = {
-    closeModal: mockCloseModal,
     clusterId: 'myClusterId',
-    automaticUpgradePolicyId: 'myUpgradePolicyId',
-    isOpen: true,
-    isHypershift: false,
-    setGate: mockSetGate,
-    setUpgradePolicy: mockSetUpgradePolicy,
-    modalData,
+    schedules: {
+      items: [
+        {
+          upgrade_type: 'OSD',
+          schedule_type: 'automatic',
+          id: 'myUpgradePolicyId',
+          state: { value: 'started' },
+        },
+      ],
+    },
   };
   afterEach(() => {
     jest.clearAllMocks();
@@ -46,6 +61,8 @@ describe('<UpgradeAcknowledgeModal> ', () => {
     const apiReturnValue = { data: { enable_minor_version_upgrades: true } };
     apiRequest.patch.mockResolvedValue(apiReturnValue);
     apiRequest.post.mockResolvedValue(apiReturnValue);
+
+    useGlobalState.mockReturnValue(modalData);
 
     render(<UpgradeAcknowledgeModal {...defaultProps} />);
 
@@ -69,29 +86,36 @@ describe('<UpgradeAcknowledgeModal> ', () => {
       '/api/clusters_mgmt/v1/clusters/myClusterId/gate_agreements',
       { version_gate: { id: 'unMetAck2' } },
     );
+    expect(mockedDispatch).toHaveBeenCalledTimes(4);
     // Call updatePolicy (y-stream) action
-    expect(mockSetUpgradePolicy.mock.calls).toHaveLength(1);
-    expect(mockSetUpgradePolicy.mock.calls[0][0]).toEqual({ enable_minor_version_upgrades: true });
+    expect(mockedDispatch).toHaveBeenCalledWith({
+      type: 'SET_CLUSTER_UPGRADE_POLICY',
+      payload: {
+        enable_minor_version_upgrades: true,
+      },
+    });
 
     // Call updateGate action
-    expect(mockSetGate.mock.calls).toHaveLength(2);
-    expect(mockSetGate.mock.calls[0][0]).toEqual('unMetAck1');
-    expect(mockSetGate.mock.calls[1][0]).toEqual('unMetAck2');
+    expect(mockedDispatch).toHaveBeenCalledWith({
+      type: 'SET_CLUSTER_UPGRADE_GATE',
+      payload: 'unMetAck1',
+    });
+    expect(mockedDispatch).toHaveBeenCalledWith({
+      type: 'SET_CLUSTER_UPGRADE_GATE',
+      payload: 'unMetAck2',
+    });
 
     // Since success, close modal
-    expect(mockCloseModal.mock.calls).toHaveLength(1);
+    expect(mockedDispatch).toHaveBeenCalledWith({ type: 'CLOSE_MODAL' });
     expect(screen.queryByRole('alert', { name: 'Danger Alert' })).not.toBeInTheDocument();
   });
 
   it('Error is shown for failed y-stream approval action', async () => {
-    const apiError = {
-      response: {
-        data: { reason: 'an error happened' },
-      },
-    };
-    apiRequest.patch.mockRejectedValueOnce(apiError).mockResolvedValue();
+    useGlobalState.mockReturnValue(modalData);
+    const apiError = { reason: 'an error happened', errorMessage: 'error message' };
+    apiRequest.patch.mockRejectedValue(apiError).mockResolvedValue();
 
-    render(<UpgradeAcknowledgeModal {...defaultProps} />);
+    const { rerender } = render(<UpgradeAcknowledgeModal {...defaultProps} />);
     const user = await userEvent.setup({
       delay: null,
     });
@@ -106,18 +130,32 @@ describe('<UpgradeAcknowledgeModal> ', () => {
     );
 
     // Call updatePolicy (y-stream) action
-    expect(mockSetUpgradePolicy).not.toHaveBeenCalled();
-
+    expect(mockedDispatch).not.toHaveBeenCalledWith({
+      type: 'SET_CLUSTER_UPGRADE_POLICY',
+      payload: {
+        enable_minor_version_upgrades: true,
+      },
+    });
+    expect(mockedDispatch).not.toHaveBeenCalled();
     // Call updateGate action
-    expect(mockSetGate).not.toHaveBeenCalled();
-
+    expect(mockedDispatch).not.toHaveBeenCalledWith({
+      type: 'SET_CLUSTER_UPGRADE_GATE',
+      payload: 'unMetAck1',
+    });
+    expect(mockedDispatch).not.toHaveBeenCalledWith({
+      type: 'SET_CLUSTER_UPGRADE_GATE',
+      payload: 'unMetAck2',
+    });
     // Since failure, don't close modal
-    expect(mockCloseModal).not.toHaveBeenCalled();
+    expect(mockedDispatch).not.toHaveBeenCalledWith({ type: 'CLOSE_MODAL' });
+
+    rerender(<UpgradeAcknowledgeModal {...defaultProps} />);
 
     expect(screen.getByText(errMsg)).toBeInTheDocument();
   });
 
   it('Errors are shown for failed gates action', async () => {
+    useGlobalState.mockReturnValue(modalData);
     const apiReturnValue = { data: { enable_minor_version_upgrades: true } };
     const apiError = {
       response: {
@@ -154,14 +192,24 @@ describe('<UpgradeAcknowledgeModal> ', () => {
     );
 
     // Call updatePolicy (y-stream) action
-    expect(mockSetUpgradePolicy.mock.calls).toHaveLength(1);
-    expect(mockSetUpgradePolicy.mock.calls[0][0]).toEqual({ enable_minor_version_upgrades: true });
+    expect(mockedDispatch).toHaveBeenCalledWith({
+      type: 'SET_CLUSTER_UPGRADE_POLICY',
+      payload: {
+        enable_minor_version_upgrades: true,
+      },
+    });
 
     // Call updateGate action
-    expect(mockSetGate).not.toHaveBeenCalled();
-
+    expect(mockedDispatch).not.toHaveBeenCalledWith({
+      type: 'SET_CLUSTER_UPGRADE_GATE',
+      payload: 'unMetAck1',
+    });
+    expect(mockedDispatch).not.toHaveBeenCalledWith({
+      type: 'SET_CLUSTER_UPGRADE_GATE',
+      payload: 'unMetAck2',
+    });
     // Since failure, don't close modal
-    expect(mockCloseModal).not.toHaveBeenCalled();
+    expect(mockedDispatch).not.toHaveBeenCalledWith({ type: 'CLOSE_MODAL' });
 
     expect(
       await screen.findByRole('button', { name: /cancel/i, hidden: true }),
@@ -170,11 +218,13 @@ describe('<UpgradeAcknowledgeModal> ', () => {
   });
 
   it('does not set enable_minor_version flag if isSTS', async () => {
+    useGlobalState.mockReturnValue({ ...modalData, isSTSEnabled: true });
+
     const apiReturnValue = { data: {} };
     apiRequest.patch.mockResolvedValue(apiReturnValue);
     apiRequest.post.mockResolvedValue(apiReturnValue);
 
-    const { user } = render(<UpgradeAcknowledgeModal {...defaultProps} isSTSEnabled />);
+    const { user } = render(<UpgradeAcknowledgeModal {...defaultProps} />);
 
     await clickSubmitButton(user);
 
@@ -190,48 +240,60 @@ describe('<UpgradeAcknowledgeModal> ', () => {
       { version_gate: { id: 'unMetAck2' } },
     );
     // Verify updatePolicy (y-stream) action was not called
-    expect(mockSetUpgradePolicy.mock.calls).toHaveLength(0);
+    // Call updatePolicy (y-stream) action
+    expect(mockedDispatch).not.toHaveBeenCalledWith({
+      type: 'SET_CLUSTER_UPGRADE_POLICY',
+      payload: {
+        enable_minor_version_upgrades: true,
+      },
+    });
 
     // Call updateGate action
-    expect(mockSetGate.mock.calls).toHaveLength(2);
-    expect(mockSetGate.mock.calls[0][0]).toEqual('unMetAck1');
-    expect(mockSetGate.mock.calls[1][0]).toEqual('unMetAck2');
-
-    // Since success, close modal
-    expect(mockCloseModal.mock.calls).toHaveLength(1);
+    expect(mockedDispatch).toHaveBeenCalledWith({
+      type: 'SET_CLUSTER_UPGRADE_GATE',
+      payload: 'unMetAck1',
+    });
+    expect(mockedDispatch).toHaveBeenCalledWith({
+      type: 'SET_CLUSTER_UPGRADE_GATE',
+      payload: 'unMetAck2',
+    });
+    expect(mockedDispatch).toHaveBeenCalledWith({ type: 'CLOSE_MODAL' });
     expect(screen.queryByRole('alert', { name: 'Danger Alert' })).not.toBeInTheDocument();
   });
 });
 
 describe('<UpgradeAcknowledgeModal>  with hosted control plane(hypershift)', () => {
-  const mockSetUpgradePolicy = jest.fn();
-  const mockSetGate = jest.fn();
-  const mockCloseModal = jest.fn();
   const modalData = {
     fromVersion: '1.2.3',
     toVersion: '1.3.4',
     unmetAcknowledgements: [{ id: 'unMetAck1' }, { id: 'unMetAck2' }],
-  };
-  const defaultProps = {
-    closeModal: mockCloseModal,
-    clusterId: 'myClusterId',
-    automaticUpgradePolicyId: 'myUpgradePolicyId',
-    isOpen: true,
     isHypershift: true,
-    setGate: mockSetGate,
-    setUpgradePolicy: mockSetUpgradePolicy,
-    modalData,
+    isSTSEnabled: false,
+  };
+  const defaultPropsHypershift = {
+    clusterId: 'myClusterId',
+    schedules: {
+      items: [
+        {
+          upgrade_type: 'OSD',
+          schedule_type: 'automatic',
+          id: 'myUpgradePolicyId',
+          state: { value: 'started' },
+        },
+      ],
+    },
   };
   afterEach(() => {
     jest.clearAllMocks();
   });
 
   it('(HCP) API call for each gates calls action and y-stream approval', async () => {
+    useGlobalState.mockReturnValue(modalData);
     const apiReturnValue = { data: { enable_minor_version_upgrades: true } };
     apiRequest.patch.mockResolvedValue(apiReturnValue);
     apiRequest.post.mockResolvedValue(apiReturnValue);
 
-    render(<UpgradeAcknowledgeModal {...defaultProps} />);
+    render(<UpgradeAcknowledgeModal {...defaultPropsHypershift} />);
 
     const user = await userEvent.setup({
       delay: null,
@@ -253,29 +315,36 @@ describe('<UpgradeAcknowledgeModal>  with hosted control plane(hypershift)', () 
       '/api/clusters_mgmt/v1/clusters/myClusterId/gate_agreements',
       { version_gate: { id: 'unMetAck2' } },
     );
+    expect(mockedDispatch).toHaveBeenCalledTimes(4);
     // Call updatePolicy (y-stream) action
-    expect(mockSetUpgradePolicy.mock.calls).toHaveLength(1);
-    expect(mockSetUpgradePolicy.mock.calls[0][0]).toEqual({ enable_minor_version_upgrades: true });
+    expect(mockedDispatch).toHaveBeenCalledWith({
+      type: 'SET_CLUSTER_UPGRADE_POLICY',
+      payload: {
+        enable_minor_version_upgrades: true,
+      },
+    });
 
     // Call updateGate action
-    expect(mockSetGate.mock.calls).toHaveLength(2);
-    expect(mockSetGate.mock.calls[0][0]).toEqual('unMetAck1');
-    expect(mockSetGate.mock.calls[1][0]).toEqual('unMetAck2');
+    expect(mockedDispatch).toHaveBeenCalledWith({
+      type: 'SET_CLUSTER_UPGRADE_GATE',
+      payload: 'unMetAck1',
+    });
+    expect(mockedDispatch).toHaveBeenCalledWith({
+      type: 'SET_CLUSTER_UPGRADE_GATE',
+      payload: 'unMetAck2',
+    });
 
     // Since success, close modal
-    expect(mockCloseModal.mock.calls).toHaveLength(1);
+    expect(mockedDispatch).toHaveBeenCalledWith({ type: 'CLOSE_MODAL' });
     expect(screen.queryByRole('alert', { name: 'Danger Alert' })).not.toBeInTheDocument();
   });
 
   it('(HCP) Error is shown for failed y-stream approval action', async () => {
-    const apiError = {
-      response: {
-        data: { reason: 'an error happened' },
-      },
-    };
+    useGlobalState.mockReturnValue(modalData);
+    const apiError = { error: { reason: 'an error happened', errorMessage: 'error message' } };
     apiRequest.patch.mockRejectedValueOnce(apiError).mockResolvedValue();
 
-    render(<UpgradeAcknowledgeModal {...defaultProps} />);
+    const { rerender } = render(<UpgradeAcknowledgeModal {...defaultPropsHypershift} />);
     const user = await userEvent.setup({
       delay: null,
     });
@@ -290,13 +359,26 @@ describe('<UpgradeAcknowledgeModal>  with hosted control plane(hypershift)', () 
     );
 
     // Call updatePolicy (y-stream) action
-    expect(mockSetUpgradePolicy).not.toHaveBeenCalled();
-
+    expect(mockedDispatch).not.toHaveBeenCalledWith({
+      type: 'SET_CLUSTER_UPGRADE_POLICY',
+      payload: {
+        enable_minor_version_upgrades: true,
+      },
+    });
+    expect(mockedDispatch).not.toHaveBeenCalled();
     // Call updateGate action
-    expect(mockSetGate).not.toHaveBeenCalled();
-
+    expect(mockedDispatch).not.toHaveBeenCalledWith({
+      type: 'SET_CLUSTER_UPGRADE_GATE',
+      payload: 'unMetAck1',
+    });
+    expect(mockedDispatch).not.toHaveBeenCalledWith({
+      type: 'SET_CLUSTER_UPGRADE_GATE',
+      payload: 'unMetAck2',
+    });
     // Since failure, don't close modal
-    expect(mockCloseModal).not.toHaveBeenCalled();
+    expect(mockedDispatch).not.toHaveBeenCalledWith({ type: 'CLOSE_MODAL' });
+
+    rerender(<UpgradeAcknowledgeModal {...defaultPropsHypershift} />);
 
     expect(screen.getByText(errMsg)).toBeInTheDocument();
   });
@@ -311,7 +393,7 @@ describe('<UpgradeAcknowledgeModal>  with hosted control plane(hypershift)', () 
     apiRequest.post.mockRejectedValue(apiError);
     apiRequest.patch.mockResolvedValueOnce(apiReturnValue);
 
-    render(<UpgradeAcknowledgeModal {...defaultProps} />);
+    render(<UpgradeAcknowledgeModal {...defaultPropsHypershift} />);
     const user = await userEvent.setup({
       delay: null,
     });
@@ -338,18 +420,28 @@ describe('<UpgradeAcknowledgeModal>  with hosted control plane(hypershift)', () 
     );
 
     // Call updatePolicy (y-stream) action
-    expect(mockSetUpgradePolicy.mock.calls).toHaveLength(1);
-    expect(mockSetUpgradePolicy.mock.calls[0][0]).toEqual({ enable_minor_version_upgrades: true });
+    expect(mockedDispatch).toHaveBeenCalledWith({
+      type: 'SET_CLUSTER_UPGRADE_POLICY',
+      payload: {
+        enable_minor_version_upgrades: true,
+      },
+    });
 
     // Call updateGate action
-    expect(mockSetGate).not.toHaveBeenCalled();
-
-    // Since failure, don't close modal
-    expect(mockCloseModal).not.toHaveBeenCalled();
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /cancel/i, hidden: true })).toBeInTheDocument();
+    expect(mockedDispatch).not.toHaveBeenCalledWith({
+      type: 'SET_CLUSTER_UPGRADE_GATE',
+      payload: 'unMetAck1',
     });
+    expect(mockedDispatch).not.toHaveBeenCalledWith({
+      type: 'SET_CLUSTER_UPGRADE_GATE',
+      payload: 'unMetAck2',
+    });
+    // Since failure, don't close modal
+    expect(mockedDispatch).not.toHaveBeenCalledWith({ type: 'CLOSE_MODAL' });
+
+    expect(
+      await screen.findByRole('button', { name: /cancel/i, hidden: true }),
+    ).toBeInTheDocument();
     expect(screen.queryAllByText(errMsg)).toHaveLength(2);
   });
 });

@@ -3,12 +3,12 @@ import { Field, FieldArray } from 'formik';
 
 import { Grid, GridItem } from '@patternfly/react-core';
 
-import { FormSubnet } from '~/common/validators';
 import { useFormState } from '~/components/clusters/wizards/hooks';
 import { FieldId } from '~/components/clusters/wizards/rosa/constants';
 import MachinePoolSubnetsForm from '~/components/common/FormikFormComponents/MachinePoolSubnetsForm';
-import { CloudVPC } from '~/types/clusters_mgmt.v1';
+import { CloudVpc } from '~/types/clusters_mgmt.v1';
 
+import { FormSubnet } from '../../common/FormSubnet';
 import VPCDropdown from '../../common/VPCDropdown/VPCDropdown';
 
 /**
@@ -35,7 +35,7 @@ const MachinePoolsSubnets = () => {
         .map((subnet) => subnet.privateSubnetId)
         .filter((id) => !!id);
 
-      const AZs = ((selectedVPC as CloudVPC)?.aws_subnets || [])
+      const AZs = ((selectedVPC as CloudVpc)?.aws_subnets || [])
         .filter(
           (vpcSubnet) => vpcSubnet.subnet_id && privateSubnetIds.includes(vpcSubnet.subnet_id),
         )
@@ -51,7 +51,7 @@ const MachinePoolsSubnets = () => {
   }, [machinePoolsSubnets, selectedVPC]);
 
   const MachinePoolSubnetsFormComponent = useCallback(
-    (props) => (
+    (props: any) => (
       <MachinePoolSubnetsForm selectedVPC={selectedVPC} {...props} warning={subnetWarnings} />
     ),
     [selectedVPC, subnetWarnings],
@@ -63,14 +63,13 @@ const MachinePoolsSubnets = () => {
         <Field
           component={VPCDropdown}
           name={FieldId.SelectedVpc}
-          validate={(newVPC: CloudVPC) => (newVPC?.id ? undefined : 'error')}
+          validate={(newVPC: CloudVpc) => (newVPC?.id ? undefined : 'error')}
           selectedVPC={selectedVPC}
           showRefresh
           isHypershift
-          isRosaV1={false}
           input={{
             ...getFieldProps(FieldId.SelectedVpc),
-            onChange: (value: CloudVPC) => setFieldValue(FieldId.SelectedVpc, value),
+            onChange: (value: CloudVpc) => setFieldValue(FieldId.SelectedVpc, value),
           }}
           meta={getFieldMeta(FieldId.SelectedVpc)}
         />

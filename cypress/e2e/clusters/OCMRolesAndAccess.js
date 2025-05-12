@@ -35,10 +35,10 @@ describe('OCM Roles And Access', { tags: ['ci'] }, () => {
   });
 
   it('successfully validate and grant the RBAC', () => {
-    OCMRolesAndAccessPage.grantRoleButton().click();
+    OCMRolesAndAccessPage.grantRoleButton().click({ force: true });
     OCMRolesAndAccessPage.grantRoleUserInput().should('exist');
     OCMRolesAndAccessPage.grantRoleUserInput().type(' ');
-    OCMRolesAndAccessPage.userInputError().should('have.text', 'Red Hat login cannot be empty.');
+    OCMRolesAndAccessPage.userInputError().should('contain', 'Red Hat login cannot be empty.');
     OCMRolesAndAccessPage.grantRoleUserInput().type(v4());
     OCMRolesAndAccessPage.submitButton().click();
     OCMRolesAndAccessPage.userInputError().should(
@@ -56,7 +56,7 @@ describe('OCM Roles And Access', { tags: ['ci'] }, () => {
   });
 
   it('successfully deletes the user', () => {
-    OCMRolesAndAccessPage.OCMRolesAndAccessTableActionButton().focus().click();
+    OCMRolesAndAccessPage.OCMRolesAndAccessTableActionButton().focus().click({ force: true });
     OCMRolesAndAccessPage.OCMRolesAndAccessTableDeleteButton().focus().click();
     OCMRolesAndAccessPage.usernameCell().should('not.exist');
   });

@@ -12,7 +12,7 @@ import {
 } from '@patternfly/react-core';
 
 import ExternalLink from '~/components/common/ExternalLink';
-import VideoImg from '~/styles/images/AdvancedClusterSecurityExplanationVideoImg.png';
+import { YoutubePlayer } from '~/components/common/YoutubePlayer/YoutubePlayer';
 
 const AdvancedClusterSecurityDrawerPanelBody = (
   <Stack hasGutter className="drawer-panel-content-body">
@@ -31,18 +31,7 @@ const AdvancedClusterSecurityDrawerPanelBody = (
     </StackItem>
 
     <StackItem>
-      <ExternalLink
-        href="https://www.youtube.com/watch?v=lFBFW3HmgsA&t=2s"
-        noIcon
-        data-testid="drawer-panel-content__explanation-video-parent"
-      >
-        <img
-          src={VideoImg}
-          alt="explanation-video"
-          className="drawer-panel-content__explanation-video"
-          data-testid="drawer-panel-content__explanation-video"
-        />
-      </ExternalLink>
+      <YoutubePlayer videoID="lFBFW3HmgsA" />
       <TextContent>
         <Text component={TextVariants.small}>Video duration 2:21</Text>
       </TextContent>
@@ -121,4 +110,4 @@ const AdvancedClusterSecurityDrawerPanelBody = (
   </Stack>
 );
 
-export default AdvancedClusterSecurityDrawerPanelBody;
+export { AdvancedClusterSecurityDrawerPanelBody };

@@ -1,7 +1,8 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 
-import ClusterDetailsRedirector from '../ClusterDetailsRedirector';
+import ClusterDetailsRedirector from '~/components/clusters/ClusterDetailsRedirectorMultiRegion';
+
 import InsightsAdvisorRedirector from '../InsightsAdvisorRedirector';
 
 const ClusterDetailsClusterOrExternalId = (props) => {

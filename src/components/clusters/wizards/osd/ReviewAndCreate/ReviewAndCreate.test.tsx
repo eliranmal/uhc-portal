@@ -5,7 +5,7 @@ import { CloudProviderType } from '~/components/clusters/wizards/common';
 import { GCPAuthType } from '~/components/clusters/wizards/osd/ClusterSettings/CloudProvider/types';
 import { FieldId } from '~/components/clusters/wizards/osd/constants';
 import { ReviewAndCreate } from '~/components/clusters/wizards/osd/ReviewAndCreate/ReviewAndCreate';
-import { OSD_GCP_WIF } from '~/redux/constants/featureConstants';
+import { OSD_GCP_WIF } from '~/queries/featureGates/featureConstants';
 import { checkAccessibility, mockUseFeatureGate, render, screen } from '~/testUtils';
 
 const formValues = {
@@ -144,7 +144,7 @@ describe('<ReviewAndCreate />', () => {
   });
 
   describe('OSD Google cloud provider', () => {
-    it('shows service account type if WIF feature is enabled', () => {
+    it('shows service account when service account authentication is selected', () => {
       mockUseFeatureGate([[OSD_GCP_WIF, true]]);
 
       render(
@@ -156,13 +156,18 @@ describe('<ReviewAndCreate />', () => {
       expect(screen.getByText('Authentication type')).toBeInTheDocument();
       expect(screen.getByText('Service Account')).toBeInTheDocument();
       expect(screen.queryByText('Workload Identity Federation')).not.toBeInTheDocument();
+      expect(screen.queryByText('WIF configuration')).not.toBeInTheDocument();
     });
 
-    it('shows wif authentication type if WIF feature is enabled', () => {
+    it('shows WIF info when WIF authentication is selected', () => {
       mockUseFeatureGate([[OSD_GCP_WIF, true]]);
+      const wifConfigName = 'some-wif-config';
       const values = {
         ...formValues,
         gcp_auth_type: GCPAuthType.WorkloadIdentityFederation,
+        gcp_wif_config: {
+          display_name: wifConfigName,
+        },
       };
       render(
         <Formik initialValues={values} onSubmit={() => {}}>
@@ -172,6 +177,9 @@ describe('<ReviewAndCreate />', () => {
 
       expect(screen.getByText('Authentication type')).toBeInTheDocument();
       expect(screen.getByText('Workload Identity Federation')).toBeInTheDocument();
+      expect(screen.getByText('WIF configuration')).toBeInTheDocument();
+      expect(screen.getByText(wifConfigName)).toBeInTheDocument();
+
       expect(screen.queryByText('Service Account')).not.toBeInTheDocument();
     });
 
@@ -187,6 +195,30 @@ describe('<ReviewAndCreate />', () => {
       expect(screen.queryByText('Authentication type')).not.toBeInTheDocument();
       expect(screen.queryByText('Service Account')).not.toBeInTheDocument();
       expect(screen.queryByText('Workload Identity Federation')).not.toBeInTheDocument();
+    });
+
+    it("doesn't show previously selected WIF config when auth type is service account (going back and forth changing auth configuration)", () => {
+      mockUseFeatureGate([[OSD_GCP_WIF, true]]);
+      const wifConfigName = 'some-wif-config';
+      render(
+        <Formik
+          initialValues={{
+            ...formValues,
+            gcp_auth_type: GCPAuthType.ServiceAccounts,
+            gcp_wif_config: {
+              display_name: wifConfigName,
+            },
+          }}
+          onSubmit={() => {}}
+        >
+          <ReviewAndCreate />
+        </Formik>,
+      );
+
+      expect(screen.getByText('Service Account')).toBeInTheDocument();
+      expect(screen.queryByText('Workload Identity Federation')).not.toBeInTheDocument();
+      expect(screen.queryByText('WIF configuration')).not.toBeInTheDocument();
+      expect(screen.queryByText(wifConfigName)).not.toBeInTheDocument();
     });
 
     it.each([

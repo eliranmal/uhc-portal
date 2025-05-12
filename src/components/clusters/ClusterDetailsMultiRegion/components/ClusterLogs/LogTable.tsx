@@ -30,7 +30,7 @@ import {
 
 import MarkdownParser from '~/common/MarkdownParser';
 import ExternalLink from '~/components/common/ExternalLink';
-import { ClusterLog } from '~/types/service_logs.v1/index';
+import { ClusterLog } from '~/types/service_logs.v1';
 import { ViewSorting } from '~/types/types';
 
 import { eventTypes } from '../../clusterDetailsHelper';
@@ -216,7 +216,7 @@ const LogTable = ({ logs, setSorting, pending, refreshEvent }: LogTableParams) =
   return (
     <Bullseye>
       {showSpinner ? (
-        <Spinner size="lg" />
+        <Spinner size="lg" aria-label="Loading..." />
       ) : (
         <Table aria-label="Expandable table" variant={TableVariant.compact}>
           <Thead>

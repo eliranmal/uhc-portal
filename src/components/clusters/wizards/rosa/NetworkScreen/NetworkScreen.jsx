@@ -27,7 +27,7 @@ import { FieldId } from '~/components/clusters/wizards/rosa/constants';
 import { DefaultIngressFieldsFormik } from '~/components/clusters/wizards/rosa/NetworkScreen/DefaultIngressFieldsFormik';
 import { CheckboxDescription } from '~/components/common/CheckboxDescription';
 import ExternalLink from '~/components/common/ExternalLink';
-import { RadioButtons, ReduxCheckbox } from '~/components/common/ReduxFormComponents';
+import { RadioButtons, ReduxCheckbox } from '~/components/common/ReduxFormComponents_deprecated';
 import useAnalytics from '~/hooks/useAnalytics';
 import { isRestrictedEnv } from '~/restrictedEnv';
 
@@ -44,8 +44,8 @@ function NetworkScreen(props) {
 
   const {
     setFieldValue, // Set value of form field directly
-    getFieldProps, // Access: name, value, onBlur, onChange for a <Field>, useful for mapping to a field that expects the redux-form props
-    getFieldMeta, // Access: error, touched for a <Field>, useful for mapping to a field that expects the redux-form props
+    getFieldProps, // Access: name, value, onBlur, onChange for a <Field>, useful for mapping to a field
+    getFieldMeta, // Access: error, touched for a <Field>, useful for mapping to a field
     values: {
       [FieldId.CloudProvider]: cloudProviderID,
       [FieldId.ConfigureProxy]: configureProxySelected,
@@ -65,7 +65,6 @@ function NetworkScreen(props) {
   const privateClusterSelected = clusterPrivacy === 'internal';
   const isHypershiftSelected = hypershiftValue === 'true';
   const clusterVersionRawId = clusterVersionValue?.raw_id;
-
   const publicSubnetIdRef = React.useRef();
 
   const isManagedIngressAllowed = canConfigureDayOneManagedIngress(clusterVersionRawId);
@@ -189,6 +188,41 @@ function NetworkScreen(props) {
       meta={getFieldMeta(FieldId.ConfigureProxy)}
     />
   );
+  const optionsAvailableInRestrictedEnv = [
+    {
+      value: 'internal',
+      label: 'Private',
+      description:
+        'Access Kubernetes API endpoint and application routes from direct private connections only.',
+    },
+  ];
+  const optionsAvailableInCommercialEnv = [
+    {
+      value: 'external',
+      label: 'Public',
+      description: 'Access Kubernetes API endpoint and application routes from the internet.',
+      extraField: isHypershiftSelected && !privateClusterSelected && (
+        <Field
+          component={SubnetSelectField}
+          name={FieldId.ClusterPrivacyPublicSubnetId}
+          input={{
+            ...getFieldProps(FieldId.ClusterPrivacyPublicSubnetId),
+            onChange: (value) => setFieldValue(FieldId.ClusterPrivacyPublicSubnetId, value),
+          }}
+          meta={getFieldMeta(FieldId.ClusterPrivacyPublicSubnetId)}
+          label="Public subnet name"
+          className="pf-v5-u-mt-md pf-v5-u-ml-lg"
+          isRequired
+          validate={(value) => validateRequiredPublicSubnetId(value, {})}
+          withAutoSelect={false}
+          selectedVPC={selectedVPC}
+          privacy="public"
+          allowedAZs={getSelectedAvailabilityZones(selectedVPC, machinePoolsSubnets)}
+        />
+      ),
+    },
+    ...optionsAvailableInRestrictedEnv,
+  ];
 
   return (
     <Form
@@ -228,40 +262,11 @@ function NetworkScreen(props) {
                 ...getFieldProps(FieldId.ClusterPrivacy),
                 onChange: (value) => onClusterPrivacyChange(undefined, value),
               }}
-              options={[
-                {
-                  value: 'external',
-                  label: 'Public',
-                  description:
-                    'Access Kubernetes API endpoint and application routes from the internet.',
-                  extraField: isHypershiftSelected && !privateClusterSelected && (
-                    <Field
-                      component={SubnetSelectField}
-                      name={FieldId.ClusterPrivacyPublicSubnetId}
-                      input={{
-                        ...getFieldProps(FieldId.ClusterPrivacyPublicSubnetId),
-                        onChange: (value) =>
-                          setFieldValue(FieldId.ClusterPrivacyPublicSubnetId, value),
-                      }}
-                      meta={getFieldMeta(FieldId.ClusterPrivacyPublicSubnetId)}
-                      label="Public subnet name"
-                      className="pf-v5-u-mt-md pf-v5-u-ml-lg"
-                      isRequired
-                      validate={(value) => validateRequiredPublicSubnetId(value, {})}
-                      withAutoSelect={false}
-                      selectedVPC={selectedVPC}
-                      privacy="public"
-                      allowedAZs={getSelectedAvailabilityZones(selectedVPC, machinePoolsSubnets)}
-                    />
-                  ),
-                },
-                {
-                  value: 'internal',
-                  label: 'Private',
-                  description:
-                    'Access Kubernetes API endpoint and application routes from direct private connections only.',
-                },
-              ]}
+              options={
+                isRestrictedEnv() && isHypershiftSelected
+                  ? optionsAvailableInRestrictedEnv
+                  : optionsAvailableInCommercialEnv
+              }
               disableDefaultValueHandling
             />
 

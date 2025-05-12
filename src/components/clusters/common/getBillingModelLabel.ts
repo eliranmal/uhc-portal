@@ -1,19 +1,20 @@
+import { SubscriptionCommonFieldsCluster_billing_model as SubscriptionCommonFieldsClusterBillingModel } from '~/types/accounts_mgmt.v1';
 import { ClusterFromSubscription } from '~/types/types';
 
-import { billingModels, normalizedProducts } from '../../../common/subscriptionTypes';
+import { normalizedProducts } from '../../../common/subscriptionTypes';
 
 const getBillingModelLabel = (cluster: ClusterFromSubscription): string => {
   const standardLabel = 'Standard';
 
   switch (cluster.subscription?.plan?.type) {
-    case normalizedProducts.OSDTRIAL:
+    case normalizedProducts.OSDTrial:
       return 'Free trial, upgradeable';
     case normalizedProducts.OSD:
       switch (cluster.subscription?.cluster_billing_model) {
-        case billingModels.STANDARD:
+        case SubscriptionCommonFieldsClusterBillingModel.standard:
           return 'Annual Red Hat subscriptions';
-        case billingModels.MARKETPLACE:
-        case billingModels.MARKETPLACE_AWS:
+        case SubscriptionCommonFieldsClusterBillingModel.marketplace:
+        case SubscriptionCommonFieldsClusterBillingModel.marketplace_aws:
           switch (cluster.ccs?.enabled) {
             case true:
               return 'On-demand via Red Hat Marketplace';
@@ -23,7 +24,7 @@ const getBillingModelLabel = (cluster: ClusterFromSubscription): string => {
               // CCS is undefined for archived clusters. Showing N/A in this case
               return 'N/A';
           }
-        case billingModels.MARKETPLACE_GCP:
+        case SubscriptionCommonFieldsClusterBillingModel.marketplace_gcp:
           switch (cluster.ccs?.enabled) {
             case true:
               return 'On-demand via Google Cloud Marketplace';

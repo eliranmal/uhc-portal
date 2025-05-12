@@ -8,7 +8,7 @@ import { checkAccessibility, render, screen } from '~/testUtils';
 
 import { buildUrlParams } from '../../../../../common/queryHelpers';
 import { normalizedProducts } from '../../../../../common/subscriptionTypes';
-import TermsAlert from '../TermsAlert';
+import TermsAlert from '../ClusterDetailsTop/components/TermsAlert';
 
 import * as Fixtures from './fixtures/TermsAlert.fixtures';
 

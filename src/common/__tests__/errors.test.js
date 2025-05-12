@@ -1,4 +1,4 @@
-import AddOnsConstants from '../../components/clusters/ClusterDetails/components/AddOns/AddOnsConstants';
+import AddOnsConstants from '../../components/clusters/ClusterDetailsMultiRegion/components/AddOns/AddOnsConstants';
 import { PENDING_ACTION } from '../../redux/reduxHelpers';
 import { formatErrorDetails, getErrorMessage, overrideErrorMessage } from '../errors';
 

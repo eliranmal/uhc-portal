@@ -9,7 +9,6 @@ import {
   FormGroup,
   Grid,
   GridItem,
-  Skeleton,
   Split,
   SplitItem,
   Title,
@@ -52,8 +51,10 @@ import VersionSelection from '~/components/clusters/wizards/rosa/ClusterSettings
 import { FieldId } from '~/components/clusters/wizards/rosa/constants';
 import ExternalLink from '~/components/common/ExternalLink';
 import PopoverHint from '~/components/common/PopoverHint';
-import { useFeatureGate } from '~/hooks/useFeatureGate';
-import { formatRegionalInstanceUrl } from '~/queries/helpers';
+import { MULTIREGION_PREVIEW_ENABLED } from '~/queries/featureGates/featureConstants';
+import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
+import { findRegionalInstance } from '~/queries/helpers';
+import { useFetchGetAvailableRegionalInstances } from '~/queries/RosaWizardQueries/useFetchGetAvailableRegionalInstances';
 import {
   refetchSearchClusterName,
   useFetchSearchClusterName,
@@ -63,13 +64,10 @@ import {
   useFetchSearchDomainPrefix,
 } from '~/queries/RosaWizardQueries/useFetchSearchDomainPrefix';
 import { getMachineTypesByRegionARN } from '~/redux/actions/machineTypesActions';
-import { MULTIREGION_PREVIEW_ENABLED } from '~/redux/constants/featureConstants';
 import { useGlobalState } from '~/redux/hooks';
 import { QuotaCostList } from '~/types/accounts_mgmt.v1';
 import { Version } from '~/types/clusters_mgmt.v1';
-import { StaticRegionalItems } from '~/types/types';
 
-import staticRegionalInstances from '../../../../../../../mockdata/api/clusters_mgmt/v1/aws_inquiries/static_regional_instances.json';
 import { MultiRegionCloudRegionSelectField } from '../../../common/ClusterSettings/Details/CloudRegionSelectField/MultiRegionCloudRegionSelectField';
 
 import { EnableExternalAuthentication } from './EnableExternalAuthentication';
@@ -125,19 +123,34 @@ function Details() {
     setIsExternalAuthExpanded(!isExternalAuthExpanded);
   };
 
-  const regionalInstances = staticRegionalInstances as StaticRegionalItems;
-
-  const findRegionalInstance = (selectedRegion: string) =>
-    regionalInstances[selectedRegion as keyof StaticRegionalItems] || regionalInstances.global;
+  const {
+    data: availableRegionalInstances,
+    isFetching: isAvailableRegionalInstancesFetching,
+    isError: isAvailableRegionalInstancesError,
+  } = useFetchGetAvailableRegionalInstances(isMultiRegionEnabled);
 
   React.useEffect(() => {
-    if (isMultiRegionEnabled) {
-      setFieldValue(FieldId.RegionalInstance, findRegionalInstance(region));
+    if (
+      isMultiRegionEnabled &&
+      availableRegionalInstances &&
+      !isAvailableRegionalInstancesFetching &&
+      !isAvailableRegionalInstancesError
+    ) {
+      setFieldValue(
+        FieldId.RegionalInstance,
+        findRegionalInstance(region, availableRegionalInstances),
+      );
     }
-    // eslint-disable-next-line  react-hooks/exhaustive-deps
-  }, [isMultiRegionEnabled, region, setFieldValue]);
+  }, [
+    isMultiRegionEnabled,
+    region,
+    availableRegionalInstances,
+    isAvailableRegionalInstancesFetching,
+    setFieldValue,
+    isAvailableRegionalInstancesError,
+  ]);
 
-  const regionSearch = formatRegionalInstanceUrl(regionalInstance?.url);
+  const regionSearch = regionalInstance?.id;
 
   const { data: hasExistingRegionalClusterName, isFetching: isSearchClusterNameFetching } =
     useFetchSearchClusterName(clusterName, regionSearch, isMultiRegionEnabled);
@@ -207,7 +220,7 @@ function Details() {
       return clusterNameAsyncError;
     }
 
-    if (isMultiRegionEnabled && isSearchClusterNameFetching) {
+    if (isMultiRegionEnabled && (isSearchClusterNameFetching || !region)) {
       return true;
     }
 
@@ -230,7 +243,7 @@ function Details() {
       return domainPrefixAsyncError;
     }
 
-    if (isMultiRegionEnabled && isSearchDomainPrefixFetching) {
+    if (isMultiRegionEnabled && (isSearchDomainPrefixFetching || !region)) {
       return true;
     }
 
@@ -265,7 +278,6 @@ function Details() {
     }
   };
 
-  // TODO: ensure billingModel is set by previous screens.
   const hasAzResources = (isMultiAz: boolean) => {
     const params = {
       product: normalizedProducts.ROSA,
@@ -372,41 +384,35 @@ function Details() {
 
         {isMultiRegionEnabled ? RegionField : null}
 
-        {isMultiRegionEnabled && !region ? (
-          <GridItem md={6}>
-            <Skeleton fontSize="md" />
-          </GridItem>
-        ) : (
-          <GridItem md={6}>
-            <Field
-              component={RichInputField}
-              name={FieldId.ClusterName}
-              label="Cluster name"
-              type="text"
-              validate={validateClusterName}
-              validation={(value: string) => clusterNameValidation(value, clusterNameMaxLength)}
-              asyncValidation={(value: string) =>
-                clusterNameAsyncValidation(
-                  value,
-                  isMultiRegionEnabled,
-                  hasExistingRegionalClusterName,
-                )
-              }
-              isRequired
-              extendedHelpText={constants.clusterNameHint}
-              input={{
-                ...getFieldProps(FieldId.ClusterName),
-                onChange: async (value: string) => {
-                  setFieldValue(
-                    FieldId.CustomOperatorRolesPrefix,
-                    createOperatorRolesPrefix(value),
-                    false,
-                  );
-                },
-              }}
-            />
-          </GridItem>
-        )}
+        <GridItem md={6}>
+          <Field
+            component={RichInputField}
+            name={FieldId.ClusterName}
+            label="Cluster name"
+            type="text"
+            validate={validateClusterName}
+            validation={(value: string) => clusterNameValidation(value, clusterNameMaxLength)}
+            asyncValidation={(value: string) =>
+              clusterNameAsyncValidation(
+                value,
+                isMultiRegionEnabled,
+                hasExistingRegionalClusterName,
+              )
+            }
+            isRequired
+            extendedHelpText={constants.clusterNameHint}
+            input={{
+              ...getFieldProps(FieldId.ClusterName),
+              onChange: async (value: string) => {
+                setFieldValue(
+                  FieldId.CustomOperatorRolesPrefix,
+                  createOperatorRolesPrefix(value),
+                  false,
+                );
+              },
+            }}
+          />
+        </GridItem>
         <GridItem md={6} />
 
         <GridItem>

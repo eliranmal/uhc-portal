@@ -7,16 +7,16 @@ import { SupportedFeature } from '~/common/featureCompatibility';
 import links from '~/common/installLinks.mjs';
 import { validateSecurityGroups } from '~/common/validators';
 import { getIncompatibleVersionReason } from '~/common/versionCompatibility';
-import EditSecurityGroups from '~/components/clusters/ClusterDetails/components/SecurityGroups/EditSecurityGroups';
-import SecurityGroupsEmptyAlert from '~/components/clusters/ClusterDetails/components/SecurityGroups/SecurityGroupsEmptyAlert';
+import EditSecurityGroups from '~/components/clusters/ClusterDetailsMultiRegion/components/SecurityGroups/EditSecurityGroups';
+import SecurityGroupsEmptyAlert from '~/components/clusters/ClusterDetailsMultiRegion/components/SecurityGroups/SecurityGroupsEmptyAlert';
 import { useFormState } from '~/components/clusters/wizards/hooks';
-import ReduxCheckbox from '~/components/common/ReduxFormComponents/ReduxCheckbox';
-import { CloudVPC } from '~/types/clusters_mgmt.v1';
+import ReduxCheckbox from '~/components/common/ReduxFormComponents_deprecated/ReduxCheckbox';
+import { CloudVpc } from '~/types/clusters_mgmt.v1';
 
 import { FieldId } from '../constants';
 
 type SecurityGroupFieldProps = {
-  selectedVPC: CloudVPC;
+  selectedVPC: CloudVpc;
   label?: string;
   input: { onChange: (selectedGroupIds: string[]) => void; value: string[] };
   isHypershift: boolean;
@@ -44,7 +44,7 @@ const SecurityGroupsSection = ({
   isHypershiftSelected,
 }: {
   openshiftVersion: string;
-  selectedVPC: CloudVPC;
+  selectedVPC: CloudVpc;
   isHypershiftSelected: boolean;
 }) => {
   const {

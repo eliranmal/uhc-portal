@@ -1,8 +1,15 @@
 import React from 'react';
 import { findIndex, get } from 'lodash';
 
-import { billingModels, subscriptionSettings } from '~/common/subscriptionTypes';
-import { Subscription, SubscriptionCommonFields } from '~/types/accounts_mgmt.v1';
+import { subscriptionSettings } from '~/common/subscriptionTypes';
+import {
+  Subscription,
+  SubscriptionCommonFieldsCluster_billing_model as SubscriptionCommonFieldsClusterBillingModel,
+  SubscriptionCommonFieldsService_level as SubscriptionCommonFieldsServiceLevel,
+  SubscriptionCommonFieldsSupport_level as SubscriptionCommonFieldsSupportLevel,
+  SubscriptionCommonFieldsSystem_units as SubscriptionCommonFieldsSystemUnits,
+  SubscriptionCommonFieldsUsage,
+} from '~/types/accounts_mgmt.v1';
 
 import { EditSubcriptionOption } from './model/EditSubcriptionOption';
 import { SubcriptionOptionType } from './model/SubcriptionOptionType';
@@ -22,55 +29,61 @@ const getOptions = (
   switch (setting) {
     case subscriptionSettings.SUPPORT_LEVEL:
       options = [
-        { label: 'Premium', value: SubscriptionCommonFields.support_level.PREMIUM },
-        { label: 'Standard', value: SubscriptionCommonFields.support_level.STANDARD },
-        { label: 'Self-Support', value: SubscriptionCommonFields.support_level.SELF_SUPPORT },
+        { label: 'Premium', value: SubscriptionCommonFieldsSupportLevel.Premium },
+        { label: 'Standard', value: SubscriptionCommonFieldsSupportLevel.Standard },
+        { label: 'Self-Support', value: SubscriptionCommonFieldsSupportLevel.Self_Support },
       ];
-      if (value === SubscriptionCommonFields.support_level.EVAL || !subscription.id) {
+      if (value === SubscriptionCommonFieldsSupportLevel.Eval || !subscription.id) {
         options.push({
           label: 'Self-Support 60-day evaluation',
-          value: SubscriptionCommonFields.support_level.EVAL,
+          value: SubscriptionCommonFieldsSupportLevel.Eval,
         });
-      } else if (value === SubscriptionCommonFields.support_level.NONE) {
+      } else if (value === SubscriptionCommonFieldsSupportLevel.None) {
         options.push({
           label: (
             <span className="subscription-settings expired-eval-option">Expired evaluation</span>
           ),
-          value: SubscriptionCommonFields.support_level.NONE,
+          value: SubscriptionCommonFieldsSupportLevel.None,
         });
       }
       break;
     case subscriptionSettings.USAGE:
       options = [
-        { label: 'Production', value: SubscriptionCommonFields.usage.PRODUCTION, isDefault: true },
-        { label: 'Development/Test', value: SubscriptionCommonFields.usage.DEVELOPMENT_TEST },
-        { label: 'Disaster Recovery', value: SubscriptionCommonFields.usage.DISASTER_RECOVERY },
+        { label: 'Production', value: SubscriptionCommonFieldsUsage.Production, isDefault: true },
+        { label: 'Development/Test', value: SubscriptionCommonFieldsUsage.Development_Test },
+        { label: 'Disaster Recovery', value: SubscriptionCommonFieldsUsage.Disaster_Recovery },
       ];
       break;
     case subscriptionSettings.SERVICE_LEVEL:
       options = [
         {
           label: 'Red Hat support (L1-L3)',
-          value: SubscriptionCommonFields.service_level.L1_L3,
+          value: SubscriptionCommonFieldsServiceLevel.L1_L3,
           isDefault: true,
         },
-        { label: 'Partner support (L3)', value: SubscriptionCommonFields.service_level.L3_ONLY },
+        { label: 'Partner support (L3)', value: SubscriptionCommonFieldsServiceLevel.L3_only },
       ];
       break;
     case subscriptionSettings.SYSTEM_UNITS:
       options = [
         {
           label: 'Cores or vCPUs',
-          value: SubscriptionCommonFields.system_units.CORES_V_CPU,
+          value: SubscriptionCommonFieldsSystemUnits.Cores_vCPU,
           isDefault: true,
         },
-        { label: 'Sockets', value: SubscriptionCommonFields.system_units.SOCKETS },
+        { label: 'Sockets', value: SubscriptionCommonFieldsSystemUnits.Sockets },
       ];
       break;
     case subscriptionSettings.CLUSTER_BILLING_MODEL:
       options = [
-        { label: STANDARD_BILLING_MODEL_LABEL, value: billingModels.STANDARD },
-        { label: MARKETPLACE_BILLING_MODEL_LABEL, value: billingModels.MARKETPLACE },
+        {
+          label: STANDARD_BILLING_MODEL_LABEL,
+          value: SubscriptionCommonFieldsClusterBillingModel.standard,
+        },
+        {
+          label: MARKETPLACE_BILLING_MODEL_LABEL,
+          value: SubscriptionCommonFieldsClusterBillingModel.marketplace,
+        },
       ];
       if (canSubscribeMarketplaceOCP) {
         options[1].isDefault = true;
@@ -103,4 +116,4 @@ const resetOptions = (
     {},
   );
 
-export { resetOptions, getOptions };
+export { getOptions, resetOptions };

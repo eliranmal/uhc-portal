@@ -4,8 +4,8 @@ import { Flex, FlexItem, Title } from '@patternfly/react-core';
 
 import ExternalLink from '~/components/common/ExternalLink';
 
+import { ProductCard } from '../../../common/ProductCard/ProductCard';
 import { DRAWER_PANEL_CONTENT, DrawerPanelContentNode } from '../common/DrawerPanelContent';
-import ProductCard from '../common/ProductCard/ProductCard';
 import PRODUCT_CARD_LOGOS from '../common/ProductCardLogos';
 
 import './RecommendedOperatorsCards.scss';
@@ -48,12 +48,14 @@ type RecommendedOperatorsCardsProps = {
 
 const TITLE = 'Recommended operators';
 
+// TODO: This component can be refactored and simplified when using ProductCardView component (a generic ProductCard view in a Flex Layout) - LInk to ticket: https://issues.redhat.com/browse/OCMUI-2413
+
 const RecommendedOperatorsCards = ({
   openLearnMore,
   selectedCardTitle,
 }: RecommendedOperatorsCardsProps) => (
   <div className="recommended-operators-cards">
-    <Title size="xl" headingLevel="h2" className="pf-v5-u-mt-lg">
+    <Title size="xl" headingLevel="h2" className="pf-v5-u-mt-lg" id="recommended-operators">
       {TITLE}
     </Title>
     <Flex className="pf-v5-u-mb-lg">
@@ -74,4 +76,4 @@ const RecommendedOperatorsCards = ({
   </div>
 );
 
-export default RecommendedOperatorsCards;
+export { RecommendedOperatorsCards, RECOMMENDED_OPERATORS_CARDS };

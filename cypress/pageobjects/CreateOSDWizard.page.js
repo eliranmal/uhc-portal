@@ -52,10 +52,11 @@ class CreateOSDCluster extends Page {
   showsFakeClusterBanner = () =>
     cy.contains('div', 'On submit, a fake OSD cluster will be created.');
 
-  osdCreateClusterButton = () => cy.getByTestId('osd-create-cluster-button', { timeout: 50000 });
+  osdCreateClusterButton = () =>
+    cy.get('a[data-testid="osd-create-cluster-button"][aria-disabled="false"]', { timeout: 50000 });
 
   osdTrialCreateClusterButton = () =>
-    cy.getByTestId('osd-create-trial-cluster', { timeout: 20000 });
+    cy.get('a[data-testid="osd-create-trial-cluster"][aria-disabled="false"]', { timeout: 20000 });
 
   subscriptionTypeFreeTrialRadio = () =>
     cy.get('input[name="billing_model"][value="standard-trial"]');
@@ -158,6 +159,8 @@ class CreateOSDCluster extends Page {
 
   authenticationTypeValue = () => cy.getByTestId('Authentication-type').find('div');
 
+  wifConfigurationValue = () => cy.getByTestId('WIF-configuration').find('div');
+
   clusterDomainPrefixLabelValue = () => cy.getByTestId('Domain-prefix').should('exist');
 
   userWorkloadMonitoringValue = () => cy.getByTestId('User-workload-monitoring').find('div');
@@ -209,6 +212,8 @@ class CreateOSDCluster extends Page {
 
   installIntoExistingVpcValue = () => cy.getByTestId('Install-into-existing-VPC').find('div');
 
+  privateServiceConnectValue = () => cy.getByTestId('Private-service-connect').find('div');
+
   applicationIngressValue = () => cy.getByTestId('Application-ingress').find('div');
 
   routeSelectorsValue = () => cy.getByTestId('Route-selectors').find('div');
@@ -245,9 +250,61 @@ class CreateOSDCluster extends Page {
 
   rootDiskSizeInput = () => cy.get('input[name="worker_volume_size_gib"]');
 
+  editClusterAutoscalingSettingsButton = () =>
+    cy.getByTestId('set-cluster-autoscaling-btn', { timeout: 80000 });
+
+  clusterAutoscalingLogVerbosityInput = () =>
+    cy.get('input[id="cluster_autoscaling.log_verbosity"]');
+
+  clusterAutoscalingMaxNodeProvisionTimeInput = () =>
+    cy.get('input[id="cluster_autoscaling.max_node_provision_time"]');
+
+  clusterAutoscalingBalancingIgnoredLabelsInput = () =>
+    cy.get('input[id="cluster_autoscaling.balancing_ignored_labels"]');
+
+  clusterAutoscalingCoresTotalMinInput = () =>
+    cy.get('input[id="cluster_autoscaling.resource_limits.cores.min"]');
+
+  clusterAutoscalingCoresTotalMaxInput = () =>
+    cy.get('input[id="cluster_autoscaling.resource_limits.cores.max"]');
+
+  clusterAutoscalingMemoryTotalMinInput = () =>
+    cy.get('input[id="cluster_autoscaling.resource_limits.memory.min"]');
+
+  clusterAutoscalingMemoryTotalMaxInput = () =>
+    cy.get('input[id="cluster_autoscaling.resource_limits.memory.max"]');
+
+  clusterAutoscalingMaxNodesTotalInput = () =>
+    cy.get('input[id="cluster_autoscaling.resource_limits.max_nodes_total"]');
+
+  clusterAutoscalingGPUsInput = () =>
+    cy.get('input[id="cluster_autoscaling.resource_limits.gpus"]');
+
+  clusterAutoscalingScaleDownUtilizationThresholdInput = () =>
+    cy.get('input[id="cluster_autoscaling.scale_down.utilization_threshold"]');
+
+  clusterAutoscalingScaleDownUnneededTimeInput = () =>
+    cy.get('input[id="cluster_autoscaling.scale_down.unneeded_time"]');
+
+  clusterAutoscalingScaleDownDelayAfterAddInput = () =>
+    cy.get('input[id="cluster_autoscaling.scale_down.delay_after_add"]');
+
+  clusterAutoscalingScaleDownDelayAfterDeleteInput = () =>
+    cy.get('input[id="cluster_autoscaling.scale_down.delay_after_delete"]');
+
+  clusterAutoscalingScaleDownDelayAfterFailureInput = () =>
+    cy.get('input[id="cluster_autoscaling.scale_down.delay_after_failure"]');
+
+  clusterAutoscalingRevertAllToDefaultsButton = () =>
+    cy.get('button').contains('Revert all to defaults');
+
+  clusterAutoscalingCloseButton = () => cy.get('button').contains('Close');
+
   addNodeLabelLink = () => cy.get('span').contains('Add node labels');
 
   installIntoExistingVpcCheckBox = () => cy.get('input[id="install_to_vpc"]');
+
+  usePrivateServiceConnectCheckBox = () => cy.get('input[id="private_service_connect"]');
 
   applicationIngressDefaultSettingsRadio = () =>
     cy.get('input[id="form-radiobutton-applicationIngress-default-field"]');
@@ -308,6 +365,15 @@ class CreateOSDCluster extends Page {
     cy.get('span.pf-v5-c-button__progress', { timeout: 80000 }).should('not.exist');
   }
 
+  selectVersion(version) {
+    cy.get('button[id="version-selector"]').click();
+    if (version === '') {
+      cy.get('button[id^="openshift-"]').first().click();
+    } else {
+      cy.get('button').contains(version).click();
+    }
+  }
+
   selectVPC(vpcName) {
     cy.getByTestId('refresh-vpcs').should('be.enabled');
     cy.get('div button[id="selected_vpc"]').click({ force: true });
@@ -316,6 +382,32 @@ class CreateOSDCluster extends Page {
       .clear()
       .type(vpcName);
     cy.contains(vpcName).scrollIntoView().click();
+  }
+  selectGcpVPC(vpcName) {
+    cy.get('select[aria-label="Existing VPC name"]').select(vpcName);
+  }
+
+  selectControlPlaneSubnetName(subnetName) {
+    cy.get('select[aria-label="Control plane subnet name"]').select(subnetName);
+  }
+
+  selectComputeSubnetName(subnetName) {
+    cy.get('select[aria-label="Compute subnet name"]').select(subnetName);
+  }
+
+  selectPrivateServiceConnectSubnetName(pscName) {
+    cy.get('select[aria-label="Private Service Connect subnet name"]').select(pscName);
+  }
+  selectKeylocation(location) {
+    cy.get('select[aria-label="KMS location"]').select(location);
+  }
+
+  selectKeyRing(keyring) {
+    cy.get('select[aria-label="Key ring"]').select(keyring);
+  }
+
+  selectKeyName(keyname) {
+    cy.get('select[aria-label="Key name"]').select(keyname);
   }
 
   selectPrivateSubnet(index = 0, privateSubnetNameOrId) {
@@ -337,8 +429,8 @@ class CreateOSDCluster extends Page {
   }
   selectSubnetAvailabilityZone(subnetAvailability) {
     cy.contains('Select availability zone').first().click();
-    cy.get('.pf-v5-c-select__menu').within(() => {
-      cy.contains('li button', subnetAvailability).click();
+    cy.get('.pf-v5-c-menu__list').within(() => {
+      cy.contains('li button', subnetAvailability).click({ force: true });
     });
   }
 
@@ -377,6 +469,8 @@ class CreateOSDCluster extends Page {
 
   securityGroupsValue = () => cy.getByTestId('Security-groups').find('div');
 
+  kmsServiceAccountInput = () => cy.get('input[id="kms_service_account"]');
+
   closePopoverDialogs() {
     cy.get('body').then(($body) => {
       if ($body.find('button[aria-label="Close"]').filter(':visible').length > 0) {
@@ -414,9 +508,9 @@ class CreateOSDCluster extends Page {
 
   selectClusterPrivacy(privacy) {
     if (privacy.toLowerCase() == 'private') {
-      this.clusterPrivacyPrivateRadio().check();
+      this.clusterPrivacyPrivateRadio().check({ force: true });
     } else {
-      this.clusterPrivacyPublicRadio().check();
+      this.clusterPrivacyPublicRadio().check({ force: true });
     }
   }
 
@@ -513,8 +607,8 @@ class CreateOSDCluster extends Page {
   }
 
   addNodeLabelKeyAndValue(key, value = '', index = 0) {
-    cy.get(`input[id="node_labels.${index}.key"]`).clear().type(key);
-    cy.get(`input[id="node_labels.${index}.value"]`).clear().type(value);
+    cy.get(`input[id="node_labels.${index}.key"]`).clear().type(key).blur();
+    cy.get(`input[id="node_labels.${index}.value"]`).clear().type(value).blur();
   }
 
   selectNodeDraining(nodeDrain) {
@@ -524,15 +618,12 @@ class CreateOSDCluster extends Page {
 
   isTextContainsInPage(text, present = true) {
     if (present) {
-      cy.get('body').then(($body) => {
-        if ($body.text().includes(text)) {
-          cy.contains(text).scrollIntoView().should('be.visible');
-        }
-      });
+      cy.contains(text).should('be.exist').should('be.visible');
     } else {
       cy.contains(text).should('not.exist');
     }
   }
+
   uploadGCPServiceAccountJSON(jsonContent) {
     cy.get('textarea[aria-label="File upload"]')
       .clear()
@@ -541,7 +632,7 @@ class CreateOSDCluster extends Page {
     cy.get('textarea[aria-label="File upload"]').type(' {backspace}');
   }
   selectWorkloadIdentityConfiguration(wifConfig) {
-    cy.get('button[aria-labelledby=" gcp_wif_config"]').click();
+    cy.get('button[id="gcp_wif_config"]').click();
     cy.get('input[placeholder="Filter by name / ID"]').clear().type(wifConfig);
     cy.contains(wifConfig).scrollIntoView().click();
   }

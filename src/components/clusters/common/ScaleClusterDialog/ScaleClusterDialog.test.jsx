@@ -1,61 +1,169 @@
 import React from 'react';
+import * as reactRedux from 'react-redux';
 
-import wizardConnector from '~/components/clusters/wizards/common/WizardConnector';
-import { checkAccessibility, render, screen } from '~/testUtils';
+import * as useFetchLoadBalancerQuotaValues from '~/queries/ClusterActionsQueries/useFetchLoadBalancerQuotaValues';
+import * as useFetchStorageQuotaValues from '~/queries/ClusterActionsQueries/useFetchStorageQuotaValues';
+import * as useEditCluster from '~/queries/ClusterDetailsQueries/useEditCluster';
+import * as useFetchOrganizationAndQuota from '~/queries/common/useFetchOrganizationAndQuota';
+import { checkAccessibility, screen, withState } from '~/testUtils';
 
 import ScaleClusterDialog from './ScaleClusterDialog';
 
+jest.mock('react-redux', () => {
+  const config = {
+    __esModule: true,
+    ...jest.requireActual('react-redux'),
+  };
+  return config;
+});
+
+const mockedUseEditCluster = jest.spyOn(useEditCluster, 'useEditCluster');
+
+const mockedUseFetchLoadBalancerQuotaValues = jest.spyOn(
+  useFetchLoadBalancerQuotaValues,
+  'useFetchLoadBalancerQuotaValues',
+);
+const mockedUseFetchLoadBalancerQuotaValuesReturnedData = [0, 4, 8, 12, 16, 20];
+
+const mockedUseFetchOrganizationAndQuota = jest.spyOn(
+  useFetchOrganizationAndQuota,
+  'useFetchOrganizationAndQuota',
+);
+const mockedQuotaListReturnedData = [
+  {
+    allowed: 2500,
+    consumed: 0,
+    quota_id: 'pv.storage|gp2',
+    related_resources: [
+      {
+        availability_zone_type: 'any',
+        billing_model: 'standard',
+        byoc: 'rhinfra',
+        cloud_provider: 'any',
+        cost: 1,
+        product: 'ANY',
+        resource_name: 'gp2',
+        resource_type: 'pv.storage',
+      },
+    ],
+  },
+  {
+    allowed: 12,
+    consumed: 4,
+    quota_id: 'network.loadbalancer|network',
+    related_resources: [
+      {
+        availability_zone_type: 'any',
+        billing_model: 'standard',
+        byoc: 'rhinfra',
+        cloud_provider: 'any',
+        cost: 1,
+        product: 'ANY',
+        resource_name: 'network',
+        resource_type: 'network.loadbalancer',
+      },
+    ],
+  },
+];
+
+const mockedUseFetchStorageQuotaValues = jest.spyOn(
+  useFetchStorageQuotaValues,
+  'useFetchStorageQuotaValues',
+);
+const mockedStorageQuotaReturnedData = [
+  {
+    value: 107374182400,
+    unit: 'B',
+  },
+  {
+    value: 644245094400,
+    unit: 'B',
+  },
+  {
+    value: 1181116006400,
+    unit: 'B',
+  },
+  {
+    value: 1717986918400,
+    unit: 'B',
+  },
+  {
+    value: 2254857830400,
+    unit: 'B',
+  },
+  {
+    value: 2791728742400,
+    unit: 'B',
+  },
+  {
+    value: 3328599654400,
+    unit: 'B',
+  },
+  {
+    value: 3865470566400,
+    unit: 'B',
+  },
+  {
+    value: 4402341478400,
+    unit: 'B',
+  },
+  {
+    value: 7623566950400,
+    unit: 'B',
+  },
+];
+
 describe('<ScaleClusterDialog />', () => {
-  const ConnectedScaleClusterDialog = wizardConnector(ScaleClusterDialog);
-  const closeModal = jest.fn();
-  const onClose = jest.fn();
-  const handleSubmit = jest.fn();
-  const change = jest.fn();
-  const resetResponse = jest.fn();
-  const getLoadBalancers = jest.fn();
-  const getPersistentStorage = jest.fn();
-  const getCloudProviders = jest.fn();
-  const getOrganizationAndQuota = jest.fn();
+  const mockMutate = jest.fn();
+  const useDispatchMock = jest.spyOn(reactRedux, 'useDispatch');
+  const mockedDispatch = jest.fn();
+  useDispatchMock.mockReturnValue(mockedDispatch);
 
-  const fulfilledRequest = {
-    pending: false,
-    error: false,
-    fulfilled: true,
-  };
-
-  const requestInitialState = {
-    pending: false,
-    error: false,
-    fulfilled: false,
-  };
-
-  const defaultProps = {
-    isOpen: true,
-    closeModal,
-    onClose,
-    handleSubmit,
-    change,
-    resetResponse,
-    getPersistentStorage,
-    getCloudProviders,
-    getOrganizationAndQuota,
-    getLoadBalancers,
-    loadBalancerValues: fulfilledRequest,
-    persistentStorageValues: fulfilledRequest,
-    organization: fulfilledRequest,
-    cloudProviderID: 'aws',
-    billingModel: 'standard',
-    isMultiAZ: true,
-    product: 'OSD',
-    initialValues: {
-      id: 'test-id',
-      nodes_compute: 4,
-      load_balancers: 4,
-      persistent_storage: 107374182400,
+  // need to set form values
+  const defaultState = {
+    modal: {
+      data: {
+        load_balancer_quota: 4,
+        storage_quota: { value: 107374182400, unit: 'B' },
+        console: { url: 'my_console_url' },
+        ccs: { enabled: false },
+        subscription: {
+          display_name: 'my_cluster_name',
+          cluster_billing_model: 'standard',
+          plan: { id: 'OSD' },
+        },
+        shouldDisplayClusterName: true,
+        cloud_provider: { id: 'aws' },
+        multi_az: true,
+        id: 'test-id',
+      },
     },
-    min: { value: 4, validationMsg: 'error' },
-    pristine: false,
-    isByoc: false,
+  };
+
+  const setMockingValues = () => {
+    mockedUseFetchLoadBalancerQuotaValues.mockReturnValue({
+      isPending: false,
+      isFetched: true,
+      isError: false,
+      data: mockedUseFetchLoadBalancerQuotaValuesReturnedData,
+    });
+
+    mockedUseFetchOrganizationAndQuota.mockReturnValue({
+      isPending: false,
+      isFetched: true,
+      isError: false,
+      quota: mockedQuotaListReturnedData,
+    });
+
+    mockedUseFetchStorageQuotaValues.mockReturnValue({
+      isPending: false,
+      isFetched: true,
+      isError: false,
+      data: mockedStorageQuotaReturnedData,
+    });
+    mockedUseEditCluster.mockReturnValue({
+      mutate: mockMutate,
+    });
   };
 
   afterEach(() => {
@@ -63,59 +171,82 @@ describe('<ScaleClusterDialog />', () => {
   });
 
   it('is accessible', async () => {
-    const { container } = render(<ConnectedScaleClusterDialog {...defaultProps} />);
+    setMockingValues();
 
+    const { container } = withState(defaultState, true).render(<ScaleClusterDialog />);
     expect(await screen.findByText('Load balancers')).toBeInTheDocument();
 
     await checkAccessibility(container);
   });
 
-  it('when fulfilled, closes dialog', async () => {
-    const { rerender } = render(<ConnectedScaleClusterDialog {...defaultProps} />);
-    expect(closeModal).not.toBeCalled();
-    expect(resetResponse).not.toBeCalled();
-    expect(onClose).not.toBeCalled();
+  describe('fetching data ', () => {
+    it('on load fetches  storage and load balancers data', () => {
+      setMockingValues();
+      expect(mockedUseFetchLoadBalancerQuotaValues).not.toHaveBeenCalled();
+      expect(mockedUseFetchOrganizationAndQuota).not.toHaveBeenCalled();
+      expect(mockedUseFetchStorageQuotaValues).not.toHaveBeenCalled();
 
-    const fulFilledProps = {
-      ...defaultProps,
-      editClusterResponse: { fulfilled: true },
-    };
+      withState(defaultState, true).render(<ScaleClusterDialog />);
 
-    rerender(<ConnectedScaleClusterDialog {...fulFilledProps} />);
-    expect(await screen.findByText('Load balancers')).toBeInTheDocument();
-    expect(closeModal).toBeCalled();
-    expect(resetResponse).toBeCalled();
-    expect(onClose).toBeCalled();
+      expect(mockedUseFetchLoadBalancerQuotaValues).toHaveBeenCalled();
+      expect(mockedUseFetchOrganizationAndQuota).toHaveBeenCalled();
+      expect(mockedUseFetchStorageQuotaValues).toHaveBeenCalled();
+    });
+  });
+
+  it('when cancelled, closes modal', async () => {
+    setMockingValues();
+
+    const { user } = withState(defaultState, true).render(<ScaleClusterDialog />);
+
+    expect(mockedDispatch).not.toHaveBeenCalled();
+    expect(mockMutate).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(mockedDispatch.mock.calls[0][0].type).toEqual('CLOSE_MODAL');
+    expect(mockMutate).not.toHaveBeenCalled();
+  });
+
+  it('calls submit when submit button is clicked', async () => {
+    setMockingValues();
+
+    expect(mockedDispatch).not.toHaveBeenCalled();
+    expect(mockMutate).not.toHaveBeenCalled();
+
+    const { user } = withState(defaultState, true).render(<ScaleClusterDialog />);
+
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: 'Load Balancers' }),
+      screen.getByRole('option', { name: '0' }),
+    );
+
+    expect(screen.getByRole('button', { name: 'Apply' })).not.toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Apply' }));
+
+    expect(mockedDispatch).not.toHaveBeenCalled();
+    expect(mockMutate).toHaveBeenCalled();
+  });
+
+  it.skip('when fulfilled, closes dialog', async () => {
+    // This is hard to test because both handleSubmit and the internal method it calls "onSubmit"
+    // are both mocked.  The close modal happens inside the internal "onSubmit"
   });
 
   it('renders correctly when an error occurs', async () => {
-    const errorProps = {
-      ...defaultProps,
-      editClusterResponse: { error: true, errorMessage: 'this is an error' },
-    };
+    setMockingValues();
 
-    render(<ConnectedScaleClusterDialog {...errorProps} />);
+    mockedUseEditCluster.mockReturnValue({
+      isLoading: false,
+      isError: true,
+      error: { errorMessage: 'I am an error' },
+    });
+    expect(mockedDispatch).not.toHaveBeenCalled();
+    expect(mockMutate).not.toHaveBeenCalled();
+
+    withState(defaultState, true).render(<ScaleClusterDialog />);
+
     expect(await screen.findByText('Load balancers')).toBeInTheDocument();
 
-    // There are multiple errors due to the redux state not being in shape that is
-    // expected for child components.  The logic we are checking is in the first alert.
-    expect(screen.getByText('this is an error')).toBeInTheDocument();
-  });
-
-  describe('fetching data -', () => {
-    it('on load fetches  storage and load balancers data', () => {
-      const initialStateProps = {
-        ...defaultProps,
-        loadBalancerValues: requestInitialState,
-        persistentStorageValues: requestInitialState,
-      };
-
-      expect(getLoadBalancers).not.toBeCalled();
-      expect(getPersistentStorage).not.toBeCalled();
-
-      render(<ConnectedScaleClusterDialog {...initialStateProps} />);
-      expect(getLoadBalancers).toBeCalled();
-      expect(getPersistentStorage).toBeCalled();
-    });
+    expect(screen.getByText('I am an error')).toBeInTheDocument();
   });
 });

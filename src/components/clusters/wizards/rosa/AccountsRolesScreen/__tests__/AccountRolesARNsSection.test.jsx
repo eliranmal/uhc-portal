@@ -2,7 +2,7 @@ import React from 'react';
 import { Formik } from 'formik';
 
 import { ROSA_HOSTED_CLI_MIN_VERSION } from '~/components/clusters/wizards/rosa/rosaConstants';
-import { HCP_USE_UNMANAGED } from '~/redux/constants/featureConstants';
+import { HCP_USE_UNMANAGED } from '~/queries/featureGates/featureConstants';
 import { checkAccessibility, mockUseFeatureGate, render, screen } from '~/testUtils';
 
 import { initialValues } from '../../constants';

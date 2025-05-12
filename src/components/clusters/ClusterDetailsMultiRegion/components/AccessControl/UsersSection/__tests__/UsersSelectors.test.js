@@ -8,7 +8,7 @@ describe('canAllowAdminSelector', () => {
       clusters: {
         details: {
           cluster: {
-            state: clusterStates.READY,
+            state: clusterStates.ready,
             managed: true,
             ccs: { enabled: false },
             product: { id: normalizedProducts.OSD },
@@ -38,7 +38,7 @@ describe('canAllowAdminSelector', () => {
       clusters: {
         details: {
           cluster: {
-            state: clusterStates.INSTALLING,
+            state: clusterStates.installing,
             managed: true,
             ccs: { enabled: false },
             subscription: {
@@ -59,7 +59,7 @@ describe('canAllowAdminSelector', () => {
       clusters: {
         details: {
           cluster: {
-            state: clusterStates.READY,
+            state: clusterStates.ready,
             managed: true,
             ccs: { enabled: false },
             product: { id: normalizedProducts.RHMI },
@@ -89,7 +89,7 @@ describe('canAllowAdminSelector', () => {
       clusters: {
         details: {
           cluster: {
-            state: clusterStates.READY,
+            state: clusterStates.ready,
             managed: true,
             ccs: { enabled: false },
             product: { id: normalizedProducts.OSD },
@@ -119,7 +119,7 @@ describe('canAllowAdminSelector', () => {
       clusters: {
         details: {
           cluster: {
-            state: clusterStates.READY,
+            state: clusterStates.ready,
             managed: true,
             ccs: { enabled: true },
             product: { id: normalizedProducts.OSD },

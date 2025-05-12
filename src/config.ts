@@ -5,8 +5,6 @@ import utc from 'dayjs/plugin/utc';
 
 import {
   ENV_OVERRIDE_LOCALSTORAGE_KEY,
-  MULTIREGION_LOCALSTORAGE_KEY,
-  NEW_CLUSTER_LIST_LOCALSTORAGE_KEY,
   RESTRICTED_ENV_OVERRIDE_LOCALSTORAGE_KEY,
 } from './common/localStorageConstants';
 import { Chrome } from './types/types';
@@ -52,7 +50,11 @@ if (APP_DEV_SERVER) {
   configs.mockdata = import(/* webpackMode: "eager" */ './config/mockdata.json');
 }
 
-// select config according to the APP_API_ENV flag (see webpack.config.js)
+// select config according to the environment
+export const APP_API_ENV =
+  window.location.host.includes('dev') || window.location.host.includes('foo')
+    ? 'staging'
+    : 'production';
 configs.default = configs[APP_API_ENV];
 
 const parseEnvQueryParam = (): string | undefined => {
@@ -79,34 +81,6 @@ const parseFakeQueryParam = () => {
     .forEach((queryString) => {
       const [key, val] = queryString.split('=');
       if (key === 'fake' && val === 'true') {
-        ret = true;
-      }
-    });
-  return ret;
-};
-
-const parseMultiRegionQueryParam = () => {
-  let ret = false;
-  window.location.search
-    .substring(1)
-    .split('&')
-    .forEach((queryString) => {
-      const [key, val] = queryString.split('=');
-      if (key.toLowerCase() === 'multiregion' && val === 'true') {
-        ret = true;
-      }
-    });
-  return ret;
-};
-
-const parseNewClusterListParam = () => {
-  let ret = false;
-  window.location.search
-    .substring(1)
-    .split('&')
-    .forEach((queryString) => {
-      const [key, val] = queryString.split('=');
-      if (key.toLowerCase() === 'newclusterlist' && val === 'true') {
         ret = true;
       }
     });
@@ -150,6 +124,8 @@ const config = {
         : {}),
       insightsGateway:
         data.insightsGateway?.replace('$SELF_PATH$', window.location.host) || undefined,
+      fedrampGateway:
+        data.insightsGateway?.replace('$SELF_PATH$', window.location.host) || undefined,
     };
 
     const simulatedRestrictedEnv = !!localStorage.getItem(RESTRICTED_ENV_OVERRIDE_LOCALSTORAGE_KEY);
@@ -174,16 +150,6 @@ const config = {
     return new Promise<void>((resolve) => {
       if (parseFakeQueryParam()) {
         that.fakeOSD = true;
-      }
-
-      if (parseMultiRegionQueryParam() || localStorage.getItem(MULTIREGION_LOCALSTORAGE_KEY)) {
-        that.multiRegion = true;
-        localStorage.setItem(MULTIREGION_LOCALSTORAGE_KEY, 'true');
-      }
-
-      if (parseNewClusterListParam() || localStorage.getItem(NEW_CLUSTER_LIST_LOCALSTORAGE_KEY)) {
-        that.newClusterList = true;
-        localStorage.setItem(NEW_CLUSTER_LIST_LOCALSTORAGE_KEY, 'true');
       }
 
       if (parseRestrictedQueryParam()) {

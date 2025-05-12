@@ -8,23 +8,25 @@ import links from '~/common/installLinks.mjs';
 import { getIncompatibleVersionReason } from '~/common/versionCompatibility';
 import { useFormState } from '~/components/clusters/wizards/hooks';
 import ExternalLink from '~/components/common/ExternalLink';
-import { ReduxCheckbox } from '~/components/common/ReduxFormComponents';
+import { ReduxCheckbox } from '~/components/common/ReduxFormComponents_deprecated';
 
 import SharedVPCField from './SharedVPCField';
 
 import './SharedVPCSection.scss';
+
+type SharedVPCSectionProps = {
+  hostedZoneDomainName?: string;
+  isSelected: boolean;
+  openshiftVersion: string;
+  isHypershiftSelected: boolean;
+};
 
 const SharedVPCSection = ({
   hostedZoneDomainName,
   isSelected,
   openshiftVersion,
   isHypershiftSelected,
-}: {
-  hostedZoneDomainName: string;
-  isSelected: boolean;
-  openshiftVersion: string;
-  isHypershiftSelected: boolean;
-}) => {
+}: SharedVPCSectionProps) => {
   const { getFieldProps, getFieldMeta } = useFormState();
   const incompatibleReason = getIncompatibleVersionReason(
     SupportedFeature.AWS_SHARED_VPC,

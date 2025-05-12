@@ -1,6 +1,11 @@
 /* eslint-disable camelcase */
+import { useEffect, useRef } from 'react';
 import isEmpty from 'lodash/isEmpty';
+import { useLocation } from 'react-router-dom';
 import semver from 'semver';
+
+import { OrganizationState } from '~/redux/reducers/userReducer';
+import { PromiseReducerState } from '~/redux/types';
 
 const noop = Function.prototype;
 
@@ -123,12 +128,17 @@ const helpers = {
   nestedIsEmpty,
 };
 
-// TODO correct type once reducers have migrated to typescript
-const shouldRefetchQuota = (organization: any) => {
-  const lastFetchedQuota = organization.timestamp;
+const shouldRefetchQuota = (
+  organizationState: PromiseReducerState<OrganizationState>,
+  checkTimeSinceRefresh = true,
+) => {
   const now = new Date().getTime();
+  const lastFetchedQuota = organizationState.timestamp ?? now;
   const TWO_MINUTES = 1000 * 60 * 2;
-  return !organization.pending && (!organization.fulfilled || now - lastFetchedQuota > TWO_MINUTES);
+  return (
+    !organizationState.pending &&
+    (!organizationState.fulfilled || !checkTimeSinceRefresh || now - lastFetchedQuota > TWO_MINUTES)
+  );
 };
 
 /**
@@ -254,9 +264,10 @@ const goZeroTime2Null = (timeStr: string): string | null => {
  */
 const isSupportedMinorVersion = (version: string, maxMinorVersion: string) => {
   const parsedMaxMinorVersion = maxMinorVersion ? semver.coerce(maxMinorVersion) : null;
+  const parsedVersion = semver.coerce(version)?.version || '';
   return parsedMaxMinorVersion
     ? semver.satisfies(
-        version,
+        parsedVersion,
         `<=${semver.major(parsedMaxMinorVersion)}.${semver.minor(parsedMaxMinorVersion)}`,
       )
     : false;
@@ -297,7 +308,7 @@ const strToKeyValueObject = (input?: string, defaultValue?: string) => {
   }, {});
 };
 
-const truncateTextWithEllipsis = (text?: string, maxLength?: number) => {
+const truncateTextWithEllipsis = (text: string, maxLength?: number) => {
   if (text && maxLength && text.length > maxLength) {
     return `${text.slice(0, maxLength / 3)}... ${text.slice((-maxLength * 2) / 3)}`;
   }
@@ -358,6 +369,37 @@ const constructSelectedSubnets = (formValues?: Record<string, any>) => {
   return selectedSubnets;
 };
 
+/**
+ * A custom React hook for smooth scrolling to an element based on the URL hash.
+ * It listens for hash changes and scrolls to the corresponding element if it exists.
+ *
+ * Notes:
+ * - Ensure elements have unique `id` attributes matching the hash.
+ * - Resets the `lastHash` reference after scrolling to avoid redundant actions.
+ */
+const useScrollToAnchor = () => {
+  const location = useLocation();
+  const lastHash = useRef('');
+  useEffect(() => {
+    if (location.hash) {
+      // Sanitize the hash value (remove the '#' and allow only alphanumeric characters and hyphens)
+      const sanitizedHash = location.hash.slice(1).replace(/[^a-zA-Z0-9-_]/g, '');
+      lastHash.current = sanitizedHash;
+    }
+
+    if (lastHash.current && document.getElementById(lastHash.current)) {
+      setTimeout(() => {
+        document
+          .getElementById(lastHash.current)
+          ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        lastHash.current = '';
+      }, 100);
+    }
+  }, [location]);
+
+  return null;
+};
+
 export {
   noop,
   isValid,
@@ -385,6 +427,7 @@ export {
   stringToArrayTrimmed,
   constructSelectedSubnets,
   Subnet,
+  useScrollToAnchor,
 };
 
 export default helpers;

@@ -2,17 +2,14 @@ import React from 'react';
 import * as reactRedux from 'react-redux';
 
 import getClusterName from '~/common/getClusterName';
-import {
-  clearToggleSubscriptionReleasedResponse,
-  toggleSubscriptionReleased,
-} from '~/redux/actions/subscriptionReleasedActions';
+import * as useToggleSubscriptionReleased from '~/queries/ClusterActionsQueries/useToggleSubscriptionReleased';
 import { useGlobalState } from '~/redux/hooks';
-import { checkAccessibility, render, screen } from '~/testUtils';
-import { SubscriptionCommonFields } from '~/types/accounts_mgmt.v1';
+import { checkAccessibility, render, screen, withState } from '~/testUtils';
+import { SubscriptionCommonFieldsStatus } from '~/types/accounts_mgmt.v1';
 
 import TransferClusterOwnershipDialog from '../TransferClusterOwnershipDialog';
 
-import { requestState, subscription } from './TransferClusterOwnershipDialog.fixtures';
+import { subscription } from './TransferClusterOwnershipDialog.fixtures';
 
 jest.mock('~/redux/hooks', () => ({
   useGlobalState: jest.fn(),
@@ -26,37 +23,46 @@ jest.mock('react-redux', () => {
   return config;
 });
 
-jest.mock('~/redux/actions/subscriptionReleasedActions', () => ({
-  clearToggleSubscriptionReleasedResponse: jest.fn(),
-  toggleSubscriptionReleased: jest.fn(),
-}));
-
 jest.mock('~/common/getClusterName', () => jest.fn());
 
+const mockedUseToggleSubscriptionReleased = jest.spyOn(
+  useToggleSubscriptionReleased,
+  'useToggleSubscriptionReleased',
+);
+
 const useGlobalStateMock = useGlobalState as jest.Mock;
-const clearToggleSubscriptionReleasedResponseMock =
-  clearToggleSubscriptionReleasedResponse as jest.Mock;
-const toggleSubscriptionReleasedMock = toggleSubscriptionReleased as jest.Mock;
 const getClusterNameMock = getClusterName as jest.Mock;
 
 describe('<TransferClusterOwnershipDialog />', () => {
   const onClose = jest.fn();
   const useDispatchMock = jest.spyOn(reactRedux, 'useDispatch');
   const mockedDispatch = jest.fn();
+  const mutate = jest.fn();
+
+  const defaultProps = {
+    onClose,
+  };
+
+  const defaultState = {
+    modal: {
+      data: {
+        id: 'my-cluster-id',
+        subscription: {
+          ...subscription,
+        },
+        shouldDisplayClusterName: false,
+      },
+    },
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
     useDispatchMock.mockReturnValue(mockedDispatch);
-    clearToggleSubscriptionReleasedResponseMock.mockReturnValue(
-      'clearToggleSubscriptionReleasedResponseResponse',
-    );
-    toggleSubscriptionReleasedMock.mockReturnValue('toggleSubscriptionReleasedResponse');
   });
 
   it('is accessible', async () => {
     // Arrange
     useGlobalStateMock.mockReturnValueOnce({ subscription });
-    useGlobalStateMock.mockReturnValueOnce(requestState);
     const { container } = render(<TransferClusterOwnershipDialog onClose={onClose} />);
 
     // Act
@@ -69,22 +75,37 @@ describe('<TransferClusterOwnershipDialog />', () => {
   it('should release clusters', async () => {
     // Arrange
     useGlobalStateMock.mockReturnValueOnce({ subscription: { ...subscription, released: false } });
-    useGlobalStateMock.mockReturnValueOnce(requestState);
-    const { user } = render(<TransferClusterOwnershipDialog onClose={onClose} />);
-    expect(toggleSubscriptionReleasedMock).toHaveBeenCalledTimes(0);
+    mockedUseToggleSubscriptionReleased.mockReturnValue({
+      mutate,
+      isPending: false,
+      isError: false,
+      error: null,
+      isSuccess: true,
+      data: undefined,
+    });
+    const { user } = withState(defaultState, true).render(
+      <TransferClusterOwnershipDialog {...defaultProps} />,
+    );
+    expect(mutate).toHaveBeenCalledTimes(0);
 
     // Act
     await user.click(screen.getByRole('button', { name: 'Initiate transfer' }));
 
     // Assert
-    expect(toggleSubscriptionReleasedMock).toHaveBeenCalledWith('0', true);
-    expect(mockedDispatch).toHaveBeenCalledWith('toggleSubscriptionReleasedResponse');
+    expect(mockedDispatch).toHaveBeenCalled();
+    expect(mockedDispatch.mock.calls[0][0].type).toEqual('CLOSE_MODAL');
+    expect(mutate).toHaveBeenCalledWith(
+      {
+        released: true,
+        subscriptionID: '0',
+      },
+      { onSuccess: expect.any(Function) },
+    );
   });
 
   it('should not show dialog for canceling transfer', () => {
     // Arrange
     useGlobalStateMock.mockReturnValueOnce({ subscription: { ...subscription, released: true } });
-    useGlobalStateMock.mockReturnValueOnce(requestState);
 
     // Act
     const { container } = render(<TransferClusterOwnershipDialog onClose={onClose} />);
@@ -99,10 +120,9 @@ describe('<TransferClusterOwnershipDialog />', () => {
       subscription: {
         ...subscription,
         released: false,
-        status: SubscriptionCommonFields.status.DISCONNECTED,
+        status: SubscriptionCommonFieldsStatus.Disconnected,
       },
     });
-    useGlobalStateMock.mockReturnValueOnce(requestState);
 
     // Act
     render(<TransferClusterOwnershipDialog onClose={onClose} />);
@@ -117,10 +137,24 @@ describe('<TransferClusterOwnershipDialog />', () => {
       subscription: {
         ...subscription,
         released: false,
-        status: SubscriptionCommonFields.status.DISCONNECTED,
+        status: SubscriptionCommonFieldsStatus.Disconnected,
       },
     });
-    useGlobalStateMock.mockReturnValueOnce({ error: true, errorMessage: 'this is an error' });
+
+    mockedUseToggleSubscriptionReleased.mockReturnValue({
+      mutate,
+      isPending: false,
+      isError: true,
+      error: {
+        isLoading: false,
+        isError: true,
+        error: {
+          errorMessage: 'this is an error',
+        },
+      },
+      isSuccess: false,
+      data: undefined,
+    });
 
     // Act
     render(<TransferClusterOwnershipDialog onClose={onClose} />);
@@ -135,7 +169,6 @@ describe('<TransferClusterOwnershipDialog />', () => {
     useGlobalStateMock.mockReturnValueOnce({
       subscription: undefined,
     });
-    useGlobalStateMock.mockReturnValueOnce(requestState);
 
     // Act
     render(<TransferClusterOwnershipDialog onClose={onClose} />);
@@ -149,15 +182,21 @@ describe('<TransferClusterOwnershipDialog />', () => {
     useGlobalStateMock.mockReturnValueOnce({
       subscription: undefined,
     });
-    useGlobalStateMock.mockReturnValueOnce({ ...requestState, fulfilled: true });
+    mockedUseToggleSubscriptionReleased.mockReturnValue({
+      mutate,
+      isPending: false,
+      isError: false,
+      error: null,
+      isSuccess: true,
+      data: undefined,
+    });
 
     // Act
     render(<TransferClusterOwnershipDialog onClose={onClose} />);
 
     // Assert
     expect(onClose).toHaveBeenCalledTimes(1);
-    expect(clearToggleSubscriptionReleasedResponseMock).toHaveBeenCalledWith();
-    expect(mockedDispatch).toHaveBeenCalledWith('clearToggleSubscriptionReleasedResponseResponse');
+    expect(mockedDispatch.mock.calls[0][0].type).toEqual('CLOSE_MODAL');
   });
 
   it('shouldDisplayClusterName false', () => {
@@ -166,7 +205,6 @@ describe('<TransferClusterOwnershipDialog />', () => {
       subscription: undefined,
       shouldDisplayClusterName: false,
     });
-    useGlobalStateMock.mockReturnValueOnce({ ...requestState, fulfilled: true });
     getClusterNameMock.mockReturnValue('whatever the name');
 
     // Act
@@ -179,14 +217,20 @@ describe('<TransferClusterOwnershipDialog />', () => {
   it('shouldDisplayClusterName true', () => {
     // Arrange
     useGlobalStateMock.mockReturnValueOnce({
-      subscription: undefined,
+      subscription: { ...subscription },
       shouldDisplayClusterName: true,
     });
-    useGlobalStateMock.mockReturnValueOnce({ ...requestState, fulfilled: true });
     getClusterNameMock.mockReturnValue('whatever the name');
-
+    const updatedState = {
+      modal: {
+        data: {
+          subscription: { ...subscription },
+          shouldDisplayClusterName: true,
+        },
+      },
+    };
     // Act
-    render(<TransferClusterOwnershipDialog onClose={onClose} />);
+    withState(updatedState, true).render(<TransferClusterOwnershipDialog {...defaultProps} />);
 
     // Assert
     expect(screen.getByText(/whatever the name/i)).toBeInTheDocument();

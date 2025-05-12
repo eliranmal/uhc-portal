@@ -1,5 +1,4 @@
-import { ClusterAuthorizationRequest } from '~/types/accounts_mgmt.v1';
-import { BillingModel } from '~/types/clusters_mgmt.v1';
+import { ClusterAuthorizationRequestProduct_id as ClusterAuthorizationRequestProductId } from '~/types/accounts_mgmt.v1';
 
 /**
  * names of all subscriptioin settings
@@ -34,54 +33,56 @@ const anyUnknownProducts = {
  */
 const {
   OSD,
-  OSDTRIAL,
+  OSDTrial,
   OCP,
   RHMI,
   ARO,
-  OCP_ASSISTED_INSTALL,
+  // eslint-disable-next-line camelcase
+  OCP_AssistedInstall,
   RHACS,
-  RHACSTRIAL,
+  RHACSTrial,
   RHOSR,
-  RHOSRTRIAL,
+  RHOSRTrial,
   RHOSAK,
-  RHOSAKTRIAL,
+  RHOSAKTrial,
   RHOSE,
-  RHOSETRIAL,
+  RHOSETrial,
   RHOIC,
-} = ClusterAuthorizationRequest.product_id;
+} = ClusterAuthorizationRequestProductId;
 
 const knownProducts = {
   OSD,
-  OSDTRIAL,
+  OSDTrial,
   OCP,
   RHMI,
   ARO,
-  OCP_ASSISTED_INSTALL,
+  // eslint-disable-next-line camelcase
+  OCP_AssistedInstall,
   RHACS,
-  RHACSTRIAL,
+  RHACSTrial,
   RHOSR,
-  RHOSRTRIAL,
+  RHOSRTrial,
   RHOSAK,
-  RHOSAKTRIAL,
+  RHOSAKTrial,
   RHOSE,
-  RHOSETRIAL,
+  RHOSETrial,
   RHOIC,
   ...rosaProducts,
 };
 
 // List of allowed products to display
 const allowedProducts = [
-  ClusterAuthorizationRequest.product_id.OSD,
-  ClusterAuthorizationRequest.product_id.OSDTRIAL,
-  ClusterAuthorizationRequest.product_id.OCP,
-  ClusterAuthorizationRequest.product_id.RHMI,
+  ClusterAuthorizationRequestProductId.OSD,
+  ClusterAuthorizationRequestProductId.OSDTrial,
+  ClusterAuthorizationRequestProductId.OCP,
+  ClusterAuthorizationRequestProductId.RHMI,
   rosaProducts.ROSA,
-  ClusterAuthorizationRequest.product_id.RHOIC,
-  ClusterAuthorizationRequest.product_id.MOA,
-  ClusterAuthorizationRequest.product_id.MOA_HOSTED_CONTROL_PLANE,
+  ClusterAuthorizationRequestProductId.RHOIC,
+  ClusterAuthorizationRequestProductId.MOA,
+  ClusterAuthorizationRequestProductId.MOA_HostedControlPlane,
   rosaProducts.ROSA_HyperShift,
-  ClusterAuthorizationRequest.product_id.ARO,
-  ClusterAuthorizationRequest.product_id.OCP_ASSISTED_INSTALL,
+  ClusterAuthorizationRequestProductId.ARO,
+  ClusterAuthorizationRequestProductId.OCP_AssistedInstall,
 ];
 
 /**
@@ -98,12 +99,12 @@ const normalizedProducts = { ...knownProducts, ...anyUnknownProducts };
  *
  */
 const clustersServiceProducts = [
-  ClusterAuthorizationRequest.product_id.OSD,
-  ClusterAuthorizationRequest.product_id.OSDTRIAL,
+  ClusterAuthorizationRequestProductId.OSD,
+  ClusterAuthorizationRequestProductId.OSDTrial,
   rosaProducts.ROSA,
   rosaProducts.ROSA_HyperShift,
-  ClusterAuthorizationRequest.product_id.RHMI,
-  ClusterAuthorizationRequest.product_id.ARO,
+  ClusterAuthorizationRequestProductId.RHMI,
+  ClusterAuthorizationRequestProductId.ARO,
 ];
 
 /**
@@ -114,28 +115,21 @@ const clustersServiceProducts = [
  */
 const productFilterOptions = [
   {
-    key: ClusterAuthorizationRequest.product_id.OCP,
+    key: ClusterAuthorizationRequestProductId.OCP,
     label: 'OCP',
     plansToQuery: ['OCP', 'OCP-AssistedInstall'],
   },
-  { key: ClusterAuthorizationRequest.product_id.OSD, label: 'OSD', plansToQuery: ['OSD'] },
+  { key: ClusterAuthorizationRequestProductId.OSD, label: 'OSD', plansToQuery: ['OSD'] },
   {
     key: rosaProducts.ROSA,
     label: 'ROSA',
     plansToQuery: ['MOA', 'ROSA', 'MOA-HostedControlPlane'],
   },
-  { key: ClusterAuthorizationRequest.product_id.ARO, label: 'ARO', plansToQuery: ['ARO'] },
-  { key: ClusterAuthorizationRequest.product_id.RHOIC, label: 'RHOIC', plansToQuery: ['RHOIC'] },
+  { key: ClusterAuthorizationRequestProductId.ARO, label: 'ARO', plansToQuery: ['ARO'] },
+  { key: ClusterAuthorizationRequestProductId.RHOIC, label: 'RHOIC', plansToQuery: ['RHOIC'] },
 ];
 
-/**
- * The cluster_billing_model field on subscription indicates what kind
- * of quota this subscription is using.
- */
-const billingModels = {
-  ...BillingModel,
-  STANDARD_TRIAL: 'standard-trial',
-};
+const STANDARD_TRIAL_BILLING_MODEL_TYPE = 'standard-trial';
 
 type OcmRoleItem = {
   id: string;
@@ -184,11 +178,11 @@ const ocmRoles: Record<string, OcmRoleItem> = {
 
 export {
   allowedProducts,
-  billingModels,
   clustersServiceProducts,
   knownProducts,
   normalizedProducts,
   ocmRoles,
   productFilterOptions,
+  STANDARD_TRIAL_BILLING_MODEL_TYPE,
   subscriptionSettings,
 };

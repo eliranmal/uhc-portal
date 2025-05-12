@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import PageHeader from '@patternfly/react-component-groups/dist/dynamic/PageHeader';
 import {
   Card,
   CardBody,
@@ -10,16 +11,15 @@ import {
   Grid,
   GridItem,
   PageSection,
+  Spinner,
   Split,
   SplitItem,
   Title,
 } from '@patternfly/react-core';
-import { PageHeader } from '@redhat-cloud-services/frontend-components/PageHeader';
-import Spinner from '@redhat-cloud-services/frontend-components/Spinner';
 
 import { createOverviewQueryObject } from '../../common/queryHelpers';
 import { AppPage } from '../App/AppPage';
-import ClusterListActions from '../clusters/ClusterList/components/ClusterListActions/ClusterListActions';
+import ClusterListActions from '../clusters/ClusterListMultiRegion/components/ClusterListActions/ClusterListActions';
 import ArchiveClusterDialog from '../clusters/common/ArchiveClusterDialog';
 import EditSubscriptionSettingsDialog from '../clusters/common/EditSubscriptionSettingsDialog/EditSubscriptionSettingsDialog';
 import SmallClusterChart from '../clusters/common/ResourceUsage/SmallClusterChart';
@@ -119,7 +119,9 @@ const Dashboard = (props) => {
       <AppPage title={PAGE_TITLE}>
         <EmptyState>
           <EmptyStateBody>
-            <Spinner centered />
+            <div className="pf-v5-u-text-align-center">
+              <Spinner size="lg" aria-label="Loading..." />
+            </div>
           </EmptyStateBody>
         </EmptyState>
       </AppPage>

@@ -17,7 +17,9 @@ describe('OSD cluster tests', { tags: ['ci'] }, () => {
     it('navigates to create OSD cluster', () => {
       cy.getByTestId('create_cluster_btn').click();
       CreateClusterPage.isCreateClusterPage();
-      cy.getByTestId('osd-create-cluster-button').click({ force: true }); // need force=true to get past 'element detached from dom' error
+      cy.get('a[data-testid="osd-create-cluster-button"][aria-disabled="false"]', {
+        timeout: 15000,
+      }).click();
       CreateOSDWizardPage.isCreateOSDPage();
     });
 

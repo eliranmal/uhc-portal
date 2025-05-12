@@ -30,14 +30,14 @@
     &::before {
       content: 'Step ' counter(ocm-instructions) ':';
       flex-shrink: 0;
-      padding-right: var(--pf-v5-global--spacer--md);
+      padding-right: var(--pf-v5-global--spacer--lg);
       white-space: nowrap;
       font-size: var(--pf-v5-c-title--m-lg--FontSize);
       font-weight: bold;
-    }
+    } 
   }
 
   &-contents {
-    margin: 0 0 0 var(--pf-v5-global--spacer--md);
+    margin: 0 0 0 var(--pf-v5-global--spacer--xl);
   }
 }

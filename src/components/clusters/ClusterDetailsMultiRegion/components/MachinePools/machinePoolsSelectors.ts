@@ -1,21 +1,24 @@
 import get from 'lodash/get';
 
-import { billingModels } from '~/common/subscriptionTypes';
-import { QuotaParams } from '~/components/clusters/common/quotaModel';
+import { QuotaParams, QuotaTypes } from '~/components/clusters/common/quotaModel';
 import { OrganizationState } from '~/redux/reducers/userReducer';
 import { PromiseReducerState } from '~/redux/types';
-import { Organization, QuotaCostList, RelatedResource } from '~/types/accounts_mgmt.v1';
+import {
+  Organization,
+  QuotaCostList,
+  RelatedResourceBilling_model as RelatedResourceBillingModel,
+  SubscriptionCommonFieldsCluster_billing_model as SubscriptionCommonFieldsClusterBillingModel,
+} from '~/types/accounts_mgmt.v1';
 import { MachineType } from '~/types/clusters_mgmt.v1';
 import { ClusterFromSubscription } from '~/types/types';
 
-import { availableNodesFromQuota } from '../../../common/quotaSelectors';
+import { availableQuota } from '../../../common/quotaSelectors';
 
 const hasNodesQuotaForType = <E extends ClusterFromSubscription>(
   machineType: MachineType,
   cluster: E,
   cloudProviderID: string,
-  // eslint-disable-next-line camelcase
-  billingModel: RelatedResource.billing_model,
+  billingModel: RelatedResourceBillingModel,
   organization: PromiseReducerState<OrganizationState>,
 ) => {
   const quotaParams: QuotaParams = {
@@ -27,7 +30,12 @@ const hasNodesQuotaForType = <E extends ClusterFromSubscription>(
     billingModel,
   };
 
-  return availableNodesFromQuota(organization?.quotaList as QuotaCostList, quotaParams) >= 1;
+  return (
+    availableQuota(organization?.quotaList as QuotaCostList, {
+      ...quotaParams,
+      resourceType: QuotaTypes.NODE,
+    }) >= 1
+  );
 };
 
 const hasMachinePoolsQuotaSelector = <E extends ClusterFromSubscription>(
@@ -41,12 +49,12 @@ const hasMachinePoolsQuotaSelector = <E extends ClusterFromSubscription>(
 
   const cloudProviderID = cluster?.cloud_provider?.id;
   const billingModel =
-    RelatedResource.billing_model[
+    RelatedResourceBillingModel[
       get(
         cluster,
         'subscription.cluster_billing_model',
-        billingModels.STANDARD,
-      ) as keyof typeof RelatedResource.billing_model
+        SubscriptionCommonFieldsClusterBillingModel.standard,
+      ) as keyof typeof RelatedResourceBillingModel
     ];
 
   if (cloudProviderID && machineTypes) {

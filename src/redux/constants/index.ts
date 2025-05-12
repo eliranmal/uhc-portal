@@ -1,5 +1,3 @@
-import * as clusterLogConstants from '../../components/clusters/ClusterDetails/components/ClusterLogs/clusterLogConstants';
-
 import * as accessRequestConstants from './accessRequestConstants';
 import * as cloudProviderConstants from './cloudProviderConstants';
 import * as clusterAutoscalerConstants from './clusterAutoscalerConstants';
@@ -7,7 +5,6 @@ import * as clustersConstants from './clustersConstants';
 import * as costConstants from './costConstants';
 import * as dashboardsConstants from './dashboardsConstants';
 import * as dnsDomainsConstants from './dnsDomainsConstants';
-import * as featureConstants from './featureConstants';
 import * as flavourConstants from './flavourConstants';
 import * as loadBalancerConstants from './loadBalancerConstants';
 import * as machineTypesConstants from './machineTypesConstants';
@@ -27,7 +24,6 @@ export {
   viewOptionsConstants,
   viewPaginationConstants,
   userConstants,
-  clusterLogConstants,
   cloudProviderConstants,
   costConstants,
   flavourConstants,
@@ -38,5 +34,4 @@ export {
   subscriptionSettingsConstants,
   dashboardsConstants,
   dnsDomainsConstants,
-  featureConstants,
 };

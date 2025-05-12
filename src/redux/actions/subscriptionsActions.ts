@@ -15,12 +15,14 @@ limitations under the License.
 */
 import type { AxiosResponse } from 'axios';
 import { action, ActionType } from 'typesafe-actions';
-import { validate as isUuid } from 'uuid';
 
-import { SelfResourceReviewRequest } from '~/types/accounts_mgmt.v1';
+import {
+  SelfResourceReviewRequestAction,
+  SelfResourceReviewRequestResource_type as SelfResourceReviewRequestResourceType,
+} from '~/types/accounts_mgmt.v1';
 import type { SubscriptionWithPermissionsList } from '~/types/types';
 
-import { accountsService, authorizationsService, clusterService } from '../../services';
+import { accountsService, authorizationsService } from '../../services';
 import { subscriptionsConstants } from '../constants';
 import { buildPermissionDict, INVALIDATE_ACTION } from '../reduxHelpers';
 
@@ -32,8 +34,8 @@ const getSubscriptionsAndPermissions = async (
 ) => {
   let canEdit: { [clusterID: string]: boolean } = {};
   const permissionsResponse = await authorizationsService.selfResourceReview({
-    action: SelfResourceReviewRequest.action.UPDATE,
-    resource_type: SelfResourceReviewRequest.resource_type.CLUSTER,
+    action: SelfResourceReviewRequestAction.update,
+    resource_type: SelfResourceReviewRequestResourceType.Cluster,
   });
   canEdit = buildPermissionDict(permissionsResponse);
 
@@ -65,44 +67,20 @@ const fetchQuotaCost = (organizationID: string) =>
     accountsService.getOrganizationQuota(organizationID),
   );
 
-const getSubscriptionIDForCluster = (clusterID: string) => {
-  if (isUuid(clusterID)) {
-    return accountsService
-      .fetchSubscriptionByExternalId(clusterID)
-      .then((result) => result.data?.items?.[0]?.id);
-  }
-  return clusterService.getClusterDetails(clusterID).then((result) => result.data.subscription?.id);
-};
-
-/**
- * Redux action creator, get a subscription ID using a cluster's id / uuid,
- * for redirecting requests from `/details/<id>` to `/details/s/<subscription_id>`
- *
- * @param {String} clusterID Either a Clusters Service cluster ID or a cluster's external_id (uuid)
- */
-const fetchSubscriptionIDForCluster = (clusterID: string) =>
-  action(subscriptionsConstants.GET_SUBSCRIPTION_ID, getSubscriptionIDForCluster(clusterID));
-
-const clearSubscriptionIDForCluster = () => action(subscriptionsConstants.CLEAR_SUBSCRIPTION_ID);
-
 const subscriptionsActions = {
   fetchAccount,
   fetchQuotaCost,
   getSubscriptions,
   invalidateSubscriptions,
-  fetchSubscriptionIDForCluster,
-  clearSubscriptionIDForCluster,
 };
 
 type SubscriptionsAction = ActionType<typeof subscriptionsActions>;
 
 export {
-  subscriptionsActions,
   fetchAccount,
   fetchQuotaCost,
   getSubscriptions,
   invalidateSubscriptions,
-  fetchSubscriptionIDForCluster,
-  clearSubscriptionIDForCluster,
   SubscriptionsAction,
+  subscriptionsActions,
 };

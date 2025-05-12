@@ -1,5 +1,9 @@
 import { ANY } from '~/common/matchUtils';
-import { CloudAccount, RelatedResource } from '~/types/accounts_mgmt.v1';
+import {
+  CloudAccount,
+  RelatedResource,
+  RelatedResourceBilling_model as RelatedResourceBillingModel,
+} from '~/types/accounts_mgmt.v1';
 
 /**
  * Known quota resourceType values.
@@ -16,8 +20,7 @@ export type QuotaParams = {
   resourceType?: string;
   resourceName?: string;
   product?: string;
-  // eslint-disable-next-line camelcase
-  billingModel?: RelatedResource.billing_model;
+  billingModel?: RelatedResourceBillingModel;
   cloudProviderID?: string;
   isBYOC?: boolean;
   isMultiAz?: boolean;
@@ -48,7 +51,7 @@ export type BillingQuota = {
 export const defaultQuotaQuery: QuotaQuery = {
   resource_type: ANY,
   availability_zone_type: ANY,
-  billing_model: RelatedResource.billing_model.ANY,
+  billing_model: RelatedResourceBillingModel.any,
   byoc: ANY,
   cloud_provider: ANY,
   product: ANY,

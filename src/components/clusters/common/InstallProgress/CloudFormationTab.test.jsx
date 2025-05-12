@@ -3,7 +3,7 @@ import { produce } from 'immer';
 
 import { checkAccessibility, render } from '~/testUtils';
 
-import fixtures from '../../ClusterDetails/__tests__/ClusterDetails.fixtures';
+import fixtures from '../../ClusterDetailsMultiRegion/__tests__/ClusterDetails.fixtures';
 
 import CloudFormationTab, { getAccountRolePrefix } from './CloudFormationTab';
 

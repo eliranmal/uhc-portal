@@ -3,9 +3,17 @@ import { Formik } from 'formik';
 
 import * as helpers from '~/common/helpers';
 import * as ReleaseHooks from '~/components/releases/hooks';
+import { UNSTABLE_CLUSTER_VERSIONS } from '~/queries/featureGates/featureConstants';
 import { clustersActions } from '~/redux/actions/clustersActions';
 import type { GlobalState } from '~/redux/store';
-import { checkAccessibility, screen, waitFor, within, withState } from '~/testUtils';
+import {
+  checkAccessibility,
+  mockUseFeatureGate,
+  screen,
+  waitFor,
+  within,
+  withState,
+} from '~/testUtils';
 import { ProductLifeCycle } from '~/types/product-life-cycles';
 
 import { FieldId } from '../constants';
@@ -84,6 +92,38 @@ const versions = [
     rosa_enabled: true,
   },
 ];
+const unstableVersions = [
+  {
+    ami_overrides: [],
+    channel_group: 'fast',
+    default: false,
+    enabled: true,
+    end_of_life_timestamp: '2024-03-17T00:00:00Z',
+    hosted_control_plane_enabled: true,
+    href: '/api/clusters_mgmt/v1/versions/openshift-v4.11.5',
+    id: 'openshift-v4.11.5-fast',
+    kind: 'Version',
+    raw_id: '4.11.5',
+    release_image:
+      'quay.io/openshift-release-dev/ocp-release@sha256:b9d6ccb5ba5a878141e468e56fa62912ad7c04864acfec0c0056d2b41e3259cc',
+    rosa_enabled: true,
+  },
+  {
+    ami_overrides: [],
+    channel_group: 'candidate',
+    default: false,
+    enabled: true,
+    end_of_life_timestamp: '2024-03-17T00:00:00Z',
+    hosted_control_plane_enabled: true,
+    href: '/api/clusters_mgmt/v1/versions/openshift-v4.11.5',
+    id: 'openshift-v4.11.5-candidate',
+    kind: 'Version',
+    raw_id: '4.11.5',
+    release_image:
+      'quay.io/openshift-release-dev/ocp-release@sha256:b9d6ccb5ba5a878141e468e56fa62912ad7c04864acfec0c0056d2b41e3259cc',
+    rosa_enabled: true,
+  },
+];
 
 const noVersionsState: GlobalState['clusters']['clusterVersions'] = {
   error: false,
@@ -110,6 +150,13 @@ const fulfilledVersionsState: GlobalState['clusters']['clusterVersions'] = {
   fulfilled: true,
   params: {},
   versions,
+};
+const fulfilledAllVersionsState: GlobalState['clusters']['clusterVersions'] = {
+  error: false,
+  pending: false,
+  fulfilled: true,
+  params: {},
+  versions: [...versions, ...unstableVersions],
 };
 
 const managedARNsState: GlobalState['rosaReducer']['getAWSAccountRolesARNsResponse'] = {
@@ -531,8 +578,8 @@ describe('<VersionSelection />', () => {
       );
 
       // Assert
-      // There is no role associated with the loading icon
-      expect(screen.getByText(/Loading/)).toBeInTheDocument();
+      expect(screen.getByRole('progressbar')).toBeInTheDocument();
+      expect(screen.getByLabelText('Loading...')).toBeInTheDocument();
       expect(screen.queryByLabelText(componentText.SELECT_TOGGLE.label)).not.toBeInTheDocument();
     });
 
@@ -880,7 +927,7 @@ describe('<VersionSelection />', () => {
       const state = { clusters: { clusterVersions: { ...fulfilledVersionsState } } };
       const newFields = {
         ...defaultFields,
-        [FieldId.ClusterVersion]: { raw_id: '4.10.9999' },
+        [FieldId.ClusterVersion]: { raw_id: '4.10.9999', id: 'openshift-4.10.9999' },
       };
 
       withState(state).render(
@@ -898,6 +945,58 @@ describe('<VersionSelection />', () => {
       );
       expect(onChangeMock.mock.calls).toHaveLength(2);
       expect(onChangeMock.mock.lastCall[0]).toMatchObject({ raw_id: '4.12.1' });
+    });
+  });
+  describe('Test feature flag unstable versions', () => {
+    it('hides unstable versions when feature flag is turned off', async () => {
+      mockUseFeatureGate([[UNSTABLE_CLUSTER_VERSIONS, false]]);
+      // Arrange
+      const state = {
+        clusters: { clusterVersions: { ...fulfilledVersionsState, params: { product: 'hcp' } } },
+        rosaReducer: { getAWSAccountRolesARNsResponse: managedARNsState },
+      };
+      const newFields = {
+        ...defaultFields,
+        [FieldId.Hypershift]: 'true',
+        ...managedARNsFields,
+      };
+      withState(state).render(
+        <Formik onSubmit={() => {}} initialValues={newFields}>
+          <VersionSelection {...defaultProps} />
+        </Formik>,
+      );
+
+      // Assert
+      expect(await screen.findByText(defaultProps.label)).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: '4.12.1' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: '4.11.4' })).toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: '4.11.5 (candidate)' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: '4.11.5 (fast)' })).not.toBeInTheDocument();
+    });
+    it('show unstable versions when feature flag is turned on', async () => {
+      mockUseFeatureGate([[UNSTABLE_CLUSTER_VERSIONS, true]]);
+      // Arrange
+      const state = {
+        clusters: { clusterVersions: { ...fulfilledAllVersionsState, params: { product: 'hcp' } } },
+        rosaReducer: { getAWSAccountRolesARNsResponse: managedARNsState },
+      };
+      const newFields = {
+        ...defaultFields,
+        [FieldId.Hypershift]: 'true',
+        ...managedARNsFields,
+      };
+      withState(state).render(
+        <Formik onSubmit={() => {}} initialValues={newFields}>
+          <VersionSelection {...defaultProps} />
+        </Formik>,
+      );
+
+      // Assert
+      expect(await screen.findByText(defaultProps.label)).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: '4.12.1' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: '4.11.4' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: '4.11.5 (candidate)' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: '4.11.5 (fast)' })).toBeInTheDocument();
     });
   });
 });

@@ -1,6 +1,6 @@
 import React from 'react';
 import classNames from 'classnames';
-import { Field } from 'redux-form';
+import { Field } from 'formik';
 
 import { FormGroup } from '@patternfly/react-core';
 
@@ -13,17 +13,20 @@ import {
 import {
   ExcludedNamespacesHelpText,
   ExcludedNamespacesPopover,
-} from '~/components/clusters/ClusterDetails/components/Networking/components/ApplicationIngressCard/ExcludedNamespacesPopover';
-import { NamespaceOwnerPolicyPopover } from '~/components/clusters/ClusterDetails/components/Networking/components/ApplicationIngressCard/NamespaceOwnerPolicyPopover';
+} from '~/components/clusters/ClusterDetailsMultiRegion/components/Networking/components/ApplicationIngressCard/ExcludedNamespacesPopover';
+import { NamespaceOwnerPolicyPopover } from '~/components/clusters/ClusterDetailsMultiRegion/components/Networking/components/ApplicationIngressCard/NamespaceOwnerPolicyPopover';
 import {
   RouteSelectorsHelpText,
   RouteSelectorsPopover,
-} from '~/components/clusters/ClusterDetails/components/Networking/components/ApplicationIngressCard/RouteSelectorsPopover';
-import { WildcardPolicyPopover } from '~/components/clusters/ClusterDetails/components/Networking/components/ApplicationIngressCard/WildcardsPolicyPopover';
-import { LoadBalancerFlavorLabel } from '~/components/clusters/ClusterDetails/components/Networking/components/constants';
-import LoadBalancerPopover from '~/components/clusters/ClusterDetails/components/Networking/components/LoadBalancerPopover';
-import { ReduxCheckbox, ReduxVerticalFormGroup } from '~/components/common/ReduxFormComponents';
-import { LoadBalancerFlavor } from '~/types/clusters_mgmt.v1';
+} from '~/components/clusters/ClusterDetailsMultiRegion/components/Networking/components/ApplicationIngressCard/RouteSelectorsPopover';
+import { WildcardPolicyPopover } from '~/components/clusters/ClusterDetailsMultiRegion/components/Networking/components/ApplicationIngressCard/WildcardsPolicyPopover';
+import { LoadBalancerFlavorLabel } from '~/components/clusters/ClusterDetailsMultiRegion/components/Networking/components/constants';
+import LoadBalancerPopover from '~/components/clusters/ClusterDetailsMultiRegion/components/Networking/components/LoadBalancerPopover';
+import {
+  ReduxCheckbox,
+  ReduxVerticalFormGroup,
+} from '~/components/common/ReduxFormComponents_deprecated';
+import { LoadBalancerFlavor } from '~/types/clusters_mgmt.v1/enums';
 
 type DefaultIngressFieldsProps = {
   className?: string;
@@ -52,6 +55,7 @@ export const DefaultIngressFields: React.FC<DefaultIngressFieldsProps> = ({
         isStack
         isRequired
       >
+        {/* @ts-ignore */}
         <Field
           component={ReduxVerticalFormGroup}
           name="default_router_address"
@@ -59,6 +63,7 @@ export const DefaultIngressFields: React.FC<DefaultIngressFieldsProps> = ({
           disabled
           helpText="Address of application routes."
         />
+        {/* @ts-ignore */}
         <Field
           component={ReduxCheckbox}
           name="private_default_router"
@@ -69,6 +74,7 @@ export const DefaultIngressFields: React.FC<DefaultIngressFieldsProps> = ({
 
     {hasSufficientIngressEditVersion && !isHypershiftCluster && (
       <FormGroup className={className} label="Route selector" labelIcon={<RouteSelectorsPopover />}>
+        {/* @ts-ignore */}
         <Field
           component={ReduxVerticalFormGroup}
           name="defaultRouterSelectors"
@@ -88,6 +94,7 @@ export const DefaultIngressFields: React.FC<DefaultIngressFieldsProps> = ({
         label="Excluded namespaces"
         labelIcon={<ExcludedNamespacesPopover />}
       >
+        {/* @ts-ignore */}
         <Field
           component={ReduxVerticalFormGroup}
           name="defaultRouterExcludedNamespacesFlag"
@@ -104,6 +111,7 @@ export const DefaultIngressFields: React.FC<DefaultIngressFieldsProps> = ({
     {isDay2 && hasSufficientIngressEditVersion && !isHypershiftCluster && (
       <>
         <FormGroup className={className} label="TLS Secret name">
+          {/* @ts-ignore */}
           <Field
             component={ReduxVerticalFormGroup}
             name="clusterRoutesTlsSecretRef"
@@ -117,6 +125,7 @@ export const DefaultIngressFields: React.FC<DefaultIngressFieldsProps> = ({
 
         {/* TODO: provide link to documentation once it is written */}
         <FormGroup className={className} label="Hostname">
+          {/* @ts-ignore */}
           <Field
             component={ReduxVerticalFormGroup}
             name="clusterRoutesHostname"
@@ -137,6 +146,7 @@ export const DefaultIngressFields: React.FC<DefaultIngressFieldsProps> = ({
         label="Namespace ownership policy"
         labelIcon={<NamespaceOwnerPolicyPopover />}
       >
+        {/* @ts-ignore */}
         <Field
           id="isDefaultRouterNamespaceOwnershipPolicyStrict"
           component={ReduxCheckbox}
@@ -156,6 +166,7 @@ export const DefaultIngressFields: React.FC<DefaultIngressFieldsProps> = ({
         label="Wildcard policy"
         labelIcon={<WildcardPolicyPopover />}
       >
+        {/* @ts-ignore */}
         <Field
           id="isDefaultRouterWildcardPolicyAllowed"
           component={ReduxCheckbox}
@@ -175,13 +186,14 @@ export const DefaultIngressFields: React.FC<DefaultIngressFieldsProps> = ({
         className={classNames('pf-v5-u-pb-md', className)}
         labelIcon={<LoadBalancerPopover />}
       >
+        {/* @ts-ignore */}
         <Field
           id="load_balancer_group"
           component={ReduxCheckbox}
           name="is_nlb_load_balancer"
           disabled={!canEditLoadBalancer}
-          label={LoadBalancerFlavorLabel[LoadBalancerFlavor.NLB]}
-          labelOff={LoadBalancerFlavorLabel[LoadBalancerFlavor.CLASSIC]}
+          label={LoadBalancerFlavorLabel[LoadBalancerFlavor.nlb]}
+          labelOff={LoadBalancerFlavorLabel[LoadBalancerFlavor.classic]}
           isSwitch
         />
       </FormGroup>

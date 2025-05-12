@@ -2,7 +2,7 @@ import { FormikTouched, FormikValues } from 'formik';
 
 import { getRandomID } from '~/common/helpers';
 import { getDefaultSecurityGroupsSettings } from '~/common/securityGroupsHelpers';
-import { billingModels, normalizedProducts } from '~/common/subscriptionTypes';
+import { normalizedProducts } from '~/common/subscriptionTypes';
 import { getDefaultClusterAutoScaling } from '~/components/clusters/common/clusterAutoScalingValues';
 import { defaultWorkerNodeVolumeSizeGiB } from '~/components/clusters/common/machinePools/constants';
 import {
@@ -22,6 +22,7 @@ import {
   ApplicationIngressType,
   ClusterPrivacyType,
 } from '~/components/clusters/wizards/osd/Networking/constants';
+import { SubscriptionCommonFieldsCluster_billing_model as SubscriptionCommonFieldsClusterBillingModel } from '~/types/accounts_mgmt.v1';
 
 export enum RosaFieldId {
   AssociatedAwsId = 'associated_aws_id',
@@ -77,18 +78,17 @@ const hypershiftDefaultSelected = true;
 export const initialValuesHypershift = (isHypershift: boolean, isMultiRegionEnabled?: boolean) =>
   isHypershift
     ? {
-        [FieldId.BillingModel]: billingModels.MARKETPLACE_AWS,
+        [FieldId.BillingModel]: SubscriptionCommonFieldsClusterBillingModel.marketplace_aws,
         [FieldId.ClusterAutoscaling]: null,
         [FieldId.ClusterPrivacyPublicSubnetId]: '',
         [FieldId.InstallToVpc]: true,
         [FieldId.NodeLabels]: [{ id: getRandomID() }],
         [FieldId.SharedVpc]: { is_allowed: false },
         [FieldId.UpgradePolicy]: 'automatic',
-        [FieldId.WorkerVolumeSizeGib]: undefined,
         [FieldId.Region]: isMultiRegionEnabled ? undefined : AWS_DEFAULT_REGION,
       }
     : {
-        [FieldId.BillingModel]: billingModels.STANDARD,
+        [FieldId.BillingModel]: SubscriptionCommonFieldsClusterBillingModel.standard,
         [FieldId.ClusterAutoscaling]: getDefaultClusterAutoScaling(),
         [FieldId.ClusterPrivacyPublicSubnetId]: '',
         [FieldId.EnableUserWorkloadMonitoring]: true,
@@ -102,7 +102,6 @@ export const initialValuesHypershift = (isHypershift: boolean, isMultiRegionEnab
           hosted_zone_role_arn: '',
         },
         [FieldId.UpgradePolicy]: 'manual',
-        [FieldId.WorkerVolumeSizeGib]: defaultWorkerNodeVolumeSizeGiB,
       };
 
 export const initialValues: (hypershiftDefault?: boolean) => FormikValues = (
@@ -146,6 +145,7 @@ export const initialValues: (hypershiftDefault?: boolean) => FormikValues = (
   [FieldId.UsePrivateLink]: false,
   [FieldId.EnableExteranlAuthentication]: false,
   [FieldId.RegionalInstance]: {},
+  [FieldId.WorkerVolumeSizeGib]: defaultWorkerNodeVolumeSizeGiB,
 
   // Optional fields based on whether Hypershift is selected or not
   ...initialValuesHypershift(hypershiftDefault),
