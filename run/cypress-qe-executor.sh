@@ -137,6 +137,11 @@ function collect_logs(){
 }
 
 function cloudutil_container_run(){
+
+  TEST_QE_AWS_ACCESS_KEY_ID=$(jq -r '.QE_AWS_ACCESS_KEY_ID' ${PWD}/cypress.env.json)
+  TEST_QE_AWS_ACCESS_KEY_SECRET=$(jq -r '.QE_AWS_ACCESS_KEY_SECRET' ${PWD}/cypress.env.json)
+  TEST_QE_AWS_REGION=$(jq -r '.QE_AWS_REGION' ${PWD}/cypress.env.json)
+
   cloudutil_container_name=$1
   pod_id=$2
   is_create_resource_action=$3
