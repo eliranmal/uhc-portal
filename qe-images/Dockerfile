@@ -1,5 +1,5 @@
 # Start from Cypress included image
-FROM cypress/included:14.3.2 
+FROM quay.io/openshifttest/cypress-included:14.3.2
 
 # Install curl and ROSA CLI dependencies
 USER root
