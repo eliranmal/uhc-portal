@@ -4,7 +4,7 @@ set -o nounset
 set -o errexit
 set -o pipefail
 
-IMAGE_TAG="updated"
+IMAGE_TAG="14.3.2"
 IMAGE_REGISTRY="quay.io"
 IMAGE_REPOSITORY="app-sre/ocmui-cypress-tests"
 CONTAINER_FILE_PATH="${PWD}/qe-images"
