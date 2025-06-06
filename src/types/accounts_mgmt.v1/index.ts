@@ -2394,6 +2394,15 @@ export interface paths {
           };
           content?: never;
         };
+        /** @description Request is invalid */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Error'];
+          };
+        };
         /** @description Auth token is invalid */
         401: {
           headers: {
@@ -13207,6 +13216,7 @@ export interface components {
     };
     FeatureReview: {
       account_username?: string;
+      cluster_id?: string;
       feature: string;
       organization_id?: string;
     };
@@ -14328,6 +14338,7 @@ export enum AccessReviewResource_type {
   ClusterSelfManagedAddon = 'ClusterSelfManagedAddon',
   ClusterSelfManagedLabel = 'ClusterSelfManagedLabel',
   ClusterSelfManagedStatus = 'ClusterSelfManagedStatus',
+  OsdTrialProtectedCluster = 'OsdTrialProtectedCluster',
 }
 export enum AccessReviewResponseAction {
   get = 'get',
@@ -14381,6 +14392,7 @@ export enum AccessReviewResponseResource_type {
   ClusterSelfManagedAddon = 'ClusterSelfManagedAddon',
   ClusterSelfManagedLabel = 'ClusterSelfManagedLabel',
   ClusterSelfManagedStatus = 'ClusterSelfManagedStatus',
+  OsdTrialProtectedCluster = 'OsdTrialProtectedCluster',
 }
 export enum AccountGroupManaged_by {
   SSO = 'SSO',
@@ -14670,6 +14682,7 @@ export enum SelfAccessReviewResource_type {
   Idp = 'Idp',
   ClusterAutoscaler = 'ClusterAutoscaler',
   MachinePool = 'MachinePool',
+  OsdTrialProtectedCluster = 'OsdTrialProtectedCluster',
 }
 export enum SelfResourceReviewAction {
   get = 'get',
