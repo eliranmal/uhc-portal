@@ -60,9 +60,10 @@ spec:
             #
             # podman run $containerImage
             #
-            # install node.js 22
+            # dnf install node.js 22
+            #
             # git checkout $revision
-            # cache get node_modules (OPTIONAL)
+            # cache use ./node_modules (optional)
             # yarn install
             # git diff HEAD --exit-code (check for clean working tree. maybe optional, might be replaced with yarn-install's --immutable)
             # make dev-env-setup
