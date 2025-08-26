@@ -50,6 +50,44 @@ spec:
               echo "${componentSha}"
             done < <(echo "$snapshotComponents")
 
+
+
+            #
+            # pseudocode
+            # ----------
+            #
+            # # option 1: local execution
+            #
+            # docker login $containerImage
+            #
+            # install node.js 22
+            # git checkout $revision
+            # cache get node_modules (OPTIONAL)
+            # yarn install
+            # git diff HEAD --exit-code (check for clean working tree. maybe optional, might be replaced with yarn-install's --immutable)
+            # make dev-env-setup
+            # make check-hosts
+            # npx cypress install
+            # yarn start --env logging=quiet --no-client-overlay &
+            #      NODE_TLS_REJECT_UNAUTHORIZED=0 yarn wait-on -i 5000 https://prod.foo.redhat.com:1337/openshift/
+            #      CYPRESS_TEST_WITHQUOTA_USER=${{ secrets.CYPRESS_TEST_WITHQUOTA_USER }} CYPRESS_TEST_WITHQUOTA_PASSWORD=${{ secrets.CYPRESS_TEST_WITHQUOTA_PASSWORD }} TERM=xterm LC_ALL=C.UTF-8 LANG=C.UTF-8 yarn e2e-test
+            # upload-artifacts cypress/screenshots/ cypress/videos/
+            #
+            #
+            # # option 2: remote execution
+            #
+            # docker run $containerImage \
+            #   --init-script 'yarn start'
+            #   --expose-port <dev-server-port>
+            #
+            # etc. etc.
+            #
+            #
+            # based on GH-action https://github.com/RedHatInsights/uhc-portal/blob/main/.github/workflows/e2e.yml
+            #
+
+
+
             # After the tests finish, record the overall result in the RESULT variable
             RESULT="SUCCESS"
 
