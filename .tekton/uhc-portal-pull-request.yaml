@@ -19,6 +19,9 @@ metadata:
   name: uhc-portal-on-pull-request
   namespace: ocm-ui-tenant
 spec:
+  env:
+  - name: YARN_BUILD_SCRIPT
+    value: build:saas
   params:
   - name: git-url
     value: '{{source_url}}'
@@ -30,8 +33,6 @@ spec:
     value: 5d
   - name: dockerfile
     value: build-tools/Dockerfile
-  - name: yarn-build-script
-    value: build:saas
   - name: unit-tests-script
     value: |
       #!/bin/bash
