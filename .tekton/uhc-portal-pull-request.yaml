@@ -48,10 +48,9 @@ spec:
   # extend the unit-tests pipeline task to increase RAM
   taskRunSpecs:
     - pipelineTaskName: build-container
-      params:
-      - name: build-args
-        value:
-        - YARN_BUILD_SCRIPT=build:saas
+      env:
+      - name: YARN_BUILD_SCRIPT
+        value: build:saas
     - pipelineTaskName: run-unit-tests
       stepSpecs:
         - name: unit-tests
