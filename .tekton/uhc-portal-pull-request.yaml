@@ -30,6 +30,8 @@ spec:
     value: 5d
   - name: dockerfile
     value: build-tools/Dockerfile
+  - name: yarn-build-script
+    value: build:saas
   - name: unit-tests-script
     value: |
       #!/bin/bash
