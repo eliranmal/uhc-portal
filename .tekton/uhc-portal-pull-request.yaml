@@ -19,10 +19,10 @@ metadata:
   name: uhc-portal-on-pull-request
   namespace: ocm-ui-tenant
 spec:
-  env:
-  - name: YARN_BUILD_SCRIPT
-    value: build:saas
   params:
+  - name: build-args
+    value:
+    - YARN_BUILD_SCRIPT=build:saas
   - name: git-url
     value: '{{source_url}}'
   - name: revision
