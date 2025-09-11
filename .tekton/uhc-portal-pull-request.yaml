@@ -19,13 +19,6 @@ metadata:
   name: uhc-portal-on-pull-request
   namespace: ocm-ui-tenant
 spec:
-  pipelineSpec:
-    tasks:
-    - name: build-container
-      params:
-      - name: build-args
-        value:
-        - YARN_BUILD_SCRIPT=build:saas
   params:
   - name: git-url
     value: '{{source_url}}'
@@ -54,6 +47,11 @@ spec:
     serviceAccountName: build-pipeline-uhc-portal
   # extend the unit-tests pipeline task to increase RAM
   taskRunSpecs:
+    - pipelineTaskName: build-container
+      params:
+      - name: build-args
+        value:
+        - YARN_BUILD_SCRIPT=build:saas
     - pipelineTaskName: run-unit-tests
       stepSpecs:
         - name: unit-tests
