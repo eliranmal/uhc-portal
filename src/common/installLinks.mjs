@@ -209,13 +209,13 @@ const links = {
 
   OPENSHIFT_LOCAL_SUPPORT_AND_COMMUNITY_DOCS: 'https://crc.dev/docs/using/',
 
-  INSTALL_GCPIPI_GETTING_STARTED: `${OCP_DOCS_BASE}/installing_on_gcp/installing-gcp-account`,
-  INSTALL_GCPIPI_LEARN_MORE: `${OCP_DOCS_BASE}/installing_on_gcp/installing-gcp-default`,
-  INSTALL_GCPUPI_GETTING_STARTED: `${OCP_DOCS_BASE}/installing_on_gcp/installing-gcp-user-infra`,
-  INSTALL_GCPUPI_RHCOS_LEARN_MORE: `${OCP_DOCS_BASE}/installing_on_gcp/installing-gcp-user-infra#installation-gcp-project_installing-gcp-user-infra`,
-  INSTALL_GCP_CUSTOMIZATIONS: `${OCP_DOCS_BASE}/installing_on_gcp/installing-gcp-customizations`,
-  INSTALL_GCP_VPC: `${OCP_DOCS_BASE}/installing_on_gcp/installing-gcp-vpc`,
-  INSTALL_GCP_SHARED_VPC: `${OCP_DOCS_BASE}/installing_on_gcp/installing-gcp-shared-vpc`,
+  INSTALL_GCPIPI_GETTING_STARTED: `${OCP_DOCS_BASE}/installing_on_google_cloud/installing-gcp-account`,
+  INSTALL_GCPIPI_LEARN_MORE: `${OCP_DOCS_BASE}/installing_on_google_cloud/installing-gcp-default`,
+  INSTALL_GCPUPI_GETTING_STARTED: `${OCP_DOCS_BASE}/installing_on_google_cloud/installing-gcp-user-infra`,
+  INSTALL_GCPUPI_RHCOS_LEARN_MORE: `${OCP_DOCS_BASE}/installing_on_google_cloud/installing-gcp-user-infra#installation-gcp-project_installing-gcp-user-infra`,
+  INSTALL_GCP_CUSTOMIZATIONS: `${OCP_DOCS_BASE}/installing_on_google_cloud/installing-gcp-customizations`,
+  INSTALL_GCP_VPC: `${OCP_DOCS_BASE}/installing_on_google_cloud/installing-gcp-vpc`,
+  INSTALL_GCP_SHARED_VPC: `${OCP_DOCS_BASE}/installing_on_google_cloud/installing-gcp-shared-vpc`,
   RHCOS_GCPUPI_TAR_X86: `${MIRROR_RHCOS_LATEST_X86}/rhcos-gcp.x86_64.tar.gz`,
 
   INSTALL_NUTANIXIPI_GETTING_STARTED: `${OCP_DOCS_BASE}/installing_on_nutanix/preparing-to-install-on-nutanix`,
@@ -293,7 +293,7 @@ const links = {
 
   OPM_DOCS: `${OCP_DOCS_BASE}/cli_tools/opm-cli#olm-about-opm_cli-opm-install`,
 
-  OSDK_REMOVAL_DOCS: `${OCP_DOCS_BASE}/release_notes/ocp-4-19-release-notes#ocp-4-19-removed-osdk_release-notes`,
+  OSDK_REMOVAL_DOCS_4_19: `https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/release_notes/ocp-4-19-release-notes#ocp-4-19-removed-osdk_release-notes`,
 
   BUTANE_DOCS: `${OCP_DOCS_BASE}/installation_configuration/installing-customizing`,
 
@@ -358,6 +358,8 @@ const links = {
   AWS_LOAD_BALANCER_FEATURES:
     'https://aws.amazon.com/elasticloadbalancing/features/#Product_comparisons',
   AWS_SHARED_VPC: 'https://docs.aws.amazon.com/vpc/latest/userguide/vpc-sharing.html',
+  AWS_CAPACITY_RESERVATION:
+    'https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/capacity-reservation-overview.html',
 
   GCP_CONSOLE_OSD_HOME:
     'https://console.cloud.google.com/marketplace/agreements/redhat-marketplace/red-hat-openshift-dedicated',
