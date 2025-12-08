@@ -368,14 +368,19 @@ describe('<Details />', () => {
       const defaultValues = {
         ...initialValues,
       };
-      const { container, user } = render(
+      const { user } = render(
         <Formik initialValues={defaultValues} onSubmit={() => {}}>
           <Details />
         </Formik>,
       );
 
-      const fipsCheckbox = container.querySelector('#fips');
-      const etcdCheckbox = container.querySelector('#etcd_encryption');
+      const advancedEncryptionExpand = screen.getByRole('button', { name: /Advanced encryption/i });
+      await user.click(advancedEncryptionExpand);
+
+      const fipsCheckbox = screen.getByRole('checkbox', { name: /Enable FIPS cryptography/i });
+      const etcdCheckbox = screen.getByRole('checkbox', {
+        name: /Enable additional etcd encryption/i,
+      });
 
       // FIPS and etcd should be initially unchecked
       expect(fipsCheckbox).not.toBeChecked();
