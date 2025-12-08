@@ -500,55 +500,64 @@ describe('<Details />', () => {
 
   describe('Advanced Encryption', () => {
     it.each([
-      ['ROSA classic', defaultValues],
+      ['ROSA classic', defaultValues, 'Enable additional etcd encryption'],
       [
         'ROSA HCP',
         {
-          defaultValues,
+          ...defaultValues,
           [FieldId.Hypershift]: 'true',
         },
+        'Encrypt etcd with a custom KMS key',
       ],
-    ])('toggles state of dependent checkboxes correctly for %s', async (msg, formValues) => {
-      const { container, user } = render(
-        <Formik initialValues={formValues} onSubmit={() => {}}>
-          <Details />
-        </Formik>,
-      );
+    ])(
+      'toggles state of dependent checkboxes correctly for %s',
+      async (msg, formValues, etcdEncryptionLabel) => {
+        const { user } = render(
+          <Formik initialValues={formValues} onSubmit={() => {}}>
+            <Details />
+          </Formik>,
+        );
 
-      const fipsCheckbox = container.querySelector('#fips');
-      const etcdCheckbox = container.querySelector('#etcd_encryption');
+        const advancedEncryptionExpand = screen.getByRole('button', {
+          name: /Advanced encryption/i,
+        });
+        await user.click(advancedEncryptionExpand);
 
-      // FIPS and etcd should be initially unchecked
-      expect(fipsCheckbox).not.toBeChecked();
-      expect(etcdCheckbox).not.toBeChecked();
+        const fipsCheckbox = screen.getByRole('checkbox', { name: /Enable FIPS cryptography/i });
+        const etcdCheckbox = screen.getByRole('checkbox', { name: etcdEncryptionLabel });
 
-      // Check FIPS
-      await user.click(fipsCheckbox!);
-      // Etcd should also be automatically checked and disabled
-      expect(fipsCheckbox).toBeChecked();
-      expect(etcdCheckbox).toBeChecked();
-      expect(etcdCheckbox).toBeDisabled();
+        // FIPS and etcd should be initially unchecked
+        expect(fipsCheckbox).not.toBeChecked();
+        expect(etcdCheckbox).not.toBeChecked();
 
-      // Uncheck FIPS
-      await user.click(fipsCheckbox!);
-      // Etcd should still be checked but no longer disabled
-      expect(fipsCheckbox).not.toBeChecked();
-      expect(etcdCheckbox).toBeChecked();
-      expect(etcdCheckbox).not.toBeDisabled();
+        // Check FIPS
+        await user.click(fipsCheckbox!);
+        // Etcd should also be automatically checked and disabled
+        expect(fipsCheckbox).toBeChecked();
+        expect(etcdCheckbox).toBeChecked();
+        expect(etcdCheckbox).toBeDisabled();
 
-      // Can independently uncheck/check etcd without affecting FIPS
-      // Check etcd
-      await user.click(etcdCheckbox!);
-      expect(fipsCheckbox).not.toBeChecked();
-      expect(etcdCheckbox).not.toBeChecked();
+        // Uncheck FIPS
+        await user.click(fipsCheckbox!);
+        // Etcd should still be checked but no longer disabled
+        expect(fipsCheckbox).not.toBeChecked();
+        expect(etcdCheckbox).toBeChecked();
+        expect(etcdCheckbox).not.toBeDisabled();
 
-      // Check FIPS once more
-      await user.click(fipsCheckbox!);
-      // Etcd should also be automatically checked and disabled
-      expect(fipsCheckbox).toBeChecked();
-      expect(etcdCheckbox).toBeChecked();
-      expect(etcdCheckbox).toBeDisabled();
-    });
+        // Can independently uncheck/check etcd without affecting FIPS
+        // Check etcd
+        await user.click(etcdCheckbox!);
+        expect(fipsCheckbox).not.toBeChecked();
+        expect(etcdCheckbox).not.toBeChecked();
+
+        // Check FIPS once more
+        await user.click(fipsCheckbox!);
+        // Etcd should also be automatically checked and disabled
+        expect(fipsCheckbox).toBeChecked();
+        expect(etcdCheckbox).toBeChecked();
+        expect(etcdCheckbox).toBeDisabled();
+      },
+    );
 
     it('toggles state of dependent checkboxes correctly in restricted env', async () => {
       // simulate restricted env
@@ -557,14 +566,19 @@ describe('<Details />', () => {
       const defaultValues = {
         ...initialValuesRestrictedEnv,
       };
-      const { container } = render(
+      const { user } = render(
         <Formik initialValues={defaultValues} onSubmit={() => {}}>
           <Details />
         </Formik>,
       );
 
-      const fipsCheckbox = container.querySelector('#fips');
-      const etcdCheckbox = container.querySelector('#etcd_encryption');
+      const advancedEncryptionExpand = screen.getByRole('button', { name: /Advanced encryption/i });
+      await user.click(advancedEncryptionExpand);
+
+      const fipsCheckbox = screen.getByRole('checkbox', { name: /Enable FIPS cryptography/i });
+      const etcdCheckbox = screen.getByRole('checkbox', {
+        name: /Enable additional etcd encryption/i,
+      });
 
       // FIPS and etcd should be initially checked and disabled
       expect(fipsCheckbox).toBeChecked();
