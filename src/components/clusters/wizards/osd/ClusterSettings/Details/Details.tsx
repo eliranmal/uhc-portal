@@ -41,7 +41,7 @@ import {
   getMinReplicasCount,
   getNodesCount,
 } from '~/components/clusters/common/ScaleSection/AutoScaleSection/AutoScaleHelper';
-import { ClassicEtcdFipsSection } from '~/components/clusters/wizards/common/ClusterSettings/Details/ClassicEtcdFipsSection';
+import { FipsCryptographySection } from '~/components/clusters/wizards/common/ClusterSettings/Details/FipsCryptographySection';
 import CloudRegionSelectField from '~/components/clusters/wizards/common/ClusterSettings/Details/CloudRegionSelectField';
 import { useResetMaxNodesTotal } from '~/components/clusters/wizards/common/ClusterSettings/Details/useResetMaxNodesTotal/useResetMaxNodesTotal';
 import { VersionSelectField } from '~/components/clusters/wizards/common/ClusterSettings/Details/VersionSelectField';
@@ -78,6 +78,7 @@ import { Version } from '~/types/clusters_mgmt.v1';
 import { ChannelGroupSelectField } from '../../../common/ClusterSettings/Details/ChannelGroupSelectField';
 import { ShieldedVM } from '../../../common/ShieldedVM';
 import { ClusterPrivacyType } from '../../Networking/constants';
+import { ClassicEtcdEncryptionSection } from '~/components/clusters/wizards/common/ClusterSettings/Details/ClassicEtcdEncryptionSection';
 
 function Details() {
   const dispatch = useDispatch();
@@ -587,7 +588,8 @@ function Details() {
                 />
               )}
 
-              <ClassicEtcdFipsSection isRosa={false} />
+              <FipsCryptographySection />
+              <ClassicEtcdEncryptionSection learnMoreLink={links.OSD_ETCD_ENCRYPTION} />
             </Grid>
           </ExpandableSection>
         </Flex>
