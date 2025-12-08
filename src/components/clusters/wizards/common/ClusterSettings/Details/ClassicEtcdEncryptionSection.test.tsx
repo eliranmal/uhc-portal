@@ -1,10 +1,10 @@
 import React from 'react';
 import { Formik } from 'formik';
 
+import { FieldId } from '~/components/clusters/wizards/common';
 import { checkAccessibility, render, screen } from '~/testUtils';
 
 import { ClassicEtcdEncryptionSection } from './ClassicEtcdEncryptionSection';
-import { FieldId } from '~/components/clusters/wizards/common';
 
 describe('<ClassicEtcdEncryptionSection />', () => {
   it('is accessible', async () => {
