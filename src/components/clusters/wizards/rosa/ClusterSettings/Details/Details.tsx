@@ -57,6 +57,7 @@ import ExternalLink from '~/components/common/ExternalLink';
 import PopoverHint from '~/components/common/PopoverHint';
 import {
   ALLOW_EUS_CHANNEL,
+  FIPS_FOR_HYPERSHIFT,
   MULTIREGION_PREVIEW_ENABLED,
 } from '~/queries/featureGates/featureConstants';
 import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
@@ -115,6 +116,9 @@ function Details() {
   const isMultiAz = multiAz === 'true';
   const isMultiRegionEnabled = useFeatureGate(MULTIREGION_PREVIEW_ENABLED) && isHypershiftSelected;
   const isEUSChannelEnabled = useFeatureGate(ALLOW_EUS_CHANNEL);
+  const isFipsForHypershiftEnabled = useFeatureGate(FIPS_FOR_HYPERSHIFT);
+
+  const isFipsAllowed = !isHypershiftSelected || isFipsForHypershiftEnabled;
 
   const getInstallableVersionsResponse = useGlobalState((state) => state.clusters.clusterVersions);
 
@@ -580,7 +584,7 @@ function Details() {
         >
           <Grid hasGutter>
             <AWSCustomerManagedEncryption />
-            <FipsCryptographySection />
+            {isFipsAllowed ? <FipsCryptographySection /> : null}
             {isHypershiftSelected ? <HCPEtcdEncryptionSection /> : <ClassicEtcdEncryptionSection />}
           </Grid>
         </ExpandableSection>

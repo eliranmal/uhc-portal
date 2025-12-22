@@ -50,7 +50,7 @@ function DetailsLeft({
   isDisconnected,
 }) {
   const useEusChannel = useFeatureGate(ALLOW_EUS_CHANNEL);
-  const isFipsForHypershiftSupported = useFeatureGate(FIPS_FOR_HYPERSHIFT);
+  const isFipsForHypershiftEnabled = useFeatureGate(FIPS_FOR_HYPERSHIFT);
   const cloudProviderId = cluster.cloud_provider ? cluster.cloud_provider.id : null;
   const region = cluster?.region?.id;
   const clusterID = cluster?.id;
@@ -96,7 +96,7 @@ function DetailsLeft({
     return 'N/A';
   }, [cluster.multi_az]);
 
-  const allowFips = isFipsForHypershiftSupported || !isHypershift;
+  const isFipsAllowed = !isHypershift || isFipsForHypershiftEnabled;
 
   return (
     <DescriptionList>
@@ -198,7 +198,7 @@ function DetailsLeft({
           </DescriptionListDescription>
         </DescriptionListGroup>
       )}
-      {allowFips && cluster.fips && (
+      {isFipsAllowed && cluster.fips && (
         <DescriptionListGroup>
           <DescriptionListTerm>Encryption level</DescriptionListTerm>
           <DescriptionListDescription>

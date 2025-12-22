@@ -16,6 +16,7 @@ import {
 import ocpLifeCycleStatuses from '~/components/releases/__mocks__/ocpLifeCycleStatuses';
 import {
   ALLOW_EUS_CHANNEL,
+  FIPS_FOR_HYPERSHIFT,
   MAX_NODES_TOTAL_249,
   MULTIREGION_PREVIEW_ENABLED,
 } from '~/queries/featureGates/featureConstants';
@@ -499,6 +500,66 @@ describe('<Details />', () => {
   });
 
   describe('Advanced Encryption', () => {
+    it('shows FIPS cryptography field by default', async () => {
+      const { user } = render(
+        <Formik initialValues={defaultValues} onSubmit={() => {}}>
+          <Details />
+        </Formik>,
+      );
+
+      const advancedEncryptionExpand = screen.getByRole('button', {
+        name: /Advanced encryption/i,
+      });
+      await user.click(advancedEncryptionExpand);
+      const fipsCheckbox = screen.getByRole('checkbox', { name: /Enable FIPS cryptography/i });
+
+      expect(fipsCheckbox).toBeInTheDocument();
+    });
+
+    it('shows FIPS cryptography field when hypershift is selected, and the feature-gate is enabled', async () => {
+      mockUseFeatureGate([[FIPS_FOR_HYPERSHIFT, true]]);
+
+      const formValues = {
+        ...defaultValues,
+        [FieldId.Hypershift]: 'true',
+      };
+      const { user } = render(
+        <Formik initialValues={formValues} onSubmit={() => {}}>
+          <Details />
+        </Formik>,
+      );
+
+      const advancedEncryptionExpand = screen.getByRole('button', {
+        name: /Advanced encryption/i,
+      });
+      await user.click(advancedEncryptionExpand);
+      const fipsCheckbox = screen.getByRole('checkbox', { name: /Enable FIPS cryptography/i });
+
+      expect(fipsCheckbox).toBeInTheDocument();
+    });
+
+    it('does not show FIPS cryptography field when hypershift is selected, and the feature-gate is not enabled', async () => {
+      mockUseFeatureGate([[FIPS_FOR_HYPERSHIFT, false]]);
+
+      const formValues = {
+        ...defaultValues,
+        [FieldId.Hypershift]: 'true',
+      };
+      const { user } = render(
+        <Formik initialValues={formValues} onSubmit={() => {}}>
+          <Details />
+        </Formik>,
+      );
+
+      const advancedEncryptionExpand = screen.getByRole('button', {
+        name: /Advanced encryption/i,
+      });
+      await user.click(advancedEncryptionExpand);
+      const fipsCheckbox = screen.queryByRole('checkbox', { name: /Enable FIPS cryptography/i });
+
+      expect(fipsCheckbox).not.toBeInTheDocument();
+    });
+
     it.each([
       ['ROSA classic', defaultValues, 'Enable additional etcd encryption'],
       [
@@ -512,6 +573,8 @@ describe('<Details />', () => {
     ])(
       'toggles state of dependent checkboxes correctly for %s',
       async (msg, formValues, etcdEncryptionLabel) => {
+        mockUseFeatureGate([[FIPS_FOR_HYPERSHIFT, true]]);
+
         const { user } = render(
           <Formik initialValues={formValues} onSubmit={() => {}}>
             <Details />
