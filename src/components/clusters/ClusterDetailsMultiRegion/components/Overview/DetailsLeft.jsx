@@ -96,8 +96,6 @@ function DetailsLeft({
     return 'N/A';
   }, [cluster.multi_az]);
 
-  const isFipsAllowed = !isHypershift || isFipsForHypershiftEnabled;
-
   return (
     <DescriptionList>
       <DescriptionListGroup>
@@ -198,7 +196,7 @@ function DetailsLeft({
           </DescriptionListDescription>
         </DescriptionListGroup>
       )}
-      {isFipsAllowed && cluster.fips && (
+      {(!isHypershift || isFipsForHypershiftEnabled) && cluster.fips ? (
         <DescriptionListGroup>
           <DescriptionListTerm>Encryption level</DescriptionListTerm>
           <DescriptionListDescription>
@@ -207,7 +205,7 @@ function DetailsLeft({
             </dl>
           </DescriptionListDescription>
         </DescriptionListGroup>
-      )}
+      ) : null}
       {cluster?.aws?.kms_key_arn ? (
         <>
           <DescriptionListGroup>

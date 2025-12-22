@@ -118,8 +118,6 @@ function Details() {
   const isEUSChannelEnabled = useFeatureGate(ALLOW_EUS_CHANNEL);
   const isFipsForHypershiftEnabled = useFeatureGate(FIPS_FOR_HYPERSHIFT);
 
-  const isFipsAllowed = !isHypershiftSelected || isFipsForHypershiftEnabled;
-
   const getInstallableVersionsResponse = useGlobalState((state) => state.clusters.clusterVersions);
 
   React.useEffect(() => {
@@ -584,7 +582,9 @@ function Details() {
         >
           <Grid hasGutter>
             <AWSCustomerManagedEncryption />
-            {isFipsAllowed ? <FipsCryptographySection /> : null}
+            {!isHypershiftSelected || isFipsForHypershiftEnabled ? (
+              <FipsCryptographySection />
+            ) : null}
             {isHypershiftSelected ? <HCPEtcdEncryptionSection /> : <ClassicEtcdEncryptionSection />}
           </Grid>
         </ExpandableSection>
