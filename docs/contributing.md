@@ -108,9 +108,9 @@ See the [unit test guidelines](./unit-testing.md) for in-depth guidance on writi
 
 ### End-to-end tests
 
-End-to-end tests are written using [Cypress](https://www.cypress.io/).
+End-to-end tests are written using [Cypress](https://www.cypress.io/).  For more details, see the [dedicated `README`](../cypress/README.md) inside the `/cypress` folder.
 
-You can read more in the [dedicated `README`](../cypress/README.md) inside the `/cypress` folder.
+For info on how E2E runs in CI, see the [continuous-integration guide](./continuous-integration.md).                                                                         
 
 ## Code assistants
 
