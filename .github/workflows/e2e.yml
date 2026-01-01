@@ -2,7 +2,7 @@ name: e2e CI
 
 on:
   pull_request_target:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [labeled]
   push:
     branches:
       - 'main'
@@ -42,6 +42,7 @@ jobs:
         run: git diff HEAD --exit-code
   e2e-test:
     name: E2E - ${{ matrix.os }} - e2e Tests - Node ${{ matrix.node-version }}
+    if: contains(github.event.pull_request.labels.*.name, 'safe to test')
     concurrency:
       group: e2e-test-${{ github.event_name }}-${{ github.head_ref }}-${{ matrix.os }}-${{ matrix.node-version }}
       cancel-in-progress: true
