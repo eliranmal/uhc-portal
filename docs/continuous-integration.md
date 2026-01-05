@@ -46,7 +46,7 @@ We use GH-workflows for various actions:
 
 In pull-requests authored by external contributors, some CI tasks require explicit action in order to run.  Specifically, Konflux build tasks, and GH-workflows for E2E-tests.
 
-This is used as precautionary measure, to prevent external contributors from potentially running malicious code in CI.
+This is used as a precautionary measure, to prevent external contributors from potentially running malicious code in CI.
 
 Once code-changes have been reviewed and are found to be safe, a repo member can explicitly trigger those workflows.  In Konflux pipelines this is done by adding a comment with the text _'/ok-to-test'_, and in GH-workflows, by adding the label _'safe to test'_.
 
