@@ -10,7 +10,7 @@ We use [Konflux-CI][1] for building and running basic verification.  The team's 
 
 The FE app is built onto container images, which are pushed into the quay.io registry; PR changes are built via the ['pull-request' pipeline][3] and long-lived branches (e.g. 'main') – via the ['push' pipeline][4] (see ['pipeline runs'][9] in Konflux UI).  Both are stored in an [image repo under the redhat-user-workloads org][2].
 
-Konflux will take care to take [snapshots][5] that can be used for testing, and to create [releases][6] which will be stored in an [image repo under the redhat-services-prod org][7].  Konflux releases are just images that have been signed as suitable for deployment.
+Konflux will create [snapshots][5] that can be used for testing, and will create [releases][6] which will be stored in an [image repo under the redhat-services-prod org][7].  Konflux releases are just images that have been signed as suitable for deployment.
 
 ### Persisted configuration
 
