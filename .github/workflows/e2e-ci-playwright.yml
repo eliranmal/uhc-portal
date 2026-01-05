@@ -31,7 +31,7 @@ on:
 jobs:
   playwright-e2e-test:
     name: Playwright E2E - ${{ matrix.os }} - e2e Tests - Node ${{ matrix.node-version }}
-    if: contains(github.event.pull_request.labels.*.name, 'safe to test')
+    if: github.event_name == 'pull_request_target' && contains(github.event.pull_request.labels.*.name, 'safe to test')
     # Allow workflow to pass even if tests fail (non-blocking for PR merge)
     continue-on-error: true
     concurrency:
