@@ -2,7 +2,7 @@ name: e2e CI
 
 on:
   pull_request_target:
-    types: [labeled]
+    types: [labeled, synchronize]
   push:
     branches:
       - 'main'
