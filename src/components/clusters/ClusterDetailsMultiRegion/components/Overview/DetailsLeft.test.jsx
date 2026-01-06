@@ -847,41 +847,42 @@ describe('<DetailsLeft />', () => {
       checkForValue(componentText.FIPS.label, componentText.FIPS.value);
     });
 
-    it('is not shown in ROSA HCP by default, even when FIPS is enabled', async () => {
-      const ROSAHypershiftClusterFixture = fixtures.ROSAHypershiftClusterDetails.cluster;
-      expect(ROSAHypershiftClusterFixture.hypershift.enabled).toBeTruthy();
-
+    describe('in ROSA HCP', () => {
       const props = {
         ...defaultProps,
         cluster: {
-          ...ROSAHypershiftClusterFixture,
+          ...fixtures.ROSAHypershiftClusterDetails.cluster,
           fips: true,
         },
       };
-      render(<DetailsLeft {...props} />);
-      await checkIfRendered();
 
-      // Assert
-      checkForValueAbsence(componentText.FIPS.label);
-    });
+      it('is not shown by default, even when FIPS is enabled', async () => {
+        render(<DetailsLeft {...props} />);
+        await checkIfRendered();
 
-    it('is shown in ROSA HCP if feature-gate is on, when FIPS is enabled', async () => {
-      mockUseFeatureGate([[FIPS_FOR_HYPERSHIFT, true]]);
-      const ROSAHypershiftClusterFixture = fixtures.ROSAHypershiftClusterDetails.cluster;
-      expect(ROSAHypershiftClusterFixture.hypershift.enabled).toBeTruthy();
+        // Assert
+        checkForValueAbsence(componentText.FIPS.label);
+      });
 
-      const props = {
-        ...defaultProps,
-        cluster: {
-          ...ROSAHypershiftClusterFixture,
-          fips: true,
-        },
-      };
-      render(<DetailsLeft {...props} />);
-      await checkIfRendered();
+      it('is shown in ROSA HCP when feature-gate is on, when FIPS is enabled', async () => {
+        mockUseFeatureGate([[FIPS_FOR_HYPERSHIFT, true]]);
 
-      // Assert
-      checkForValue(componentText.FIPS.label, componentText.FIPS.value);
+        render(<DetailsLeft {...props} />);
+        await checkIfRendered();
+
+        // Assert
+        checkForValue(componentText.FIPS.label, componentText.FIPS.value);
+      });
+
+      it('is not shown in ROSA HCP when feature-gate is off, even when FIPS is enabled', async () => {
+        mockUseFeatureGate([[FIPS_FOR_HYPERSHIFT, false]]);
+
+        render(<DetailsLeft {...props} />);
+        await checkIfRendered();
+
+        // Assert
+        checkForValueAbsence(componentText.FIPS.label);
+      });
     });
   });
 });
