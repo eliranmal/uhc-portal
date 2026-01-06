@@ -76,8 +76,6 @@ const ControlPlaneField = ({
       [FieldId.ConfigureProxy]: false,
       // Reset VPC settings in case they were configured and then came back to the Control plane step
       [FieldId.MachinePoolsSubnets]: [emptyAWSSubnet()],
-      // Uncheck fips selection checkbox when switching Control plane selection
-      [FieldId.FipsCryptography]: false,
       // Accounts and roles
       [FieldId.InstallerRoleArn]: NO_ROLE_DETECTED,
       [FieldId.SupportRoleArn]: NO_ROLE_DETECTED,
