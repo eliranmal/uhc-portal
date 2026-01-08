@@ -21,6 +21,8 @@ import { FieldId } from '~/components/clusters/wizards/rosa/constants';
 import { CheckboxDescription } from '~/components/common/CheckboxDescription';
 import ExternalLink from '~/components/common/ExternalLink';
 import PopoverHint from '~/components/common/PopoverHint';
+import { FIPS_FOR_HYPERSHIFT } from '~/queries/featureGates/featureConstants';
+import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 
 export function HCPEtcdEncryptionSection() {
   const {
@@ -32,6 +34,7 @@ export function HCPEtcdEncryptionSection() {
     },
     setFieldValue,
   } = useFormState();
+  const isFipsForHypershiftEnabled = useFeatureGate(FIPS_FOR_HYPERSHIFT);
 
   React.useEffect(() => {
     if (!etcdEncryption && !!etcdKeyArn) {
@@ -67,7 +70,7 @@ export function HCPEtcdEncryptionSection() {
           <CheckboxDescription>
             Etcd is always encrypted, but you can specify a custom KMS key if desired.
           </CheckboxDescription>
-          {fipsCryptography && (
+          {isFipsForHypershiftEnabled && fipsCryptography && (
             <FormHelperText>
               <HelperText>
                 <HelperTextItem>Required when FIPS cryptography is enabled</HelperTextItem>
