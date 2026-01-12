@@ -622,32 +622,42 @@ describe('<Details />', () => {
       },
     );
 
-    it('toggles state of dependent checkboxes correctly in restricted env', async () => {
-      // simulate restricted env
-      mockRestrictedEnv(true);
+    it.each([
+      ['ROSA classic', { ...initialValuesRestrictedEnv }, 'Enable additional etcd encryption'],
+      [
+        'ROSA HCP',
+        {
+          ...initialValuesRestrictedEnv,
+          [FieldId.Hypershift]: 'true',
+        },
+        'Encrypt etcd with a custom KMS key',
+      ],
+    ])(
+      'toggles state of dependent checkboxes correctly in restricted env for %s',
+      async (msg, formValues, etcdEncryptionLabel) => {
+        // simulate restricted env
+        mockRestrictedEnv(true);
 
-      const defaultValues = {
-        ...initialValuesRestrictedEnv,
-      };
-      const { user } = render(
-        <Formik initialValues={defaultValues} onSubmit={() => {}}>
-          <Details />
-        </Formik>,
-      );
+        const { user } = render(
+          <Formik initialValues={formValues} onSubmit={() => {}}>
+            <Details />
+          </Formik>,
+        );
 
-      const advancedEncryptionExpand = screen.getByRole('button', { name: /Advanced encryption/i });
-      await user.click(advancedEncryptionExpand);
+        const advancedEncryptionExpand = screen.getByRole('button', {
+          name: /Advanced encryption/i,
+        });
+        await user.click(advancedEncryptionExpand);
 
-      const fipsCheckbox = screen.getByRole('checkbox', { name: /Enable FIPS cryptography/i });
-      const etcdCheckbox = screen.getByRole('checkbox', {
-        name: /Enable additional etcd encryption/i,
-      });
+        const fipsCheckbox = screen.getByRole('checkbox', { name: /Enable FIPS cryptography/i });
+        const etcdCheckbox = screen.getByRole('checkbox', { name: etcdEncryptionLabel });
 
-      // FIPS and etcd should be initially checked and disabled
-      expect(fipsCheckbox).toBeChecked();
-      expect(fipsCheckbox).toBeDisabled();
-      expect(etcdCheckbox).toBeChecked();
-      expect(etcdCheckbox).toBeDisabled();
-    });
+        // FIPS and etcd should be initially checked and disabled
+        expect(fipsCheckbox).toBeChecked();
+        expect(fipsCheckbox).toBeDisabled();
+        expect(etcdCheckbox).toBeChecked();
+        expect(etcdCheckbox).toBeDisabled();
+      },
+    );
   });
 });
