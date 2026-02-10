@@ -30,7 +30,7 @@ const fieldsInTab = [
   'machine-pool',
   'name',
   'privateSubnetId',
-  'instanceType',
+  FieldId.InstanceType,
   'autoscaling',
   'autoscaleMin',
   'autoscaleMax',

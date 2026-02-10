@@ -20,7 +20,7 @@ import { noMachineTypes } from '~/common/helpers';
 import { normalizedProducts } from '~/common/subscriptionTypes';
 import { constants } from '~/components/clusters/common/CreateOSDFormConstants';
 import { availableQuota } from '~/components/clusters/common/quotaSelectors';
-import { CloudProviderType } from '~/components/clusters/wizards/common/constants';
+import { CloudProviderType, FieldId } from '~/components/clusters/wizards/common/constants';
 import ErrorBox from '~/components/common/ErrorBox';
 import ExternalLink from '~/components/common/ExternalLink';
 import { FormGroupHelperText } from '~/components/common/FormGroupHelperText';
@@ -48,8 +48,6 @@ import {
 } from './machineTypeSelectionHelper';
 import sortMachineTypes from './sortMachineTypes';
 
-const fieldId = 'instanceType';
-
 // Default selection scenarios:
 // - First time, default is available => select it.
 // - First time, default is not listed (due to quota or ccs_only) => leave placeholder ''.
@@ -63,10 +61,10 @@ const fieldId = 'instanceType';
 //   CloudProviderSelectionField does `change('machine_type', '')` => same as first time.
 type MachineTypeSelectionProps = {
   machineTypesResponse: MachineTypesResponse;
-  isMultiAz: boolean;
-  isBYOC: boolean;
-  isMachinePool: boolean;
-  inModal: boolean;
+  isMultiAz?: boolean;
+  isBYOC?: boolean;
+  isMachinePool?: boolean;
+  inModal?: boolean;
   cloudProviderID: 'aws' | 'gcp' | undefined;
   productId: string;
   billingModel: BillingModel;
@@ -78,7 +76,7 @@ const MachineTypeSelection = ({
   isMultiAz,
   isBYOC,
   isMachinePool,
-  inModal = false,
+  inModal,
   cloudProviderID,
   productId,
   billingModel,
@@ -90,7 +88,7 @@ const MachineTypeSelection = ({
     _field,
     { value: instanceType, touched, error: instanceTypeError },
     { setValue: setFieldValue },
-  ] = useField(fieldId);
+  ] = useField(FieldId.InstanceType);
 
   const { flavours, machineTypesByRegion, organization, quota } = useGlobalState((state) => ({
     flavours: state.flavours,
@@ -321,7 +319,7 @@ const MachineTypeSelection = ({
   if (
     isDataReady &&
     (!useRegionFilteredData || isRegionSpecificDataReady) &&
-    !('error' in activeMachineTypes ? activeMachineTypes.error : false)
+    !activeMachineTypes.error
   ) {
     if (filteredMachineTypes.length === 0) {
       return (
@@ -388,4 +386,4 @@ const MachineTypeSelection = ({
   );
 };
 
-export { MachineTypeSelection, MachineTypeSelectionProps, fieldId };
+export { MachineTypeSelection, MachineTypeSelectionProps };

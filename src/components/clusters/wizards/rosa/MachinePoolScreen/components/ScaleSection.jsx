@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { Field, FieldArray } from 'formik';
+import { FieldArray } from 'formik';
 
 import {
   Content,
@@ -9,18 +9,18 @@ import {
   Title,
 } from '@patternfly/react-core';
 
-import { required } from '~/common/validators';
 import {
   getWorkerNodeVolumeSizeMaxGiB,
   getWorkerNodeVolumeSizeMinGiB,
 } from '~/components/clusters/common/machinePools/utils';
-import MachineTypeSelection from '~/components/clusters/common/ScaleSection-deprecated/MachineTypeSelection';
+import { MachineTypeSelection } from '~/components/clusters/common/ScaleSection/MachineTypeSelection/MachineTypeSelection';
 import { AutoScale } from '~/components/clusters/wizards/common/ClusterSettings/MachinePool/AutoScale/AutoScale';
 import { canSelectImds } from '~/components/clusters/wizards/common/constants';
 import { useFormState } from '~/components/clusters/wizards/hooks';
 import { FieldId } from '~/components/clusters/wizards/rosa/constants';
 import FormKeyValueList from '~/components/common/FormikFormComponents/FormKeyValueList';
 import useCanClusterAutoscale from '~/hooks/useCanClusterAutoscale';
+import { useFetchMachineTypes } from '~/queries/ClusterDetailsQueries/MachinePoolTab/MachineTypes/useFetchMachineTypes';
 import { IMDS_SELECTION } from '~/queries/featureGates/featureConstants';
 import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 
@@ -41,15 +41,10 @@ function ScaleSection() {
       [FieldId.AutoscalingEnabled]: autoscalingEnabled,
       [FieldId.NodeLabels]: nodeLabels,
       [FieldId.ClusterVersion]: clusterVersion,
-      [FieldId.InstallerRoleArn]: installerRoleArn,
-      [FieldId.Region]: region,
       [FieldId.BillingModel]: billingModel,
       [FieldId.IMDS]: imds,
     },
     setFieldValue,
-    setFieldTouched,
-    getFieldProps,
-    getFieldMeta,
   } = useFormState();
 
   const isImdsEnabledHypershift = useFeatureGate(IMDS_SELECTION);
@@ -68,6 +63,8 @@ function ScaleSection() {
     const maxWorkerVolumeSizeGiB = getWorkerNodeVolumeSizeMaxGiB(clusterVersionRawId);
     return { minWorkerVolumeSizeGiB, maxWorkerVolumeSizeGiB };
   }, [isHypershiftSelected, clusterVersionRawId]);
+
+  const { data: machineTypes } = useFetchMachineTypes();
 
   const LabelsSectionComponent = useCallback(
     () =>
@@ -142,34 +139,13 @@ function ScaleSection() {
       )}
       {/* Instance type */}
       <GridItem md={6}>
-        <Field
-          component={MachineTypeSelection}
-          selectedVpc={selectedVpc}
-          name={FieldId.MachineType}
-          installerRoleArn={installerRoleArn}
-          region={region}
-          validate={required}
+        <MachineTypeSelection
+          machineTypesResponse={machineTypes}
           isMultiAz={isMultiAzSelected}
           isBYOC={isByoc}
           cloudProviderID={cloudProviderID}
-          product={product}
+          productId={product}
           billingModel={billingModel}
-          machine_type={{
-            input: {
-              ...getFieldProps(FieldId.MachineType),
-              onChange: (value) => {
-                setFieldValue(FieldId.MachineType, value, true);
-                setTimeout(() => setFieldTouched(FieldId.MachineType), 1);
-              },
-            },
-            meta: getFieldMeta(FieldId.MachineType),
-          }}
-          machine_type_force_choice={{
-            input: {
-              ...getFieldProps(FieldId.MachineTypeForceChoice),
-              onChange: (value) => setFieldValue(FieldId.MachineTypeForceChoice, value),
-            },
-          }}
         />
       </GridItem>
       <GridItem md={6} />
