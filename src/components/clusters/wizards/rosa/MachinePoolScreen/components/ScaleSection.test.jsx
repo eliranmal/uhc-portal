@@ -17,13 +17,10 @@ const useCanClusterAutoscaleMock = jest.spyOn(useCanClusterAutoscale, 'default')
 jest.mock(
   '~/components/clusters/common/ScaleSection/MachineTypeSelection/MachineTypeSelection',
   () => ({
-    MachineTypeSelection: ({ machineType }) => {
-      // Simulate loading state when no machine type is selected
-      if (!machineType?.input?.value || !machineType.input.value.id) {
-        return <div data-testid="machine-type-selection">Loading node types...</div>;
-      }
-      return <div data-testid="machine-type-selection">Machine Type Selection</div>;
-    },
+    // Simulate initial loading state
+    MachineTypeSelection: () => (
+      <div data-testid="machine-type-selection">Loading node types...</div>
+    ),
   }),
 );
 
