@@ -27,9 +27,10 @@ import { FormGroupHelperText } from '~/components/common/FormGroupHelperText';
 import PopoverHint from '~/components/common/PopoverHint';
 import { MachineTypesResponse } from '~/queries/types';
 import { DEFAULT_FLAVOUR_ID, getDefaultFlavour } from '~/redux/actions/flavourActions';
+import { getMachineTypesByRegionARN } from '~/redux/actions/machineTypesActions';
 import { useGlobalState } from '~/redux/hooks';
 import { RelatedResourceBilling_model as RelatedResourceBillingModel } from '~/types/accounts_mgmt.v1';
-import { BillingModel, MachineType } from '~/types/clusters_mgmt.v1';
+import { BillingModel, CloudVpc, MachineType } from '~/types/clusters_mgmt.v1';
 import { ErrorState } from '~/types/types';
 
 import { QuotaTypes } from '../../quotaModel';
@@ -61,6 +62,9 @@ import sortMachineTypes from './sortMachineTypes';
 //   CloudProviderSelectionField does `change('machine_type', '')` => same as first time.
 type MachineTypeSelectionProps = {
   machineTypesResponse: MachineTypesResponse;
+  selectedVpc?: CloudVpc;
+  region?: string;
+  installerRoleArn?: string;
   isMultiAz?: boolean;
   isBYOC?: boolean;
   isMachinePool?: boolean;
@@ -73,6 +77,9 @@ type MachineTypeSelectionProps = {
 
 const MachineTypeSelection = ({
   machineTypesResponse,
+  selectedVpc,
+  region = '',
+  installerRoleArn = '',
   isMultiAz,
   isBYOC,
   isMachinePool,
@@ -253,6 +260,15 @@ const MachineTypeSelection = ({
     () => sortedMachineTypes.filter((type) => isTypeAvailable(type.id)),
     [isTypeAvailable, sortedMachineTypes],
   );
+
+  React.useEffect(() => {
+    const AZs = [
+      ...new Set(
+        selectedVpc?.aws_subnets?.map((el) => el.availability_zone ?? '')?.filter(Boolean),
+      ),
+    ];
+    dispatch(getMachineTypesByRegionARN(installerRoleArn, region, [...AZs]));
+  }, [selectedVpc, dispatch, installerRoleArn, region]);
 
   const machineTypeUnavailableWarning =
     'OCM does not have access to all AWS account details. Machine node type cannot be verified to be accessible for this AWS user.';

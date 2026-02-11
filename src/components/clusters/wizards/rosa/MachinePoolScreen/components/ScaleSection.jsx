@@ -41,6 +41,8 @@ function ScaleSection() {
       [FieldId.AutoscalingEnabled]: autoscalingEnabled,
       [FieldId.NodeLabels]: nodeLabels,
       [FieldId.ClusterVersion]: clusterVersion,
+      [FieldId.InstallerRoleArn]: installerRoleArn,
+      [FieldId.Region]: region,
       [FieldId.BillingModel]: billingModel,
       [FieldId.IMDS]: imds,
     },
@@ -141,6 +143,9 @@ function ScaleSection() {
       <GridItem md={6}>
         <MachineTypeSelection
           machineTypesResponse={machineTypes}
+          selectedVpc={selectedVpc}
+          installerRoleArn={installerRoleArn}
+          region={region}
           isMultiAz={isMultiAzSelected}
           isBYOC={isByoc}
           cloudProviderID={cloudProviderID}
