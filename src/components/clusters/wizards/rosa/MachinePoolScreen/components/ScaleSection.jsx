@@ -142,6 +142,7 @@ function ScaleSection() {
       {/* Instance type */}
       <GridItem md={6}>
         <MachineTypeSelection
+          fieldId={FieldId.MachineType}
           machineTypesResponse={machineTypes}
           selectedVpc={selectedVpc}
           installerRoleArn={installerRoleArn}

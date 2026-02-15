@@ -177,6 +177,7 @@ export const MachinePool = () => {
       <Grid hasGutter>
         <GridItem md={6}>
           <MachineTypeSelection
+            fieldId={FieldId.MachineType}
             machineTypesResponse={machineTypes}
             isMultiAz={isMultiAz}
             isBYOC={isByoc}

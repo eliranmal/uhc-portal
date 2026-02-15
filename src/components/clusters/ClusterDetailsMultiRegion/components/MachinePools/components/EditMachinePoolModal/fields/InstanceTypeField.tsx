@@ -18,6 +18,7 @@ type InstanceTypeFieldProps = {
 const InstanceTypeField = ({ cluster, machineTypesResponse }: InstanceTypeFieldProps) => (
   <GridItem>
     <MachineTypeSelection
+      fieldId={'instanceType'}
       machineTypesResponse={machineTypesResponse}
       isMultiAz={isMultiAZ(cluster)}
       isBYOC={!!cluster.ccs?.enabled}

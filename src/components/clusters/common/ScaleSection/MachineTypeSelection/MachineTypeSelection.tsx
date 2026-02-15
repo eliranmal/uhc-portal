@@ -20,7 +20,7 @@ import { noMachineTypes } from '~/common/helpers';
 import { normalizedProducts } from '~/common/subscriptionTypes';
 import { constants } from '~/components/clusters/common/CreateOSDFormConstants';
 import { availableQuota } from '~/components/clusters/common/quotaSelectors';
-import { CloudProviderType, FieldId } from '~/components/clusters/wizards/common/constants';
+import { CloudProviderType } from '~/components/clusters/wizards/common/constants';
 import ErrorBox from '~/components/common/ErrorBox';
 import ExternalLink from '~/components/common/ExternalLink';
 import { FormGroupHelperText } from '~/components/common/FormGroupHelperText';
@@ -61,6 +61,7 @@ import sortMachineTypes from './sortMachineTypes';
 // - Something was selected (either automatically or manually), then changed cloud provider.
 //   CloudProviderSelectionField does `change('machine_type', '')` => same as first time.
 type MachineTypeSelectionProps = {
+  fieldId: string;
   machineTypesResponse: MachineTypesResponse;
   selectedVpc?: CloudVpc;
   region?: string;
@@ -76,6 +77,7 @@ type MachineTypeSelectionProps = {
 };
 
 const MachineTypeSelection = ({
+  fieldId,
   machineTypesResponse,
   selectedVpc,
   region = '',
@@ -95,7 +97,7 @@ const MachineTypeSelection = ({
     _field,
     { value: instanceType, touched, error: instanceTypeError },
     { setValue: setFieldValue },
-  ] = useField(FieldId.InstanceType);
+  ] = useField(fieldId);
 
   const { flavours, machineTypesByRegion, organization, quota } = useGlobalState(
     (state) => ({
@@ -358,7 +360,6 @@ const MachineTypeSelection = ({
       <FormGroup
         label="Compute node instance type"
         isRequired
-        fieldId="node_type"
         labelHelp={<PopoverHint hint={constants.computeNodeInstanceTypeHint} />}
       >
         <TreeViewSelect
