@@ -38,6 +38,7 @@ jest.mock('~/redux/hooks', () => ({
 const useGlobalStateMock = useGlobalState as jest.Mock;
 
 const defaultProps: MachineTypeSelectionProps = {
+  fieldId: 'machine_type',
   machineTypesResponse: emptyMachineTypesResponse,
   isMultiAz: false,
   isBYOC: false,
