@@ -71,7 +71,7 @@ const EditDetailsSection = ({
         <MachineTypeSelection
           fieldId="instanceType"
           machineTypesResponse={machineTypesResponse}
-          machineTypesError={machineTypesErrorResponse}
+          machineTypesErrorResponse={machineTypesErrorResponse}
           isMultiAz={isMultiAZ(cluster)}
           isBYOC={!!cluster.ccs?.enabled}
           cloudProviderID={cluster.cloud_provider?.id}

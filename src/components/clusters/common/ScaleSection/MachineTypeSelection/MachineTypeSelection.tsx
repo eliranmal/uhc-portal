@@ -63,7 +63,7 @@ import sortMachineTypes from './sortMachineTypes';
 type MachineTypeSelectionProps = {
   fieldId: string;
   machineTypesResponse: MachineTypesResponse;
-  machineTypesError?: Pick<ErrorState, 'errorDetails' | 'errorMessage' | 'operationID'>;
+  machineTypesErrorResponse?: Pick<ErrorState, 'errorDetails' | 'errorMessage' | 'operationID'>;
   selectedVpc?: CloudVpc;
   region?: string;
   installerRoleArn?: string;
@@ -80,7 +80,7 @@ type MachineTypeSelectionProps = {
 const MachineTypeSelection = ({
   fieldId,
   machineTypesResponse,
-  machineTypesError,
+  machineTypesErrorResponse,
   selectedVpc,
   region = '',
   installerRoleArn = '',
@@ -144,7 +144,7 @@ const MachineTypeSelection = ({
     : machineTypesResponse;
   const activeMachineTypesError = useMachineTypesByRegion
     ? machineTypesByRegion.error
-    : machineTypesError;
+    : machineTypesErrorResponse;
 
   /**
    * Checks whether type can be offered, based on quota and ccs_only.

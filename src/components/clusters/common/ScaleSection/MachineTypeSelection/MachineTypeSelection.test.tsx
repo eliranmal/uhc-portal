@@ -53,7 +53,7 @@ const defaultProps: MachineTypeSelectionProps = {
 
 const errorProps: MachineTypeSelectionProps = {
   ...defaultProps,
-  machineTypesError: errorData,
+  machineTypesErrorResponse: errorData,
 };
 
 const quotaAvailableProps: MachineTypeSelectionProps = {
