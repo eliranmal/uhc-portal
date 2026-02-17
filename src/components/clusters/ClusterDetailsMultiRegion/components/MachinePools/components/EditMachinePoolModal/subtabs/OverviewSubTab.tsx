@@ -50,7 +50,7 @@ type Props = {
   currentMachinePool?: MachinePool;
   setCurrentMPId: (id: string) => void;
   machineTypesResponse: MachineTypesResponse;
-  machineTypesErrorResponse: Pick<ErrorState, 'errorMessage' | 'errorDetails' | 'operationID'>;
+  machineTypesErrorResponse?: Pick<ErrorState, 'errorMessage' | 'errorDetails' | 'operationID'>;
   machineTypesLoading: boolean;
   tabKey: number | string;
   initialTabContentShown?: boolean;
