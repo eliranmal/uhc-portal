@@ -13,6 +13,7 @@ import { checkAccessibility, render, screen, within } from '~/testUtils';
 import {
   baseFlavoursState,
   emptyMachineTypesResponse,
+  errorData,
   errorFlavoursState,
   errorState,
   fulfilledFlavoursState,
@@ -48,6 +49,11 @@ const defaultProps: MachineTypeSelectionProps = {
   billingModel: 'standard',
   allExpanded: true,
   inModal: false,
+};
+
+const errorProps: MachineTypeSelectionProps = {
+  ...defaultProps,
+  machineTypesError: errorData,
 };
 
 const quotaAvailableProps: MachineTypeSelectionProps = {
@@ -105,14 +111,18 @@ describe('MachineTypeSelection', () => {
     });
 
     describe('with an error loading flavours', () => {
-      // Arrange
-      useGlobalStateMock.mockReturnValue({
-        flavours: { ...errorFlavoursState, error: true },
-        machineTypesByRegion: fulfilledMachineByRegionState,
-        organization: organizationState,
+      afterEach(() => {
+        jest.clearAllMocks();
       });
 
       it('displays "Not enough quota" error', async () => {
+        // Arrange
+        useGlobalStateMock.mockReturnValue({
+          flavours: { ...errorFlavoursState, error: true },
+          machineTypesByRegion: fulfilledMachineByRegionState,
+          organization: organizationState,
+        });
+
         // Act
         const { container } = render(
           buildTestComponent(<MachineTypeSelection {...defaultProps} />),
@@ -130,6 +140,10 @@ describe('MachineTypeSelection', () => {
     });
 
     describe('with rhinfra quota available', () => {
+      afterEach(() => {
+        jest.clearAllMocks();
+      });
+
       it('does not display ccs_only machine types, only machines with quota', async () => {
         // Arrange
         useGlobalStateMock.mockReturnValue({
@@ -158,6 +172,10 @@ describe('MachineTypeSelection', () => {
     });
 
     describe('with rhinfra quota covering previous selection', () => {
+      afterEach(() => {
+        jest.clearAllMocks();
+      });
+
       it('is accessible', async () => {
         // Act
         const { container } = render(
@@ -180,11 +198,11 @@ describe('MachineTypeSelection', () => {
           buildTestComponent(<MachineTypeSelection {...previousSelectionProps} />),
         );
 
-        // Assert
         expect(screen.queryByText('m5.xlarge', { exact: false })).not.toBeInTheDocument();
 
         await user.click(screen.getByLabelText('Machine type select toggle'));
 
+        // Assert
         expect(screen.getByText('m5.xlarge')).toBeInTheDocument();
         expect(screen.getByText('m5.4xlarge')).toBeInTheDocument();
         expect(screen.queryByText('m5.12xlarge')).not.toBeInTheDocument();
@@ -192,6 +210,10 @@ describe('MachineTypeSelection', () => {
     });
 
     describe('with rhinfra quota not covering previous selection', () => {
+      afterEach(() => {
+        jest.clearAllMocks();
+      });
+
       it('does not display ccs_only machine types, only machines with quota', async () => {
         // Arrange
         useGlobalStateMock.mockReturnValue({
@@ -206,7 +228,6 @@ describe('MachineTypeSelection', () => {
           buildTestComponent(<MachineTypeSelection {...previousSelectionProps} />),
         );
 
-        // Assert
         const optionsMenu = screen.getByLabelText('Machine type select toggle');
         await user.click(optionsMenu);
 
@@ -214,12 +235,17 @@ describe('MachineTypeSelection', () => {
           .getAllByRole('treeitem')
           .map((option) => option.querySelector('.pf-v6-l-stack__item')?.textContent);
 
+        // Assert
         expect(options).not.toContain('m5.12xlarge');
         expect(options).not.toContain('g4dn.2xlarge');
       });
     });
 
     describe('byoc lacking enough byoc node quota', () => {
+      afterEach(() => {
+        jest.clearAllMocks();
+      });
+
       it('displays an alert', () => {
         // Arrange
         useGlobalStateMock.mockReturnValue({
@@ -244,25 +270,20 @@ describe('MachineTypeSelection', () => {
   });
 
   describe('with an error loading machineTypes', () => {
-    // todo - make this test pass by fixing the component.
-    //        MachineTypeSelection stopped supporting showing an error message on fetch errors
-    //        when the component was updated to accept the response `data` struct from react-query,
-    //        instead of the whole response status that redux provided (including its `error` prop).
-    //        see the fallback return value of the component (`return (activeMachineTypes as ErrorState)?.error ? ...`),
-    //        which references the now missing `error` prop when `activeMachineTypes` is assigned with `machineTypesResponse`,
-    //        and so never gets called.
-    //        to fix this, we should propagate the error state from react-query's hook return value (i.e. `isError`)
-    //        into the component as a new prop, and use it in place of the current `error` prop.
-    it.skip('displays an error alert', async () => {
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('displays an error alert when machine-types response has an error', () => {
       // Arrange
       useGlobalStateMock.mockReturnValue({
         flavours: fulfilledFlavoursState,
-        machineTypesByRegion: errorState,
+        machineTypesByRegion: fulfilledMachineByRegionState,
         organization: organizationState,
       });
 
       // Act
-      render(buildTestComponent(<MachineTypeSelection {...defaultProps} />));
+      render(buildTestComponent(<MachineTypeSelection {...errorProps} />));
 
       // Assert
       expect(within(screen.getByRole('alert')).getByText('This is an error message'));
@@ -285,11 +306,9 @@ describe('MachineTypeSelection', () => {
   });
 
   describe('when the machine types list contains unknown categories', () => {
-    // Arrange
     const moreTypes = {
       aws: [...(machineTypes?.aws ?? []), ...unknownCategoryMachineTypes],
     };
-
     const unknownCategoryProps = {
       ...defaultProps,
       machineTypesResponse: {
@@ -301,6 +320,10 @@ describe('MachineTypeSelection', () => {
     };
 
     describe('byoc with sufficient byoc quota available', () => {
+      afterEach(() => {
+        jest.clearAllMocks();
+      });
+
       it('displays only machine types with quota from known categories', async () => {
         // Arrange
         useGlobalStateMock.mockReturnValue({
@@ -315,7 +338,6 @@ describe('MachineTypeSelection', () => {
           buildTestComponent(<MachineTypeSelection {...unknownCategoryProps} />),
         );
 
-        // Assert
         const optionsMenu = await screen.findByLabelText('Machine type select toggle');
         await user.click(optionsMenu);
 
@@ -323,6 +345,7 @@ describe('MachineTypeSelection', () => {
           .getAllByRole('treeitem')
           .map((option) => option.querySelector('.pf-v6-l-stack__item')?.textContent);
 
+        // Assert
         expect(options).toContain('m5.xlarge');
         expect(options).not.toContain('foo.2xbar');
       });
@@ -330,6 +353,10 @@ describe('MachineTypeSelection', () => {
   });
 
   describe('when the request is pending', () => {
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
     it('renders correctly', () => {
       // Arrange
       useGlobalStateMock.mockReturnValue({

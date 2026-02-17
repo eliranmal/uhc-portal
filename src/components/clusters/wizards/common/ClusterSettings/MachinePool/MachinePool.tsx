@@ -54,7 +54,10 @@ export const MachinePool = () => {
 
   const [loadNewMachineTypes, setLoadNewMachineTypes] = React.useState(false);
   const machineTypesByRegion = useSelector((state: GlobalState) => state.machineTypesByRegion);
-  const { data: machineTypes } = useFetchMachineTypes();
+  const {
+    data: machineTypesResponse,
+    error: { error: machineTypesError },
+  } = useFetchMachineTypes();
 
   React.useEffect(() => {
     if (machineTypesByRegion.region) {
@@ -178,7 +181,8 @@ export const MachinePool = () => {
         <GridItem md={6}>
           <MachineTypeSelection
             fieldId={FieldId.MachineType}
-            machineTypesResponse={machineTypes}
+            machineTypesResponse={machineTypesResponse}
+            machineTypesError={machineTypesError}
             isMultiAz={isMultiAz}
             isBYOC={isByoc}
             cloudProviderID={cloudProvider}

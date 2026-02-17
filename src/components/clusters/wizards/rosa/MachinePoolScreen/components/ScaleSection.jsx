@@ -66,7 +66,10 @@ function ScaleSection() {
     return { minWorkerVolumeSizeGiB, maxWorkerVolumeSizeGiB };
   }, [isHypershiftSelected, clusterVersionRawId]);
 
-  const { data: machineTypes } = useFetchMachineTypes();
+  const {
+    data: machineTypesResponse,
+    error: { error: machineTypesError },
+  } = useFetchMachineTypes();
 
   const LabelsSectionComponent = useCallback(
     () =>
@@ -143,7 +146,8 @@ function ScaleSection() {
       <GridItem md={6}>
         <MachineTypeSelection
           fieldId={FieldId.MachineType}
-          machineTypesResponse={machineTypes}
+          machineTypesResponse={machineTypesResponse}
+          machineTypesError={machineTypesError}
           selectedVpc={selectedVpc}
           installerRoleArn={installerRoleArn}
           region={region}

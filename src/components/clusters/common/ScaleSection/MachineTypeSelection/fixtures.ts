@@ -58,10 +58,14 @@ const pendingState = {
   fulfilled: false,
 };
 
-const errorState = {
-  ...baseState,
+const errorData = {
   error: true,
   errorMessage: 'This is an error message',
+};
+
+const errorState = {
+  ...baseState,
+  ...errorData,
 };
 
 const organizationState = {
@@ -316,6 +320,7 @@ export {
   pendingState,
   errorState,
   organizationState,
+  errorData,
   emptyMachineTypesResponse,
   machineTypes,
   machineTypesByRegion,

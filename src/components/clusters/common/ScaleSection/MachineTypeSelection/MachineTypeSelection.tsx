@@ -30,7 +30,7 @@ import { DEFAULT_FLAVOUR_ID, getDefaultFlavour } from '~/redux/actions/flavourAc
 import { getMachineTypesByRegionARN } from '~/redux/actions/machineTypesActions';
 import { useGlobalState } from '~/redux/hooks';
 import { RelatedResourceBilling_model as RelatedResourceBillingModel } from '~/types/accounts_mgmt.v1';
-import { BillingModel, CloudVpc, MachineType } from '~/types/clusters_mgmt.v1';
+import { BillingModel, CloudProvider, CloudVpc, MachineType } from '~/types/clusters_mgmt.v1';
 import { ErrorState } from '~/types/types';
 
 import { QuotaTypes } from '../../quotaModel';
@@ -63,6 +63,7 @@ import sortMachineTypes from './sortMachineTypes';
 type MachineTypeSelectionProps = {
   fieldId: string;
   machineTypesResponse: MachineTypesResponse;
+  machineTypesError?: Pick<ErrorState, 'errorDetails' | 'errorMessage' | 'operationID'>;
   selectedVpc?: CloudVpc;
   region?: string;
   installerRoleArn?: string;
@@ -70,7 +71,7 @@ type MachineTypeSelectionProps = {
   isBYOC?: boolean;
   isMachinePool?: boolean;
   inModal?: boolean;
-  cloudProviderID: 'aws' | 'gcp' | undefined;
+  cloudProviderID: CloudProvider['id'];
   productId: string;
   billingModel: BillingModel;
   allExpanded?: boolean;
@@ -79,6 +80,7 @@ type MachineTypeSelectionProps = {
 const MachineTypeSelection = ({
   fieldId,
   machineTypesResponse,
+  machineTypesError,
   selectedVpc,
   region = '',
   installerRoleArn = '',
@@ -134,10 +136,15 @@ const MachineTypeSelection = ({
   const [isMachineTypeFilteredByRegion, setIsMachineTypeFilteredByRegion] = React.useState(
     !previousSelectionFromUnfilteredSet,
   );
-  const activeMachineTypes =
-    isRegionSpecificDataReady && useRegionFilteredData && isMachineTypeFilteredByRegion
-      ? machineTypesByRegion
-      : machineTypesResponse;
+
+  const useMachineTypesByRegion =
+    isRegionSpecificDataReady && useRegionFilteredData && isMachineTypeFilteredByRegion;
+  const activeMachineTypes: MachineTypesResponse = useMachineTypesByRegion
+    ? machineTypesByRegion
+    : machineTypesResponse;
+  const activeMachineTypesError = useMachineTypesByRegion
+    ? machineTypesByRegion.error
+    : machineTypesError;
 
   /**
    * Checks whether type can be offered, based on quota and ccs_only.
@@ -340,7 +347,7 @@ const MachineTypeSelection = ({
   if (
     isDataReady &&
     (!useRegionFilteredData || isRegionSpecificDataReady) &&
-    !activeMachineTypes.error
+    !activeMachineTypesError
   ) {
     if (filteredMachineTypes.length === 0) {
       return (
@@ -394,8 +401,8 @@ const MachineTypeSelection = ({
     );
   }
 
-  return (activeMachineTypes as ErrorState)?.error ? (
-    <ErrorBox message="Error loading node types" response={activeMachineTypes as ErrorState} />
+  return activeMachineTypesError ? (
+    <ErrorBox message="Error loading node types" response={activeMachineTypesError} />
   ) : (
     <>
       <div className="spinner-fit-container">

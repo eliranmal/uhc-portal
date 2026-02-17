@@ -222,6 +222,7 @@ const EditMachinePoolModal = ({
     currentMachinePool,
     setCurrentMPId,
     machineTypesResponse,
+    machineTypesErrorResponse,
     machineTypesLoading,
     tabKey: 1,
     initialTabContentShown: STARTING_TAB_KEY === 1,
@@ -358,6 +359,7 @@ const EditMachinePoolModal = ({
                       currentMPId={currentMachinePool?.id}
                       setCurrentMPId={setCurrentMPId}
                       machineTypesResponse={machineTypesResponse}
+                      machineTypesErrorResponse={machineTypesErrorResponse}
                       machineTypesLoading={machineTypesLoading}
                     />
                     <EditNodeCountSection
