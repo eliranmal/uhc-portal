@@ -271,13 +271,16 @@ const MachineTypeSelection = ({
   );
 
   React.useEffect(() => {
+    if (!installerRoleArn || !region) {
+      return;
+    }
     const AZs = [
       ...new Set(
         selectedVpc?.aws_subnets?.map((el) => el.availability_zone ?? '')?.filter(Boolean),
       ),
     ];
     dispatch(getMachineTypesByRegionARN(installerRoleArn, region, [...AZs]));
-  }, [selectedVpc, dispatch, installerRoleArn, region]);
+  }, [dispatch, selectedVpc, installerRoleArn, region]);
 
   const machineTypeUnavailableWarning =
     'OCM does not have access to all AWS account details. Machine node type cannot be verified to be accessible for this AWS user.';
