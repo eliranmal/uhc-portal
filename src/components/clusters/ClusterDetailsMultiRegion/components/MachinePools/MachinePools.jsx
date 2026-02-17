@@ -355,11 +355,11 @@ const MachinePools = ({ cluster }) => {
           machinePoolsResponse={machinePoolData}
           machinePoolsLoading={isMachinePoolLoading}
           machinePoolsError={isMachinePoolError}
-          machinePoolsErrorResponse={machinePoolError.error}
+          machinePoolsErrorResponse={machinePoolError?.error}
           machineTypesResponse={machineTypes}
           machineTypesLoading={isMachineTypesLoading}
           machineTypesError={isMachineTypesError}
-          machineTypesErrorResponse={machineTypesError.error}
+          machineTypesErrorResponse={machineTypesError?.error}
         />
       )}
       <UpdateMachinePoolModal

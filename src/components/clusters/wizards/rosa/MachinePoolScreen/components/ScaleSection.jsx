@@ -144,7 +144,7 @@ function ScaleSection() {
         <MachineTypeSelection
           fieldId={FieldId.MachineType}
           machineTypesResponse={machineTypesResponse}
-          machineTypesErrorResponse={machineTypesError.error}
+          machineTypesErrorResponse={machineTypesError?.error}
           selectedVpc={selectedVpc}
           installerRoleArn={installerRoleArn}
           region={region}

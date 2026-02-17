@@ -179,7 +179,7 @@ export const MachinePool = () => {
           <MachineTypeSelection
             fieldId={FieldId.MachineType}
             machineTypesResponse={machineTypesResponse}
-            machineTypesErrorResponse={machineTypesError.error}
+            machineTypesErrorResponse={machineTypesError?.error}
             isMultiAz={isMultiAz}
             isBYOC={isByoc}
             cloudProviderID={cloudProvider}

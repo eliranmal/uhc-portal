@@ -505,8 +505,8 @@ export const ConnectedEditMachinePoolModal = ({
       machinePoolsError={isMachinePoolError}
       machineTypesLoading={isMachineTypesLoading}
       machineTypesError={isMachineTypesError}
-      machinePoolsErrorResponse={machinePoolError.error}
-      machineTypesErrorResponse={machineTypesError.error}
+      machinePoolsErrorResponse={machinePoolError?.error}
+      machineTypesErrorResponse={machineTypesError?.error}
       onSave={() => {
         if (!isMachinePoolLoading) {
           machinePoolOrNodePoolsRefetch();
