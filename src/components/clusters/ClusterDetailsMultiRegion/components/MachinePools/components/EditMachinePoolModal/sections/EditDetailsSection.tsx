@@ -11,7 +11,7 @@ import { WINDOWS_LICENSE_INCLUDED } from '~/queries/featureGates/featureConstant
 import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 import { MachineTypesResponse } from '~/queries/types';
 import { SubscriptionCommonFieldsCluster_billing_model as SubscriptionCommonFieldsClusterBillingModel } from '~/types/accounts_mgmt.v1';
-import { BillingModel, Cluster, MachinePool } from '~/types/clusters_mgmt.v1';
+import { BillingModel, Cluster, MachinePool, NodePool } from '~/types/clusters_mgmt.v1';
 import { ClusterFromSubscription, ErrorState } from '~/types/types';
 
 import SelectField from '../fields/SelectField';
@@ -21,7 +21,7 @@ import { WindowsLicenseIncludedField } from '../fields/WindowsLicenseIncludedFie
 type EditDetailsSectionProps = {
   cluster: ClusterFromSubscription;
   isEdit: boolean;
-  machinePools: MachinePool[];
+  machinePools: MachinePool[] | NodePool[];
   currentMPId: string | undefined;
   setCurrentMPId: (currentMPId: string) => void;
   machineTypesResponse: MachineTypesResponse;
@@ -43,6 +43,7 @@ const EditDetailsSection = ({
 }: EditDetailsSectionProps) => {
   const isHypershift = isHypershiftCluster(cluster);
   const allowWindowsLicenseIncluded = useFeatureGate(WINDOWS_LICENSE_INCLUDED) && isHypershift;
+  const clusterVersion = cluster?.openshift_version || cluster?.version?.raw_id || '';
 
   return isEdit ? (
     <FormGroup fieldId="machine-pool" label="Machine pool">
@@ -56,7 +57,7 @@ const EditDetailsSection = ({
       {allowWindowsLicenseIncluded ? (
         <WindowsLicenseIncludedField
           isEdit
-          currentMP={machinePools.find((mp) => mp.id === currentMPId)}
+          currentMP={machinePools.find((mp) => mp.id === currentMPId) as NodePool}
         />
       ) : null}
     </FormGroup>
@@ -85,7 +86,9 @@ const EditDetailsSection = ({
           inModal
         />
       </GridItem>
-      {allowWindowsLicenseIncluded ? <WindowsLicenseIncludedField /> : null}
+      {allowWindowsLicenseIncluded ? (
+        <WindowsLicenseIncludedField clusterVersion={clusterVersion} />
+      ) : null}
     </>
   );
 };
