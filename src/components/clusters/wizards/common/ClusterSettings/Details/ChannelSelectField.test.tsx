@@ -1,12 +1,10 @@
 import React from 'react';
 import { Formik } from 'formik';
 
-import {
-  ChannelSelectField,
-  ChannelSelectFieldProps,
-} from '~/components/clusters/wizards/common/ClusterSettings/Details/ChannelSelectField';
 import { checkAccessibility, render, screen } from '~/testUtils';
 import { Version } from '~/types/clusters_mgmt.v1';
+
+import { ChannelSelectField, ChannelSelectFieldProps } from './ChannelSelectField';
 
 const defaultVersion: Version = {
   kind: 'Version',
