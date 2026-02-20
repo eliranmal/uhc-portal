@@ -9,7 +9,7 @@ import PopoverHint from '~/components/common/PopoverHint';
 import { Version } from '~/types/clusters_mgmt.v1';
 
 export type ChannelSelectFieldProps = {
-  clusterVersion: Version;
+  clusterVersion?: Version;
 };
 
 export const ChannelSelectField = ({ clusterVersion }: ChannelSelectFieldProps) => {

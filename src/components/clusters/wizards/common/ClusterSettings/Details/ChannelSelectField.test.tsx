@@ -64,6 +64,23 @@ describe('<ChannelSelectField />', () => {
     ).toBeInTheDocument();
   });
 
+  describe('when version is missing', () => {
+    it('is empty', () => {
+      buildComponent({ clusterVersion: undefined });
+
+      expect(
+        screen.queryByText('No channels available for the selected version'),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByText('candidate-4.19')).not.toBeInTheDocument();
+    });
+
+    it('is disabled', () => {
+      buildComponent({ clusterVersion: undefined });
+
+      expect(screen.getByRole('combobox', { name: 'Channel' })).toBeDisabled();
+    });
+  });
+
   describe('when channels are not available', () => {
     it('shows an empty message', () => {
       buildComponent({ clusterVersion: noAvailableChannelsVersion });
