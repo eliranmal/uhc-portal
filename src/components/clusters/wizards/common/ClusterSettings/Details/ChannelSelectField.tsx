@@ -3,7 +3,7 @@ import { useField } from 'formik';
 
 import { FormGroup, FormSelect, FormSelectOption } from '@patternfly/react-core';
 
-import { FieldId } from '~/components/clusters/wizards/rosa/constants';
+import { FieldId } from '~/components/clusters/wizards/common';
 import ExternalLink from '~/components/common/ExternalLink';
 import PopoverHint from '~/components/common/PopoverHint';
 import { Version } from '~/types/clusters_mgmt.v1';
