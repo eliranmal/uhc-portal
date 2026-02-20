@@ -46,7 +46,7 @@ export const CAPACITY_RESERVATION_ID_FIELD = 'ocmui-capacity-reservation-id-fiel
 export const TABBED_CLUSTERS = 'ocmui-tabbed-clusters';
 export const OSD_FOR_GOOGLE_CLOUD = 'ocmui-osd-wizard-for-google-cloud';
 export const FIPS_FOR_HYPERSHIFT = 'ocmui-fips-for-hypershift';
-export const Y_STREAM_CHANNELS = 'ocmui-y-stream-channels';
+export const Y_STREAM_CHANNEL = 'ocmui-y-stream-channel';
 
 export const ENABLE_AWS_TAGS_EDITING = false;
 
@@ -81,5 +81,5 @@ export default {
   TABBED_CLUSTERS,
   OSD_FOR_GOOGLE_CLOUD,
   FIPS_FOR_HYPERSHIFT,
-  Y_STREAM_CHANNELS,
+  Y_STREAM_CHANNEL,
 } as const;

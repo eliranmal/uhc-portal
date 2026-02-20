@@ -39,7 +39,7 @@ import {
   HYPERSHIFT_WIZARD_FEATURE,
   IMDS_SELECTION,
   MULTIREGION_PREVIEW_ENABLED,
-  Y_STREAM_CHANNELS,
+  Y_STREAM_CHANNEL,
 } from '~/queries/featureGates/featureConstants';
 import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 
@@ -120,15 +120,15 @@ const ReviewClusterScreen = ({
   const hasExternalAuth = hasExternalAuthenticationCapability(organization?.capabilities);
 
   const isEUSChannelEnabled = useFeatureGate(ALLOW_EUS_CHANNEL);
-  const isYStreamChannelsEnabled = useFeatureGate(Y_STREAM_CHANNELS);
+  const isYStreamChannelEnabled = useFeatureGate(Y_STREAM_CHANNEL);
   const isFipsForHypershiftEnabled = useFeatureGate(FIPS_FOR_HYPERSHIFT);
 
   const clusterSettingsFields = [
     FieldId.ClusterName,
     ...(hasDomainPrefix ? [FieldId.DomainPrefix] : []),
-    ...(isEUSChannelEnabled && !isYStreamChannelsEnabled ? [FieldId.ChannelGroup] : []),
+    ...(isEUSChannelEnabled && !isYStreamChannelEnabled ? [FieldId.ChannelGroup] : []),
     FieldId.ClusterVersion,
-    ...(isYStreamChannelsEnabled ? [FieldId.VersionChannel] : []),
+    ...(isYStreamChannelEnabled ? [FieldId.VersionChannel] : []),
     FieldId.Region,
     FieldId.MultiAz,
     ...(!isHypershiftSelected ? [FieldId.EnableUserWorkloadMonitoring] : []),

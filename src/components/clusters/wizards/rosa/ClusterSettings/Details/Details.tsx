@@ -60,7 +60,7 @@ import {
   ALLOW_EUS_CHANNEL,
   FIPS_FOR_HYPERSHIFT,
   MULTIREGION_PREVIEW_ENABLED,
-  Y_STREAM_CHANNELS,
+  Y_STREAM_CHANNEL,
 } from '~/queries/featureGates/featureConstants';
 import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 import { findRegionalInstance } from '~/queries/helpers';
@@ -119,7 +119,7 @@ function Details() {
   const isMultiRegionEnabled = useFeatureGate(MULTIREGION_PREVIEW_ENABLED) && isHypershiftSelected;
   const isEUSChannelEnabled = useFeatureGate(ALLOW_EUS_CHANNEL);
   const isFipsForHypershiftEnabled = useFeatureGate(FIPS_FOR_HYPERSHIFT);
-  const isYStreamChannelsEnabled = useFeatureGate(Y_STREAM_CHANNELS);
+  const isYStreamChannelEnabled = useFeatureGate(Y_STREAM_CHANNEL);
 
   const monitoringLink = isHypershiftSelected
     ? links.ROSA_MONITORING
@@ -130,7 +130,7 @@ function Details() {
     if (isEUSChannelEnabled) {
       const parseVersion = (version: string | undefined) => semver.valid(semver.coerce(version));
 
-      const availableVersions = isYStreamChannelsEnabled
+      const availableVersions = isYStreamChannelEnabled
         ? getInstallableVersionsResponse.versions
         : getInstallableVersionsResponse.versions.filter(
             (version: Version) => version.channel_group === channelGroup,
@@ -487,7 +487,7 @@ function Details() {
           </>
         )}
 
-        {isEUSChannelEnabled && !isYStreamChannelsEnabled ? (
+        {isEUSChannelEnabled && !isYStreamChannelEnabled ? (
           <>
             <GridItem md={6}>
               <FormGroup
@@ -524,13 +524,13 @@ function Details() {
             onChange={handleVersionChange}
             channelGroup={channelGroup}
             isEUSChannelEnabled={isEUSChannelEnabled}
-            isYStreamChannelsEnabled={isYStreamChannelsEnabled}
+            isYStreamChannelEnabled={isYStreamChannelEnabled}
             key={selectedVersion?.id}
           />
         </GridItem>
         <GridItem md={6} />
 
-        {isYStreamChannelsEnabled ? (
+        {isYStreamChannelEnabled ? (
           <>
             <GridItem md={6}>
               <ChannelSelectField clusterVersion={selectedVersion} />

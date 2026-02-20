@@ -65,7 +65,7 @@ import { FieldId, MIN_SECURE_BOOT_VERSION } from '~/components/clusters/wizards/
 import { CheckboxDescription } from '~/components/common/CheckboxDescription';
 import ExternalLink from '~/components/common/ExternalLink';
 import PopoverHint from '~/components/common/PopoverHint';
-import { ALLOW_EUS_CHANNEL, Y_STREAM_CHANNELS } from '~/queries/featureGates/featureConstants';
+import { ALLOW_EUS_CHANNEL, Y_STREAM_CHANNEL } from '~/queries/featureGates/featureConstants';
 import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 import { useFetchSearchClusterName } from '~/queries/RosaWizardQueries/useFetchSearchClusterName';
 import { useFetchSearchDomainPrefix } from '~/queries/RosaWizardQueries/useFetchSearchDomainPrefix';
@@ -115,7 +115,7 @@ function Details() {
   );
 
   const isEUSChannelEnabled = useFeatureGate(ALLOW_EUS_CHANNEL);
-  const isYStreamChannelsEnabled = useFeatureGate(Y_STREAM_CHANNELS);
+  const isYStreamChannelEnabled = useFeatureGate(Y_STREAM_CHANNEL);
 
   const isByoc = byoc === 'true';
   const isMultiAz = multiAz === 'true';
@@ -259,7 +259,7 @@ function Details() {
     resetMaxNodesTotal({ clusterVersion });
   };
 
-  const availableVersions = isYStreamChannelsEnabled
+  const availableVersions = isYStreamChannelEnabled
     ? getInstallableVersionsResponse.versions
     : getInstallableVersionsResponse.versions.filter(
         (version: Version) => version.channel_group === channelGroup,
@@ -425,7 +425,7 @@ function Details() {
             </GridItem>
           )}
 
-          {isEUSChannelEnabled && !isYStreamChannelsEnabled ? (
+          {isEUSChannelEnabled && !isYStreamChannelEnabled ? (
             <GridItem>
               <FormGroup
                 label="Channel group"
@@ -465,11 +465,11 @@ function Details() {
               onChange={handleVersionChange}
               key={channelGroup}
               isEUSChannelEnabled={isEUSChannelEnabled}
-              isYStreamChannelsEnabled={isYStreamChannelsEnabled}
+              isYStreamChannelEnabled={isYStreamChannelEnabled}
             />
           </GridItem>
 
-          {isYStreamChannelsEnabled ? (
+          {isYStreamChannelEnabled ? (
             <GridItem>
               <ChannelSelectField clusterVersion={selectedVersion} />
             </GridItem>

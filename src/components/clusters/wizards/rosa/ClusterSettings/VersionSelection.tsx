@@ -35,7 +35,7 @@ type VersionSelectionProps = {
   onChange: (version?: Version) => void;
   channelGroup?: string;
   isEUSChannelEnabled?: boolean;
-  isYStreamChannelsEnabled?: boolean;
+  isYStreamChannelEnabled?: boolean;
 };
 
 function VersionSelection({
@@ -43,7 +43,7 @@ function VersionSelection({
   onChange,
   channelGroup,
   isEUSChannelEnabled,
-  isYStreamChannelsEnabled,
+  isYStreamChannelEnabled,
 }: VersionSelectionProps) {
   const [input, { touched, error }, { setValue }] = useField(FieldId.ClusterVersion);
   const {
@@ -193,7 +193,7 @@ function VersionSelection({
       const defaultRosaVersion = versions.find(
         (version) =>
           isValidRosaVersion(version) &&
-          (isYStreamChannelsEnabled || version.channel_group === targetChannelGroup),
+          (isYStreamChannelEnabled || version.channel_group === targetChannelGroup),
       );
 
       const defaultHypershiftVersion =
@@ -201,7 +201,7 @@ function VersionSelection({
         versions.find(
           (version) =>
             version.hosted_control_plane_enabled &&
-            (isYStreamChannelsEnabled || version.channel_group === targetChannelGroup),
+            (isYStreamChannelEnabled || version.channel_group === targetChannelGroup),
         );
 
       if (!defaultRosaVersion || (isHypershiftSelected && !defaultHypershiftVersion)) {
@@ -225,7 +225,7 @@ function VersionSelection({
     isHypershiftSelected,
     isValidRosaVersion,
     isEUSChannelEnabled,
-    isYStreamChannelsEnabled,
+    isYStreamChannelEnabled,
     channelGroup,
   ]);
 
@@ -252,7 +252,7 @@ function VersionSelection({
       filteredVersions,
       unstableOCPVersionsEnabled,
       supportVersionMap,
-      isEUSChannelEnabled && !isYStreamChannelsEnabled ? channelGroup : undefined,
+      isEUSChannelEnabled && !isYStreamChannelEnabled ? channelGroup : undefined,
     );
 
     // If getVersionsData returns an array (specific channel selected), wrap it in an object
@@ -291,7 +291,7 @@ function VersionSelection({
     supportVersionMap,
     channelGroup,
     isEUSChannelEnabled,
-    isYStreamChannelsEnabled,
+    isYStreamChannelEnabled,
   ]);
 
   const sortFn = (a: FuzzyEntryType, b: FuzzyEntryType) => versionComparator(b.label, a.label);
