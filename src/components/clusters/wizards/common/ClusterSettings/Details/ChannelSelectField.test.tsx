@@ -62,7 +62,7 @@ describe('<ChannelSelectField />', () => {
     buildComponent({ clusterVersion: defaultVersion });
 
     expect(
-      screen.getByRole('button', { name: 'Available channels information' }),
+      screen.getByRole('button', { name: 'Version channels information' }),
     ).toBeInTheDocument();
   });
 
