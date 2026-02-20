@@ -31,7 +31,7 @@ interface VersionSelectFieldProps {
   key?: string;
   isDisabled?: boolean;
   isEUSChannelEnabled?: boolean;
-  isPending?: boolean;
+  isYStreamChannelsEnabled?: boolean;
 }
 
 export const VersionSelectField = ({
@@ -42,6 +42,7 @@ export const VersionSelectField = ({
   onChange,
   key,
   isEUSChannelEnabled,
+  isYStreamChannelsEnabled,
 }: VersionSelectFieldProps) => {
   const dispatch = useDispatch();
   const organization = useGlobalState((state) => state.userProfile.organization.details);
@@ -150,10 +151,16 @@ export const VersionSelectField = ({
         versions,
         unstableOCPVersionsEnabled,
         supportVersionMap,
-        channelGroup,
-        isEUSChannelEnabled,
+        isEUSChannelEnabled && !isYStreamChannelsEnabled ? channelGroup : undefined,
       ),
-    [supportVersionMap, versions, unstableOCPVersionsEnabled, channelGroup, isEUSChannelEnabled],
+    [
+      supportVersionMap,
+      versions,
+      unstableOCPVersionsEnabled,
+      channelGroup,
+      isEUSChannelEnabled,
+      isYStreamChannelsEnabled,
+    ],
   );
 
   return (

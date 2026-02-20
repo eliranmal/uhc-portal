@@ -29,6 +29,7 @@ import {
   ALLOW_EUS_CHANNEL,
   OSD_GCP_WIF,
   PRIVATE_SERVICE_CONNECT,
+  Y_STREAM_CHANNELS,
 } from '~/queries/featureGates/featureConstants';
 import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 
@@ -65,6 +66,7 @@ export const ReviewAndCreateContent = ({ isPending }: ReviewAndCreateContentProp
   const autoscalingEnabled = canAutoScale && !!formValues[FieldId.AutoscalingEnabled];
   const isWifEnabled = useFeatureGate(OSD_GCP_WIF);
   const isEUSChannelEnabled = useFeatureGate(ALLOW_EUS_CHANNEL);
+  const isYStreamChannelsEnabled = useFeatureGate(Y_STREAM_CHANNELS);
   const hasPSCFeatureGate = useFeatureGate(PRIVATE_SERVICE_CONNECT);
 
   const isByoc = byoc === 'true';
@@ -83,8 +85,9 @@ export const ReviewAndCreateContent = ({ isPending }: ReviewAndCreateContentProp
     ...(hasWIFConfiguration ? [FieldId.GcpWifConfig] : []),
     FieldId.ClusterName,
     ...(hasDomainPrefix ? [FieldId.DomainPrefix] : []),
-    ...(isEUSChannelEnabled ? [FieldId.ChannelGroup] : []),
+    ...(isEUSChannelEnabled && !isYStreamChannelsEnabled ? [FieldId.ChannelGroup] : []),
     FieldId.ClusterVersion,
+    ...(isYStreamChannelsEnabled ? [FieldId.VersionChannel] : []),
     FieldId.Region,
     FieldId.MultiAz,
     ...(isGCP ? [FieldId.SecureBoot] : []),
