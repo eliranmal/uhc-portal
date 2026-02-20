@@ -28,7 +28,6 @@ import useCanClusterAutoscale from '~/hooks/useCanClusterAutoscale';
 import {
   ALLOW_EUS_CHANNEL,
   OSD_GCP_WIF,
-  PRIVATE_SERVICE_CONNECT,
   Y_STREAM_CHANNELS,
 } from '~/queries/featureGates/featureConstants';
 import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
@@ -67,7 +66,6 @@ export const ReviewAndCreateContent = ({ isPending }: ReviewAndCreateContentProp
   const isWifEnabled = useFeatureGate(OSD_GCP_WIF);
   const isEUSChannelEnabled = useFeatureGate(ALLOW_EUS_CHANNEL);
   const isYStreamChannelsEnabled = useFeatureGate(Y_STREAM_CHANNELS);
-  const hasPSCFeatureGate = useFeatureGate(PRIVATE_SERVICE_CONNECT);
 
   const isByoc = byoc === 'true';
   const isAWS = cloudProvider === CloudProviderType.Aws;
@@ -163,7 +161,7 @@ export const ReviewAndCreateContent = ({ isPending }: ReviewAndCreateContentProp
         {isByoc && clusterPrivacy === ClusterPrivacyType.Internal && installToVpc && isAWS && (
           <ReviewItem name={FieldId.UsePrivateLink} formValues={formValues} />
         )}
-        {isGCPPrivateClusterInstalltoVPC && hasPSCFeatureGate && (
+        {isGCPPrivateClusterInstalltoVPC && (
           <ReviewItem name={FieldId.PrivateServiceConnect} formValues={formValues} />
         )}
         {isByoc && isGCP && installToSharedVpc && (
