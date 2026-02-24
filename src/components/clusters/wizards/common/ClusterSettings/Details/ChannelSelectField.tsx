@@ -33,7 +33,7 @@ export const ChannelSelectField = ({ clusterVersion }: ChannelSelectFieldProps) 
   );
 
   const selectOptions = hasChannels ? (
-    versionChannels?.map((channel: any) => (
+    versionChannels?.map((channel: string) => (
       <FormSelectOption key={channel} value={channel} label={channel} />
     ))
   ) : (
