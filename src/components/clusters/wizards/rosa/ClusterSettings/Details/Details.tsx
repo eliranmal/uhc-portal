@@ -144,10 +144,11 @@ function Details() {
             )
           : null;
 
-      if (foundVersion) {
-        setFieldValue(FieldId.ClusterVersion, foundVersion);
-      } else {
-        setFieldValue(FieldId.ClusterVersion, availableVersions[0]);
+      const versionToSet = foundVersion ?? availableVersions[0];
+
+      setFieldValue(FieldId.ClusterVersion, versionToSet);
+      if (isYStreamChannelEnabled) {
+        setFieldValue(FieldId.VersionChannel, versionToSet?.available_channels?.[0] ?? '');
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -285,6 +286,9 @@ function Details() {
 
   const handleVersionChange = (clusterVersion: Version | undefined) => {
     if (!clusterVersion) {
+      if (isYStreamChannelEnabled) {
+        setFieldValue(FieldId.VersionChannel, '');
+      }
       return;
     }
     // If features become incompatible with the new version, clear their settings
@@ -299,6 +303,11 @@ function Details() {
 
     if (!isHypershiftSelected) {
       resetMaxNodesTotal({ clusterVersion });
+    }
+
+    if (isYStreamChannelEnabled) {
+      // @ts-ignore - `available_channels` isn't available in API schemas yet
+      setFieldValue(FieldId.VersionChannel, clusterVersion?.available_channels?.[0] ?? '');
     }
   };
 
