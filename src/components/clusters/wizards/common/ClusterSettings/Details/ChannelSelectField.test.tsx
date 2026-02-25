@@ -59,9 +59,7 @@ describe('<ChannelSelectField />', () => {
   it('renders popover hint', () => {
     buildComponent({ clusterVersion: defaultVersion });
 
-    expect(
-      screen.getByRole('button', { name: 'Version channels information' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Update channels information' })).toBeInTheDocument();
   });
 
   describe('when version is missing', () => {
