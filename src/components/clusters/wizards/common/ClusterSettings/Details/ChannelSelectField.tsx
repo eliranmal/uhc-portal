@@ -4,7 +4,6 @@ import { useField } from 'formik';
 import { FormGroup, FormSelect, FormSelectOption } from '@patternfly/react-core';
 
 import { FieldId } from '~/components/clusters/wizards/common';
-import ExternalLink from '~/components/common/ExternalLink';
 import PopoverHint from '~/components/common/PopoverHint';
 import { Version } from '~/types/clusters_mgmt.v1';
 
@@ -22,11 +21,17 @@ export const ChannelSelectField = ({ clusterVersion }: ChannelSelectFieldProps) 
   const popoverHint = (
     <PopoverHint
       buttonAriaLabel="Version channels information"
-      // todo - add real help text and a doc link
       hint={
         <>
-          Lorem ipsum dolor sit amet.{' '}
-          <ExternalLink href={/* links.___ */ ''}>Learn more about version channels</ExternalLink>
+          Channels are the mechanism by which you declare the Red Hat OpenShift Service on AWS minor
+          version that you intend to upgrade the cluster to. The version number in the channel
+          represents the target minor version that the cluster will eventually be upgraded to. This
+          differs from Channel groups, which only showed the available z-stream updates within a
+          particular minor version.
+          <br />
+          For example, if your cluster was using the Channel group EUS, it will be migrated to your
+          current cluster minor version; that is, if your cluster is on version 4.18.29, the Channel
+          will default to eus-4.18.
         </>
       }
     />
