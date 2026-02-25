@@ -191,17 +191,14 @@ function VersionSelection({
       const defaultVersion = versions.find((version) => version.default === true);
 
       const defaultRosaVersion = versions.find(
-        (version) =>
-          isValidRosaVersion(version) &&
-          (isYStreamChannelEnabled || version.channel_group === targetChannelGroup),
+        (version) => isValidRosaVersion(version) && version.channel_group === targetChannelGroup,
       );
 
       const defaultHypershiftVersion =
         isHypershiftSelected &&
         versions.find(
           (version) =>
-            version.hosted_control_plane_enabled &&
-            (isYStreamChannelEnabled || version.channel_group === targetChannelGroup),
+            version.hosted_control_plane_enabled && version.channel_group === targetChannelGroup,
         );
 
       if (!defaultRosaVersion || (isHypershiftSelected && !defaultHypershiftVersion)) {
@@ -225,7 +222,6 @@ function VersionSelection({
     isHypershiftSelected,
     isValidRosaVersion,
     isEUSChannelEnabled,
-    isYStreamChannelEnabled,
     channelGroup,
   ]);
 
