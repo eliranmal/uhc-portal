@@ -3,7 +3,9 @@ import { useField } from 'formik';
 
 import { FormGroup, FormSelect, FormSelectOption } from '@patternfly/react-core';
 
+import installLinks from '~/common/installLinks.mjs';
 import { FieldId } from '~/components/clusters/wizards/common';
+import ExternalLink from '~/components/common/ExternalLink';
 import PopoverHint from '~/components/common/PopoverHint';
 import { Version } from '~/types/clusters_mgmt.v1';
 
@@ -20,7 +22,7 @@ export const ChannelSelectField = ({ clusterVersion }: ChannelSelectFieldProps) 
 
   const popoverHint = (
     <PopoverHint
-      buttonAriaLabel="Version channels information"
+      buttonAriaLabel="Update channels information"
       hint={
         <>
           Channels are the mechanism by which you declare the Red Hat OpenShift Service on AWS minor
@@ -31,7 +33,8 @@ export const ChannelSelectField = ({ clusterVersion }: ChannelSelectFieldProps) 
           <br />
           For example, if your cluster was using the Channel group EUS, it will be migrated to your
           current cluster minor version; that is, if your cluster is on version 4.18.29, the Channel
-          will default to eus-4.18.
+          will default to eus-4.18.{' '}
+          <ExternalLink href={installLinks.OCP_UPDATE_CHANNELS}>Learn more</ExternalLink>
         </>
       }
     />

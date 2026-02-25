@@ -411,6 +411,8 @@ const links = {
   RH_ROSA_LEARN: `${RH_BASE}/technologies/cloud-computing/openshift/aws/learn`,
   RH_ROSA_INSTALL: `${RH_BASE}/products/interactive-walkthrough/install-rosa`,
   RH_ROSA_LIGHTBOARD: `${RH_BASE}/about/videos/rosa-lightboard`,
+
+  OCP_UPDATE_CHANNELS: `${OCP_DOCS_BASE}/updating_clusters/understanding-openshift-updates-1#understanding-update-channels-releases`,
 };
 
 // Tool identifiers are public — e.g. for linking to specific tool in DownloadsPage.
