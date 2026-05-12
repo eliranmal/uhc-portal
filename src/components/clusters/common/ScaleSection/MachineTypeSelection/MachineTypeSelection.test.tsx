@@ -1,3 +1,4 @@
+// Integration tests: `MachineTypeSelectionWithState` composes `useMachineTypeSelection` + render-only `MachineTypeSelection` (OCMUI-4376 v2).
 import React from 'react';
 import { Formik } from 'formik';
 
@@ -6,26 +7,49 @@ import {
   CCSQuotaList,
   rhQuotaList,
 } from '~/components/clusters/common/__tests__/quota.fixtures';
+import { useFetchDefaultFlavour } from '~/queries/ClusterDetailsQueries/MachinePoolTab/MachineTypes/useFetchDefaultFlavour';
 import { useGlobalState } from '~/redux/hooks';
 import { mapMachineTypesById } from '~/redux/reducers/machineTypesReducer';
 import { checkAccessibility, render, screen, within } from '~/testUtils';
 
 import {
-  baseFlavoursState,
+  useMachineTypeSelection,
+  type UseMachineTypeSelectionInput,
+} from '../useMachineTypeSelection';
+
+import {
   emptyMachineTypesResponse,
   errorData,
-  errorFlavoursState,
-  errorState,
   fulfilledFlavoursState,
-  fulfilledMachineByRegionState,
   machineTypes,
+  machineTypesByRegionResponse,
   machineTypesResponse,
   organizationState,
-  pendingFlavoursState,
-  pendingState,
   unknownCategoryMachineTypes,
 } from './fixtures';
-import { MachineTypeSelection, MachineTypeSelectionProps } from './MachineTypeSelection';
+import { MachineTypeSelection } from './MachineTypeSelection';
+
+const fulfilledRegionProps = {
+  machineTypesByRegionResponse,
+  machineTypesByRegionErrorResponse: undefined,
+  machineTypesByRegionPending: false,
+} satisfies Pick<
+  UseMachineTypeSelectionInput,
+  | 'machineTypesByRegionResponse'
+  | 'machineTypesByRegionErrorResponse'
+  | 'machineTypesByRegionPending'
+>;
+
+const pendingRegionProps = {
+  machineTypesByRegionResponse: undefined,
+  machineTypesByRegionErrorResponse: undefined,
+  machineTypesByRegionPending: true,
+} satisfies Pick<
+  UseMachineTypeSelectionInput,
+  | 'machineTypesByRegionResponse'
+  | 'machineTypesByRegionErrorResponse'
+  | 'machineTypesByRegionPending'
+>;
 
 const buildTestComponent = (children: React.ReactNode) => (
   <Formik initialValues={{}} onSubmit={jest.fn()}>
@@ -36,9 +60,22 @@ const buildTestComponent = (children: React.ReactNode) => (
 jest.mock('~/redux/hooks', () => ({
   useGlobalState: jest.fn(),
 }));
-const useGlobalStateMock = useGlobalState as jest.Mock;
+const useGlobalStateMock = jest.mocked(useGlobalState);
 
-const defaultProps: MachineTypeSelectionProps = {
+jest.mock('~/queries/ClusterDetailsQueries/MachinePoolTab/MachineTypes/useFetchDefaultFlavour');
+const useFetchDefaultFlavourMock = jest.mocked(useFetchDefaultFlavour);
+
+const stubFlavourQuery = (
+  partial: Partial<ReturnType<typeof useFetchDefaultFlavour>>,
+): ReturnType<typeof useFetchDefaultFlavour> =>
+  partial as ReturnType<typeof useFetchDefaultFlavour>;
+
+const MachineTypeSelectionWithState = (props: UseMachineTypeSelectionInput) => {
+  const renderProps = useMachineTypeSelection(props);
+  return <MachineTypeSelection {...renderProps} />;
+};
+
+const defaultProps: UseMachineTypeSelectionInput = {
   fieldId: 'machine_type',
   machineTypesResponse: emptyMachineTypesResponse,
   isMultiAz: false,
@@ -51,33 +88,44 @@ const defaultProps: MachineTypeSelectionProps = {
   inModal: false,
 };
 
-const errorProps: MachineTypeSelectionProps = {
+const errorProps: UseMachineTypeSelectionInput = {
   ...defaultProps,
   machineTypesErrorResponse: errorData,
 };
 
-const quotaAvailableProps: MachineTypeSelectionProps = {
+const quotaAvailableProps: UseMachineTypeSelectionInput = {
   ...defaultProps,
   machineTypesResponse,
   isMultiAz: true,
 };
 
-const previousSelectionProps: MachineTypeSelectionProps = {
+const previousSelectionProps: UseMachineTypeSelectionInput = {
   ...defaultProps,
   machineTypesResponse,
   isMultiAz: true,
 };
 
-const byocProps: MachineTypeSelectionProps = {
+const byocProps: UseMachineTypeSelectionInput = {
   ...defaultProps,
   machineTypesResponse,
   isMultiAz: true,
   isBYOC: true,
+  ...fulfilledRegionProps,
 };
 
 describe('MachineTypeSelection', () => {
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  beforeEach(() => {
+    useFetchDefaultFlavourMock.mockReturnValue(
+      stubFlavourQuery({
+        isSuccess: true,
+        isError: false,
+        data: fulfilledFlavoursState.byID['osd-4'],
+      }),
+    );
   });
 
   describe('when the machine types list is available', () => {
@@ -89,8 +137,6 @@ describe('MachineTypeSelection', () => {
       // Arrange
       beforeEach(() => {
         useGlobalStateMock.mockReturnValue({
-          flavours: fulfilledFlavoursState,
-          machineTypesByRegion: fulfilledMachineByRegionState,
           organization: organizationState,
           quota: CCSQuotaList,
         });
@@ -98,7 +144,9 @@ describe('MachineTypeSelection', () => {
 
       it('displays only machine types with quota', async () => {
         // Act
-        const { user } = render(buildTestComponent(<MachineTypeSelection {...byocProps} />));
+        const { user } = render(
+          buildTestComponent(<MachineTypeSelectionWithState {...byocProps} />),
+        );
 
         // Assert
         const optionsMenu = screen.getByLabelText('Machine type select toggle');
@@ -118,14 +166,19 @@ describe('MachineTypeSelection', () => {
       it('displays "Not enough quota" error', async () => {
         // Arrange
         useGlobalStateMock.mockReturnValue({
-          flavours: { ...errorFlavoursState, error: true },
-          machineTypesByRegion: fulfilledMachineByRegionState,
           organization: organizationState,
         });
+        useFetchDefaultFlavourMock.mockReturnValue(
+          stubFlavourQuery({
+            isSuccess: false,
+            isError: true,
+            data: undefined,
+          }),
+        );
 
         // Act
         const { container } = render(
-          buildTestComponent(<MachineTypeSelection {...defaultProps} />),
+          buildTestComponent(<MachineTypeSelectionWithState {...defaultProps} />),
         );
 
         // Assert
@@ -147,15 +200,13 @@ describe('MachineTypeSelection', () => {
       it('does not display ccs_only machine types, only machines with quota', async () => {
         // Arrange
         useGlobalStateMock.mockReturnValue({
-          flavours: fulfilledFlavoursState,
-          machineTypesByRegion: fulfilledMachineByRegionState,
           organization: organizationState,
           quota: rhQuotaList,
         });
 
         // Act
         const { user } = render(
-          buildTestComponent(<MachineTypeSelection {...quotaAvailableProps} />),
+          buildTestComponent(<MachineTypeSelectionWithState {...quotaAvailableProps} />),
         );
 
         // Assert
@@ -179,7 +230,7 @@ describe('MachineTypeSelection', () => {
       it('is accessible', async () => {
         // Act
         const { container } = render(
-          buildTestComponent(<MachineTypeSelection {...previousSelectionProps} />),
+          buildTestComponent(<MachineTypeSelectionWithState {...previousSelectionProps} />),
         );
         await checkAccessibility(container);
       });
@@ -187,15 +238,20 @@ describe('MachineTypeSelection', () => {
       it('does not display ccs_only machine types, only machines with quota', async () => {
         // Arrange
         useGlobalStateMock.mockReturnValue({
-          flavours: baseFlavoursState,
-          machineTypesByRegion: fulfilledMachineByRegionState,
           organization: organizationState,
           quota: rhQuotaList,
         });
+        useFetchDefaultFlavourMock.mockReturnValue(
+          stubFlavourQuery({
+            isSuccess: true,
+            isError: false,
+            data: {},
+          }),
+        );
 
         // Act
         const { user } = render(
-          buildTestComponent(<MachineTypeSelection {...previousSelectionProps} />),
+          buildTestComponent(<MachineTypeSelectionWithState {...previousSelectionProps} />),
         );
 
         expect(screen.queryByText('m5.xlarge', { exact: false })).not.toBeInTheDocument();
@@ -217,15 +273,13 @@ describe('MachineTypeSelection', () => {
       it('does not display ccs_only machine types, only machines with quota', async () => {
         // Arrange
         useGlobalStateMock.mockReturnValue({
-          flavours: fulfilledFlavoursState,
-          machineTypesByRegion: fulfilledMachineByRegionState,
           organization: organizationState,
           quota: rhQuotaList,
         });
 
         // Act
         const { user } = render(
-          buildTestComponent(<MachineTypeSelection {...previousSelectionProps} />),
+          buildTestComponent(<MachineTypeSelectionWithState {...previousSelectionProps} />),
         );
 
         const optionsMenu = screen.getByLabelText('Machine type select toggle');
@@ -249,14 +303,12 @@ describe('MachineTypeSelection', () => {
       it('displays an alert', () => {
         // Arrange
         useGlobalStateMock.mockReturnValue({
-          flavours: fulfilledFlavoursState,
-          machineTypesByRegion: fulfilledMachineByRegionState,
           organization: organizationState,
           quota: CCSOneNodeRemainingQuotaList,
         });
 
         // Act
-        render(buildTestComponent(<MachineTypeSelection {...byocProps} />));
+        render(buildTestComponent(<MachineTypeSelectionWithState {...byocProps} />));
 
         // Assert
         expect(
@@ -277,13 +329,11 @@ describe('MachineTypeSelection', () => {
     it('displays an error alert when machine-types response has an error', () => {
       // Arrange
       useGlobalStateMock.mockReturnValue({
-        flavours: fulfilledFlavoursState,
-        machineTypesByRegion: fulfilledMachineByRegionState,
         organization: organizationState,
       });
 
       // Act
-      render(buildTestComponent(<MachineTypeSelection {...errorProps} />));
+      render(buildTestComponent(<MachineTypeSelectionWithState {...errorProps} />));
 
       // Assert
       expect(within(screen.getByRole('alert')).getByText('This is an error message'));
@@ -292,13 +342,13 @@ describe('MachineTypeSelection', () => {
     it('is accessible', async () => {
       // Arrange
       useGlobalStateMock.mockReturnValue({
-        flavours: fulfilledFlavoursState,
-        machineTypesByRegion: errorState,
         organization: organizationState,
       });
 
       // Act
-      const { container } = render(buildTestComponent(<MachineTypeSelection {...defaultProps} />));
+      const { container } = render(
+        buildTestComponent(<MachineTypeSelectionWithState {...defaultProps} />),
+      );
 
       // Assert
       await checkAccessibility(container);
@@ -309,14 +359,12 @@ describe('MachineTypeSelection', () => {
     const moreTypes = {
       aws: [...(machineTypes?.aws ?? []), ...unknownCategoryMachineTypes],
     };
-    const unknownCategoryProps = {
-      ...defaultProps,
+    const unknownCategoryProps: UseMachineTypeSelectionInput = {
+      ...byocProps,
       machineTypesResponse: {
         types: moreTypes,
         typesByID: mapMachineTypesById(moreTypes),
       },
-      isMultiAz: true,
-      isBYOC: true,
     };
 
     describe('byoc with sufficient byoc quota available', () => {
@@ -327,15 +375,13 @@ describe('MachineTypeSelection', () => {
       it('displays only machine types with quota from known categories', async () => {
         // Arrange
         useGlobalStateMock.mockReturnValue({
-          flavours: fulfilledFlavoursState,
-          machineTypesByRegion: fulfilledMachineByRegionState,
           organization: organizationState,
           quota: CCSQuotaList,
         });
 
         // Act
         const { user } = render(
-          buildTestComponent(<MachineTypeSelection {...unknownCategoryProps} />),
+          buildTestComponent(<MachineTypeSelectionWithState {...unknownCategoryProps} />),
         );
 
         const optionsMenu = await screen.findByLabelText('Machine type select toggle');
@@ -360,13 +406,22 @@ describe('MachineTypeSelection', () => {
     it('renders correctly', () => {
       // Arrange
       useGlobalStateMock.mockReturnValue({
-        flavours: pendingFlavoursState,
-        machineTypesByRegion: pendingState,
         organization: organizationState,
       });
+      useFetchDefaultFlavourMock.mockReturnValue(
+        stubFlavourQuery({
+          isSuccess: false,
+          isError: false,
+          data: undefined,
+        }),
+      );
 
       // Act
-      render(buildTestComponent(<MachineTypeSelection {...defaultProps} />));
+      render(
+        buildTestComponent(
+          <MachineTypeSelectionWithState {...byocProps} {...pendingRegionProps} />,
+        ),
+      );
 
       // Assert
       expect(screen.getByRole('progressbar')).toBeInTheDocument();
@@ -376,13 +431,22 @@ describe('MachineTypeSelection', () => {
     it('is accessible', async () => {
       // Arrange
       useGlobalStateMock.mockReturnValue({
-        flavours: pendingFlavoursState,
-        machineTypesByRegion: pendingState,
         organization: organizationState,
       });
+      useFetchDefaultFlavourMock.mockReturnValue(
+        stubFlavourQuery({
+          isSuccess: false,
+          isError: false,
+          data: undefined,
+        }),
+      );
 
       // Act
-      const { container } = render(buildTestComponent(<MachineTypeSelection {...defaultProps} />));
+      const { container } = render(
+        buildTestComponent(
+          <MachineTypeSelectionWithState {...byocProps} {...pendingRegionProps} />,
+        ),
+      );
 
       // Assert
       await checkAccessibility(container);
