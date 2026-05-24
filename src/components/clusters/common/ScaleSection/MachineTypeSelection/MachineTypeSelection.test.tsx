@@ -1,6 +1,11 @@
-// Integration tests: `MachineTypeSelectionWithState` composes `useMachineTypeSelection` + render-only `MachineTypeSelection` (OCMUI-4376 v2).
 import React from 'react';
 import { Formik } from 'formik';
+
+import type {
+  QueryObserverLoadingErrorResult,
+  QueryObserverPendingResult,
+  QueryObserverSuccessResult,
+} from '@tanstack/query-core';
 
 import {
   CCSOneNodeRemainingQuotaList,
@@ -11,6 +16,7 @@ import { useFetchDefaultFlavour } from '~/queries/ClusterDetailsQueries/MachineP
 import { useGlobalState } from '~/redux/hooks';
 import { mapMachineTypesById } from '~/redux/reducers/machineTypesReducer';
 import { checkAccessibility, render, screen, within } from '~/testUtils';
+import type { Flavour } from '~/types/clusters_mgmt.v1';
 
 import {
   useMachineTypeSelection,
@@ -65,10 +71,77 @@ const useGlobalStateMock = jest.mocked(useGlobalState);
 jest.mock('~/queries/ClusterDetailsQueries/MachinePoolTab/MachineTypes/useFetchDefaultFlavour');
 const useFetchDefaultFlavourMock = jest.mocked(useFetchDefaultFlavour);
 
-const stubFlavourQuery = (
-  partial: Partial<ReturnType<typeof useFetchDefaultFlavour>>,
-): ReturnType<typeof useFetchDefaultFlavour> =>
-  partial as ReturnType<typeof useFetchDefaultFlavour>;
+const refetchDefaultFlavour = jest.fn();
+
+const defaultFlavourQueryBase = {
+  dataUpdatedAt: 0,
+  errorUpdatedAt: 0,
+  failureCount: 0,
+  failureReason: null,
+  errorUpdateCount: 0,
+  isFetched: true,
+  isFetchedAfterMount: true,
+  isFetching: false,
+  isInitialLoading: false,
+  isPaused: false,
+  isPlaceholderData: false,
+  isRefetching: false,
+  isStale: false,
+  fetchStatus: 'idle' as const,
+  refetch: refetchDefaultFlavour,
+};
+
+const defaultFlavourQuerySuccess = {
+  ...defaultFlavourQueryBase,
+  data: fulfilledFlavoursState.byID['osd-4'],
+  error: null,
+  isError: false,
+  isPending: false,
+  isLoading: false,
+  isLoadingError: false,
+  isRefetchError: false,
+  isSuccess: true,
+  status: 'success',
+} satisfies QueryObserverSuccessResult<Flavour>;
+
+const defaultFlavourQueryEmptySuccess = {
+  ...defaultFlavourQueryBase,
+  data: {},
+  error: null,
+  isError: false,
+  isPending: false,
+  isLoading: false,
+  isLoadingError: false,
+  isRefetchError: false,
+  isSuccess: true,
+  status: 'success',
+} satisfies QueryObserverSuccessResult<Flavour>;
+
+const defaultFlavourQueryError = {
+  ...defaultFlavourQueryBase,
+  data: undefined,
+  error: new Error('Failed to fetch default flavour'),
+  isError: true,
+  isPending: false,
+  isLoading: false,
+  isLoadingError: true,
+  isRefetchError: false,
+  isSuccess: false,
+  status: 'error',
+} satisfies QueryObserverLoadingErrorResult<Flavour>;
+
+const defaultFlavourQueryPending = {
+  ...defaultFlavourQueryBase,
+  data: undefined,
+  error: null,
+  isError: false,
+  isPending: true,
+  isLoading: false,
+  isLoadingError: false,
+  isRefetchError: false,
+  isSuccess: false,
+  status: 'pending',
+} satisfies QueryObserverPendingResult<Flavour>;
 
 const MachineTypeSelectionWithState = (props: UseMachineTypeSelectionInput) => {
   const renderProps = useMachineTypeSelection(props);
@@ -119,13 +192,7 @@ describe('MachineTypeSelection', () => {
   });
 
   beforeEach(() => {
-    useFetchDefaultFlavourMock.mockReturnValue(
-      stubFlavourQuery({
-        isSuccess: true,
-        isError: false,
-        data: fulfilledFlavoursState.byID['osd-4'],
-      }),
-    );
+    useFetchDefaultFlavourMock.mockReturnValue(defaultFlavourQuerySuccess);
   });
 
   describe('when the machine types list is available', () => {
@@ -168,13 +235,7 @@ describe('MachineTypeSelection', () => {
         useGlobalStateMock.mockReturnValue({
           organization: organizationState,
         });
-        useFetchDefaultFlavourMock.mockReturnValue(
-          stubFlavourQuery({
-            isSuccess: false,
-            isError: true,
-            data: undefined,
-          }),
-        );
+        useFetchDefaultFlavourMock.mockReturnValue(defaultFlavourQueryError);
 
         // Act
         const { container } = render(
@@ -241,13 +302,7 @@ describe('MachineTypeSelection', () => {
           organization: organizationState,
           quota: rhQuotaList,
         });
-        useFetchDefaultFlavourMock.mockReturnValue(
-          stubFlavourQuery({
-            isSuccess: true,
-            isError: false,
-            data: {},
-          }),
-        );
+        useFetchDefaultFlavourMock.mockReturnValue(defaultFlavourQueryEmptySuccess);
 
         // Act
         const { user } = render(
@@ -408,13 +463,7 @@ describe('MachineTypeSelection', () => {
       useGlobalStateMock.mockReturnValue({
         organization: organizationState,
       });
-      useFetchDefaultFlavourMock.mockReturnValue(
-        stubFlavourQuery({
-          isSuccess: false,
-          isError: false,
-          data: undefined,
-        }),
-      );
+      useFetchDefaultFlavourMock.mockReturnValue(defaultFlavourQueryPending);
 
       // Act
       render(
@@ -433,13 +482,7 @@ describe('MachineTypeSelection', () => {
       useGlobalStateMock.mockReturnValue({
         organization: organizationState,
       });
-      useFetchDefaultFlavourMock.mockReturnValue(
-        stubFlavourQuery({
-          isSuccess: false,
-          isError: false,
-          data: undefined,
-        }),
-      );
+      useFetchDefaultFlavourMock.mockReturnValue(defaultFlavourQueryPending);
 
       // Act
       const { container } = render(
