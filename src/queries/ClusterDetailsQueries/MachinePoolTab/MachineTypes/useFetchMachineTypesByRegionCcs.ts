@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
+import { secretFingerprint } from '~/common/queryHelpers';
 import { queryConstants } from '~/queries/queriesConstants';
 import clusterService from '~/services/clusterService';
 
@@ -11,19 +12,6 @@ export type UseFetchMachineTypesByRegionCcsParams = {
   accountId: string | undefined;
   secretAccessKey: string | undefined;
   enabled: boolean;
-};
-
-/** Opaque cache-bust token so rotating a secret refetches; not the raw secret. */
-const secretFingerprint = (secret: string | undefined) => {
-  if (!secret) {
-    return '';
-  }
-  const mod = 1_000_000_007;
-  let h = 0;
-  for (let i = 0; i < secret.length; i += 1) {
-    h = (h * 131 + secret.charCodeAt(i)) % mod;
-  }
-  return h.toString(16);
 };
 
 /**

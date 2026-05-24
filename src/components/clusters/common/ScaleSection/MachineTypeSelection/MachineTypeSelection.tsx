@@ -36,13 +36,11 @@ import {
 const MACHINE_TYPE_UNAVAILABLE_WARNING =
   'OCM does not have access to all AWS account details. Machine node type cannot be verified to be accessible for this AWS user.';
 
-function PossiblyUnavailableWarnIcon() {
-  return (
-    <Icon status="warning" size="md">
-      <ExclamationTriangleIcon />
-    </Icon>
-  );
-}
+const PossiblyUnavailableWarnIcon = () => (
+  <Icon status="warning" size="md">
+    <ExclamationTriangleIcon />
+  </Icon>
+);
 
 export type MachineTypeSelectionRenderProps =
   | { phase: 'loading' }
