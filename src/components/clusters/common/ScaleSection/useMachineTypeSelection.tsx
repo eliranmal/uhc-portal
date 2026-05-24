@@ -299,13 +299,10 @@ export function useMachineTypeSelection({
     !activeMachineTypesHasError
   ) {
     if (filteredMachineTypes.length === 0) {
-      const noTypes: Extract<MachineTypeSelectionRenderProps, { phase: 'noTypes' }> = {
-        phase: 'noTypes',
-      };
-      return noTypes;
+      return { phase: 'noTypes' };
     }
 
-    const form: Extract<MachineTypeSelectionRenderProps, { phase: 'form' }> = {
+    return {
       phase: 'form',
       filteredMachineTypes,
       regionFilterForAvailability,
@@ -319,19 +316,14 @@ export function useMachineTypeSelection({
       instanceTypeError,
       allExpanded,
     };
-    return form;
   }
 
   if (activeMachineTypesHasError) {
-    const errorProps: Extract<MachineTypeSelectionRenderProps, { phase: 'error' }> = {
+    return {
       phase: 'error',
       activeMachineTypesError: activeMachineTypesError ?? {},
     };
-    return errorProps;
   }
 
-  const loading: Extract<MachineTypeSelectionRenderProps, { phase: 'loading' }> = {
-    phase: 'loading',
-  };
-  return loading;
+  return { phase: 'loading' };
 }
