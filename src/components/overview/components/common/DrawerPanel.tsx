@@ -2,13 +2,10 @@ import React from 'react';
 
 import {
   Divider,
-  Drawer,
   DrawerActions,
   DrawerCloseButton,
-  DrawerContent,
   DrawerContentBody,
   DrawerHead,
-  DrawerPanelContent,
 } from '@patternfly/react-core';
 
 import { DrawerPanelContentNode } from './DrawerPanelContent';
@@ -24,22 +21,16 @@ const DrawerPanel = ({ content, onClose }: DrawerPanelProps) => {
   };
 
   return (
-    <Drawer isExpanded>
-      <DrawerContent
-        panelContent={
-          <DrawerPanelContent>
-            <DrawerHead>
-              {content?.head}
-              <DrawerActions>
-                <DrawerCloseButton onClick={handleClose} data-testid="drawer-close-button" />
-              </DrawerActions>
-            </DrawerHead>
-            <Divider component="div" data-testid="drawer-panel-divider" />
-            <DrawerContentBody>{content?.body}</DrawerContentBody>
-          </DrawerPanelContent>
-        }
-      />
-    </Drawer>
+    <>
+      <DrawerHead>
+        {content?.head}
+        <DrawerActions>
+          <DrawerCloseButton onClick={handleClose} data-testid="drawer-close-button" />
+        </DrawerActions>
+      </DrawerHead>
+      <Divider component="div" data-testid="drawer-panel-divider" />
+      <DrawerContentBody hasPadding>{content?.body}</DrawerContentBody>
+    </>
   );
 };
 
