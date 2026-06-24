@@ -15,7 +15,7 @@ import PRODUCT_CARD_LOGOS from './ProductCardLogos';
 import './DrawerPanelContent.scss';
 
 type DrawerPanelContentNode = {
-  head?: ReactNode;
+  head: ReactNode;
   body: ReactNode;
 };
 

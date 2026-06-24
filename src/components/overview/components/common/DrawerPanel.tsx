@@ -17,19 +17,19 @@ type DrawerPanelProps = {
 
 const DrawerPanel = ({ content, onClose }: DrawerPanelProps) => {
   const handleClose = () => {
-    onClose?.();
+    onClose();
   };
 
   return (
     <>
       <DrawerHead>
-        {content?.head}
+        {content.head}
         <DrawerActions>
           <DrawerCloseButton onClick={handleClose} data-testid="drawer-close-button" />
         </DrawerActions>
       </DrawerHead>
       <Divider component="div" data-testid="drawer-panel-divider" />
-      <DrawerContentBody hasPadding>{content?.body}</DrawerContentBody>
+      <DrawerContentBody hasPadding>{content.body}</DrawerContentBody>
     </>
   );
 };
