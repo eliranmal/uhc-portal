@@ -36,7 +36,8 @@ import modals from '~/components/common/Modal/modals';
 import useAnalytics from '~/hooks/useAnalytics';
 import useCanClusterAutoscale from '~/hooks/useCanClusterAutoscale';
 import { useFetchMachineOrNodePools } from '~/queries/ClusterDetailsQueries/MachinePoolTab/useFetchMachineOrNodePools';
-import { ENABLE_AUTO_NODE } from '~/queries/featureGates/featureConstants';
+import { useFetchLogForwarders } from '~/queries/ClusterDetailsQueries/useFetchLogForwarders';
+import { ENABLE_AUTO_NODE, HCP_LOG_FORWARDING } from '~/queries/featureGates/featureConstants';
 import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 import { isRestrictedEnv } from '~/restrictedEnv';
 import { SubscriptionCommonFieldsStatus } from '~/types/accounts_mgmt.v1';
@@ -56,16 +57,26 @@ import EditAutoNodeModal from '../EditAutoNodeModal/EditAutoNodeModal';
 import DeleteProtection from './DeleteProtection/DeleteProtection';
 import AutoNodeKarpenterCount from './AutoNodeKarpenterCount';
 import { ClusterStatus } from './ClusterStatus';
+import LogForwardingConfiguration from './LogForwardingConfiguration';
 
 const AUTO_NODE_MIN_VERSION = '4.22.0';
 
-function DetailsRight({ cluster, hasAutoscaleCluster, isDeprovisioned, clusterDetailsFetching }) {
+function DetailsRight({
+  cluster,
+  hasAutoscaleCluster,
+  isDeprovisioned,
+  clusterDetailsFetching,
+  displayUpgradeSettingsTab,
+}) {
   const isHypershift = isHypershiftCluster(cluster);
+  const isROSACluster = isROSA(cluster);
   const region = cluster?.subscription?.rh_region_id;
   const clusterID = cluster?.id;
   const clusterVersionID = cluster?.version?.id;
   const clusterRawVersionID = cluster?.version?.raw_id;
   const isAutoNodeAllowed = useFeatureGate(ENABLE_AUTO_NODE) && isHypershift;
+  const isHcpLogForwardingEnabled = useFeatureGate(HCP_LOG_FORWARDING);
+  const showControlPlaneLogForwarding = isHypershift && isHcpLogForwardingEnabled;
   const track = useAnalytics();
   const dispatch = useDispatch();
 
@@ -76,6 +87,14 @@ function DetailsRight({ cluster, hasAutoscaleCluster, isDeprovisioned, clusterDe
     region,
     clusterRawVersionID,
   );
+
+  const { data: logForwarders = [] } = useFetchLogForwarders(
+    showControlPlaneLogForwarding ? clusterID : undefined,
+    region,
+  );
+
+  const s3LogForwarder = logForwarders.find((forwarder) => forwarder.s3);
+  const cloudWatchLogForwarder = logForwarders.find((forwarder) => forwarder.cloudwatch);
 
   const nodesSectionData = totalNodesDataSelector(cluster, machinePools);
 
@@ -130,7 +149,6 @@ function DetailsRight({ cluster, hasAutoscaleCluster, isDeprovisioned, clusterDe
   );
   const isAWS = cluster.subscription?.cloud_provider_id === 'aws';
   const isGCP = cluster.subscription?.cloud_provider_id === 'gcp';
-  const isROSACluster = isROSA(cluster);
   const infraAccount = cluster.subscription?.cloud_account_id || null;
   const hypershiftEtcdEncryptionKey = isHypershift && cluster.aws?.etcd_encryption?.kms_key_arn;
   const { clusterVpc } = useAWSVPCFromCluster(cluster);
@@ -482,7 +500,12 @@ function DetailsRight({ cluster, hasAutoscaleCluster, isDeprovisioned, clusterDe
                 id="autonode-hint"
                 iconClassName="nodes-hint"
                 buttonAriaLabel="More information about Autonode"
-                hint="Enables hosted Karpenter to autoscale nodes."
+                hint={
+                  <>
+                    Enables hosted Karpenter to autoscale nodes.{' '}
+                    <ExternalLink href={docLinks.ROSA_AUTONODE}>Learn more</ExternalLink>
+                  </>
+                }
               />
             </DescriptionListTerm>
             <DescriptionListDescription>
@@ -546,6 +569,14 @@ function DetailsRight({ cluster, hasAutoscaleCluster, isDeprovisioned, clusterDe
           </DescriptionListDescription>
         </DescriptionListGroup>
       )}
+      {/* Control plane log forwarding */}
+      {showControlPlaneLogForwarding ? (
+        <LogForwardingConfiguration
+          displayUpgradeSettingsTab={displayUpgradeSettingsTab}
+          isS3Enabled={!!s3LogForwarder}
+          isCloudWatchEnabled={!!cloudWatchLogForwarder}
+        />
+      ) : null}
     </DescriptionList>
   );
 }
@@ -555,6 +586,7 @@ DetailsRight.propTypes = {
   isDeprovisioned: PropTypes.bool,
   hasAutoscaleCluster: PropTypes.bool,
   clusterDetailsFetching: PropTypes.bool,
+  displayUpgradeSettingsTab: PropTypes.bool,
 };
 
 export default DetailsRight;

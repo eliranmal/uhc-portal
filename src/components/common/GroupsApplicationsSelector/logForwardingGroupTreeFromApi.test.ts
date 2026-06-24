@@ -2,6 +2,7 @@ import {
   buildLogForwardingTree,
   buildOtherGroupTreeNode,
   compareLogForwarderVersionIds,
+  LOG_FORWARDING_OTHER_GROUP_NAME,
   LOG_FORWARDING_OTHER_GROUP_ROOT_ID,
   logForwardingGroupRootId,
   logForwardingGroupVersionsListToTree,
@@ -29,6 +30,11 @@ describe('pickLatestLogForwarderGroupVersion', () => {
     expect(latest?.id).toBe('10');
     expect(latest?.applications).toEqual(['b']);
   });
+
+  it('returns undefined when versions are missing or empty', () => {
+    expect(pickLatestLogForwarderGroupVersion(undefined)).toBeUndefined();
+    expect(pickLatestLogForwarderGroupVersion([])).toBeUndefined();
+  });
 });
 
 describe('logForwardingGroupVersionsListToTree', () => {
@@ -50,7 +56,7 @@ describe('logForwardingGroupVersionsListToTree', () => {
     expect(tree[0].children?.map((c) => c.id)).toEqual(['audit', 'apiserver']);
   });
 
-  it('renders a single-app group as a parent with one child', () => {
+  it('keeps a single-app group as a parent node with the application name as the leaf', () => {
     const tree = logForwardingGroupVersionsListToTree([
       {
         name: 'scheduler',
@@ -65,6 +71,44 @@ describe('logForwardingGroupVersionsListToTree', () => {
         children: [{ id: 'kube-scheduler', text: 'kube-scheduler' }],
       },
     ]);
+  });
+
+  it('skips blank group names and versions without applications', () => {
+    const tree = logForwardingGroupVersionsListToTree([
+      { name: '   ', enabled: true, versions: [{ id: '1', applications: ['app'] }] },
+      { name: 'Empty', enabled: true, versions: [{ id: '1', applications: [] }] },
+      {
+        name: 'API',
+        enabled: true,
+        versions: [{ id: '1', applications: ['audit'] }],
+      },
+    ]);
+
+    expect(tree).toEqual([
+      {
+        id: logForwardingGroupRootId('API'),
+        text: 'API',
+        children: [{ id: 'audit', text: 'audit' }],
+      },
+    ]);
+  });
+
+  it('sorts root nodes alphabetically by display name', () => {
+    const tree = logForwardingGroupVersionsListToTree([
+      {
+        name: 'Zulu',
+        enabled: true,
+        versions: [{ id: '1', applications: ['z-app'] }],
+      },
+      {
+        name: 'Alpha',
+        enabled: true,
+        versions: [{ id: '1', applications: ['a-one', 'a-two'] }],
+      },
+    ]);
+
+    expect(tree.map((node) => node.text)).toEqual(['Alpha', 'Zulu']);
+    expect(tree[0].children?.map((child) => child.id)).toEqual(['a-one', 'a-two']);
   });
 });
 
@@ -104,7 +148,7 @@ describe('buildOtherGroupTreeNode', () => {
     const result = buildOtherGroupTreeNode(apps, groupsTree);
     expect(result).toEqual({
       id: LOG_FORWARDING_OTHER_GROUP_ROOT_ID,
-      text: 'Other',
+      text: LOG_FORWARDING_OTHER_GROUP_NAME,
       children: [
         { id: 'etcd', text: 'etcd' },
         { id: 'private-router', text: 'private-router' },
@@ -143,7 +187,7 @@ describe('buildOtherGroupTreeNode', () => {
   it('buildLogForwardingTree appends the Other group when orphan applications exist', () => {
     const tree = buildLogForwardingTree(groupsTree, [{ name: 'orphan-app', enabled: true }]);
     expect(tree).toHaveLength(groupsTree.length + 1);
-    expect(tree.at(-1)?.text).toBe('Other');
+    expect(tree.at(-1)?.text).toBe(LOG_FORWARDING_OTHER_GROUP_NAME);
     expect(tree.at(-1)?.children?.map((c) => c.id)).toEqual(['orphan-app']);
   });
 });

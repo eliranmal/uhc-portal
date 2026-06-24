@@ -13,11 +13,11 @@ import {
 // Re-export so existing imports from this module continue to work.
 export { LOG_FORWARDING_GROUP_ID_PREFIX, logForwardingGroupRootId };
 
-function isNonEmptyApplicationId(a: unknown): a is string {
-  return typeof a === 'string' && a.trim().length > 0;
+/** Normalizes group display names to API group ids (matches wizard submit normalization). */
+export function normalizeLogForwardingGroupIdFromDisplay(name: string): string {
+  return name.trim().toLowerCase().replace(/\s+/g, '_');
 }
 
-/** Compare version ids so the numerically highest / latest id sorts last. */
 export function compareLogForwarderVersionIds(a?: string, b?: string): number {
   const sa = a ?? '';
   const sb = b ?? '';
@@ -38,6 +38,10 @@ export function pickLatestLogForwarderGroupVersion(
   return versions.reduce((best, v) =>
     compareLogForwarderVersionIds(v.id, best.id) > 0 ? v : best,
   );
+}
+
+function isNonEmptyApplicationId(a: unknown): a is string {
+  return typeof a === 'string' && a.trim().length > 0;
 }
 
 /**
@@ -81,7 +85,7 @@ export function logForwardingGroupVersionsListToTree(
   return roots;
 }
 
-export const LOG_FORWARDING_OTHER_GROUP_NAME = 'Other';
+export const LOG_FORWARDING_OTHER_GROUP_NAME = 'other';
 export const LOG_FORWARDING_OTHER_GROUP_ROOT_ID = logForwardingGroupRootId(
   LOG_FORWARDING_OTHER_GROUP_NAME,
 );
