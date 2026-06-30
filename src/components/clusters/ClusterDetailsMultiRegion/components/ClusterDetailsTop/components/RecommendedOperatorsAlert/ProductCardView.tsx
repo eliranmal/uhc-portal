@@ -9,7 +9,7 @@ import { ProductCard, ProductCardNode } from '../../../../../../common/ProductCa
 
 type ProductCardViewProps = {
   cards: ProductCardNode[];
-  openLearnMore: (title: string, content?: DrawerPanelContentNode) => void;
+  openLearnMore: (title: string, content: DrawerPanelContentNode) => void;
   title?: string;
   selectedCardTitle?: string;
   learnMoreLink?: {

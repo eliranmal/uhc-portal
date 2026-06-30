@@ -22,7 +22,7 @@ const OPERATORS_CARDS: ProductCardNode[] = [
 ];
 
 type RecommendedOperatorsAlertProps = {
-  openLearnMore: (title: string, content?: DrawerPanelContentNode) => void;
+  openLearnMore: (title: string, content: DrawerPanelContentNode) => void;
   selectedCardTitle?: string;
   clusterState: clusterStates;
   closeDrawer: () => void;
