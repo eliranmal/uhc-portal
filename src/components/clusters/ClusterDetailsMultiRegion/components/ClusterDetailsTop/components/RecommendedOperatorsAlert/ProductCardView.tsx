@@ -3,9 +3,9 @@ import React from 'react';
 import { Gallery, GalleryItem, Title } from '@patternfly/react-core';
 
 import ExternalLink from '~/components/common/ExternalLink';
+import { DrawerPanelContentNode } from '~/hooks/useChromeDrawerPanel';
 
 import { ProductCard, ProductCardNode } from '../../../../../../common/ProductCard/ProductCard';
-import { DrawerPanelContentNode } from '../../../../../../overview/components/common/DrawerPanelContent';
 
 type ProductCardViewProps = {
   cards: ProductCardNode[];

@@ -5,14 +5,13 @@ import { Gallery, GalleryItem, PageSection, Title } from '@patternfly/react-core
 import { useScrollToAnchor } from '~/common/helpers';
 import { Link } from '~/common/routing';
 import InternalTrackingLink from '~/components/common/InternalTrackingLink';
-import { useChromeDrawerPanel } from '~/hooks/useChromeDrawerPanel';
+import { DrawerPanelContentNode, useChromeDrawerPanel } from '~/hooks/useChromeDrawerPanel';
 import { useCanCreateManagedCluster } from '~/queries/ClusterDetailsQueries/useFetchActionsPermissions';
 
 import docLinks from '../../common/docLinks.mjs';
 import OpenShiftProductIcon from '../../styles/images/OpenShiftProductIcon.svg';
 import { AppPage } from '../App/AppPage';
 
-import { DrawerPanelContentNode } from './components/common/DrawerPanelContent';
 import { FeaturedProductsCards } from './components/FeaturedProductsCards/FeaturedProductsCards';
 import OfferingCard from './components/OfferingCard/OfferingCard';
 import {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { ReactNode, useCallback, useEffect, useRef } from 'react';
 
 import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
 
@@ -11,15 +11,17 @@ type DrawerPanelOptions = {
   onClose?: () => void;
 };
 
-type DrawerContent<T = unknown> = {
-  title: string;
-  content?: T;
+export type DrawerPanelContentNode = {
+  head: ReactNode;
+  body: ReactNode;
 };
 
-export const useChromeDrawerPanel = <T = unknown>({
-  module,
-  onClose: onCloseCallback,
-}: DrawerPanelOptions) => {
+type DrawerContent = {
+  title: string;
+  content?: DrawerPanelContentNode;
+};
+
+export const useChromeDrawerPanel = ({ module, onClose: onCloseCallback }: DrawerPanelOptions) => {
   const { drawerActions } = useChrome();
   const isOpenRef = useRef<boolean>(false);
 

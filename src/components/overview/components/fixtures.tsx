@@ -1,8 +1,9 @@
 import React from 'react';
 
+import { DrawerPanelContentNode } from '~/hooks/useChromeDrawerPanel';
 import SomeLogo from '~/styles/images/RedHatOpenShiftGitOpsLogo.svg';
 
-import { DRAWER_PANEL_CONTENT, DrawerPanelContentNode } from './common/DrawerPanelContent';
+import { DRAWER_PANEL_CONTENT } from './common/DrawerPanelContent';
 import PRODUCT_CARD_LOGOS from './common/ProductCardLogos';
 import { FEATURED_PRODUCTS_CARDS } from './FeaturedProductsCards/FeaturedProductsCards';
 
