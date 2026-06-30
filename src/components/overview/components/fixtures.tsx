@@ -93,7 +93,7 @@ type RecommendedOperatorsCardsNode = {
   description: string;
   logo: string | undefined;
   labelText?: string;
-  drawerPanelContent?: DrawerPanelContentNode;
+  drawerPanelContent: DrawerPanelContentNode;
 };
 
 const RECOMMENDED_OPERATORS_CARDS_DATA: RecommendedOperatorsCardsNode[] = [

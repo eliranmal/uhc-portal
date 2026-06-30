@@ -16,7 +16,7 @@ type RecommendedOperatorsCardsNode = {
   description: string;
   logo?: string;
   labelText?: string;
-  drawerPanelContent?: DrawerPanelContentNode;
+  drawerPanelContent: DrawerPanelContentNode;
 };
 
 const RECOMMENDED_OPERATORS_CARDS: RecommendedOperatorsCardsNode[] = [

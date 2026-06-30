@@ -23,7 +23,7 @@ export type ProductCardNode = {
   description: string;
   logo?: string;
   labelText?: string;
-  drawerPanelContent?: DrawerPanelContentNode;
+  drawerPanelContent: DrawerPanelContentNode;
 };
 
 type ProductCardProps = ProductCardNode & {
