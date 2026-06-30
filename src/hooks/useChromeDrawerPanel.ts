@@ -55,7 +55,9 @@ export const useChromeDrawerPanel = <T = unknown>({
         drawerActions?.toggleDrawerPanel();
       }
     },
-    [drawerActions],
+    // prevent the drawer from closing on data re-fetches
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
   );
 
   return { open, close };
