@@ -82,7 +82,7 @@ describe('useChromeDrawerPanel', () => {
       scope: 'openshift',
       module: './DrawerPanel',
       title: 'Second drawer title',
-      content: undefined,
+      content,
       onClose: expect.any(Function),
     });
     expect(toggleDrawerPanel).toHaveBeenCalledTimes(1);
