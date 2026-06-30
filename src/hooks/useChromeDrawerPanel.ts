@@ -24,14 +24,17 @@ type DrawerContent = {
 export const useChromeDrawerPanel = ({ module, onClose: onCloseCallback }: DrawerPanelOptions) => {
   const { drawerActions } = useChrome();
   const isOpenRef = useRef<boolean>(false);
+  const onCloseRef = useRef(onCloseCallback);
 
   const close = useCallback(() => {
     if (isOpenRef.current) {
       isOpenRef.current = false;
       drawerActions?.toggleDrawerPanel();
-      onCloseCallback?.();
+      if (onCloseRef.current) {
+        onCloseRef.current();
+      }
     }
-  }, [drawerActions, onCloseCallback]);
+  }, [drawerActions, onCloseRef]);
 
   const open = useCallback(
     ({ title, content }: DrawerContent) => {
