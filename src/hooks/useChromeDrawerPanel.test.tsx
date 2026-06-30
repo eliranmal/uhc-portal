@@ -10,6 +10,11 @@ jest.mock('@redhat-cloud-services/frontend-components/useChrome', () => jest.fn(
 const useChromeMock = useChrome as jest.Mock;
 
 describe('useChromeDrawerPanel', () => {
+  const content = {
+    head: <div>Drawer head</div>,
+    body: <div>Drawer body</div>,
+  };
+
   const setDrawerPanelContent = jest.fn();
   const toggleDrawerPanel = jest.fn();
 
@@ -32,11 +37,6 @@ describe('useChromeDrawerPanel', () => {
         onClose,
       }),
     );
-
-    const content = {
-      head: <div>Drawer head</div>,
-      body: <div>Drawer body</div>,
-    };
 
     act(() => {
       result.current.open({
@@ -66,12 +66,14 @@ describe('useChromeDrawerPanel', () => {
     act(() => {
       result.current.open({
         title: 'First drawer title',
+        content,
       });
     });
 
     act(() => {
       result.current.open({
         title: 'Second drawer title',
+        content,
       });
     });
 
@@ -98,6 +100,7 @@ describe('useChromeDrawerPanel', () => {
     act(() => {
       result.current.open({
         title: 'Drawer title',
+        content,
       });
     });
 
@@ -138,6 +141,7 @@ describe('useChromeDrawerPanel', () => {
     act(() => {
       result.current.open({
         title: 'Drawer title',
+        content,
       });
     });
 
@@ -163,6 +167,7 @@ describe('useChromeDrawerPanel', () => {
     act(() => {
       result.current.open({
         title: 'Drawer title',
+        content,
       });
     });
 
@@ -197,6 +202,7 @@ describe('useChromeDrawerPanel', () => {
       act(() => {
         result.current.open({
           title: 'Drawer title',
+          content,
         });
       });
 
