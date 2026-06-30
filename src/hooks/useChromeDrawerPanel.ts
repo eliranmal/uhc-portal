@@ -18,7 +18,7 @@ export type DrawerPanelContentNode = {
 
 type DrawerContent = {
   title: string;
-  content?: DrawerPanelContentNode;
+  content: DrawerPanelContentNode;
 };
 
 export const useChromeDrawerPanel = ({ module, onClose: onCloseCallback }: DrawerPanelOptions) => {
