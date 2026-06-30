@@ -52,7 +52,7 @@ function OverviewEmptyState() {
     onClose: () => setSelectedCardTitle(''),
   });
 
-  const openDrawer = (title: string, content?: DrawerPanelContentNode) => {
+  const openDrawer = (title: string, content: DrawerPanelContentNode) => {
     setSelectedCardTitle(title);
     open({ title, content });
   };

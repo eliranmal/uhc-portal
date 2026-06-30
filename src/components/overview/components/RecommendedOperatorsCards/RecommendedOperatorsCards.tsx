@@ -43,7 +43,7 @@ const RECOMMENDED_OPERATORS_CARDS: RecommendedOperatorsCardsNode[] = [
 ];
 
 type RecommendedOperatorsCardsProps = {
-  openLearnMore: (title: string, content?: DrawerPanelContentNode) => void;
+  openLearnMore: (title: string, content: DrawerPanelContentNode) => void;
   selectedCardTitle: string;
 };
 

@@ -49,7 +49,7 @@ const FEATURED_PRODUCTS_CARDS: FeaturedProductsCardsNode[] = [
 ];
 
 type FeaturedProductsCardsProps = {
-  openLearnMore: (title: string, content?: DrawerPanelContentNode) => void;
+  openLearnMore: (title: string, content: DrawerPanelContentNode) => void;
   selectedCardTitle: string;
 };
 

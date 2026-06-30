@@ -27,7 +27,7 @@ export type ProductCardNode = {
 };
 
 type ProductCardProps = ProductCardNode & {
-  openLearnMore: (title: string, content?: DrawerPanelContentNode) => void;
+  openLearnMore: (title: string, content: DrawerPanelContentNode) => void;
   isSelected: boolean;
   dataTestId: string;
 };
